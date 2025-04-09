@@ -13,6 +13,7 @@
                 <img src="assets/logo/logo-main.png" alt="Miss Star International 2025">
             </div>
             <ul>
+                <li><a href="index.html">Inicio</a></li>
                 <li><a href="company.html">La Compañía</a></li>
                 <li><a href="about.html">About Us</a></li>
                 <li><a href="consortium.html">Consortium</a></li>
@@ -22,13 +23,63 @@
                 <li><a href="partners.html">Partners</a></li>
                 <li><a href="news.html">News</a></li>
             </ul>
+            <div class="language-switcher">
+                <button data-lang="es" class="active">ES</button>
+                <button data-lang="en">EN</button>
+            </div>
         </nav>
     </header>
 
     <main>
         <section id="inicio" class="hero">
-            <h1>Miss Star International 2025</h1>
-            <p>El certamen de belleza más prestigioso</p>
+            <video class="hero-video" autoplay muted loop>
+                <source src="assets/videos/hero-video.mp4" type="video/mp4">
+                <!-- Fallback para navegadores que no soportan video -->
+                Tu navegador no soporta videos HTML5.
+            </video>
+            <div class="hero-overlay"></div>
+            <h1 data-lang-es="Miss Star International 2025" data-lang-en="Miss Star International 2025">Miss Star International 2025</h1>
+            <p data-lang-es="El certamen de belleza más prestigioso" data-lang-en="The most prestigious beauty pageant">El certamen de belleza más prestigioso</p>
+        </section>
+
+        <section id="featured-sections">
+            <h2 data-lang-es="Secciones Destacadas" data-lang-en="Featured Sections">Secciones Destacadas</h2>
+            
+            <div class="expandable-section">
+                <h3 class="expandable-title" data-lang-es="Sobre el Certamen" data-lang-en="About the Pageant">Sobre el Certamen</h3>
+                <div class="expandable-content">
+                    <p data-lang-es="Miss Star International es un certamen de belleza que celebra la diversidad y el empoderamiento." data-lang-en="Miss Star International is a beauty pageant that celebrates diversity and empowerment.">
+                        Miss Star International es un certamen de belleza que celebra la diversidad y el empoderamiento.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="expandable-section">
+                <h3 class="expandable-title" data-lang-es="Candidatas" data-lang-en="Contestants">Candidatas</h3>
+                <div class="expandable-content">
+                    <p data-lang-es="Conoce a las candidatas que representarán a sus países en Miss Star International 2025." data-lang-en="Meet the contestants who will represent their countries in Miss Star International 2025.">
+                        Conoce a las candidatas que representarán a sus países en Miss Star International 2025.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="expandable-section">
+                <h3 class="expandable-title" data-lang-es="Eventos" data-lang-en="Events">Eventos</h3>
+                <div class="expandable-content">
+                    <p data-lang-es="Calendario de eventos y actividades del certamen Miss Star International 2025." data-lang-en="Calendar of events and activities for the Miss Star International 2025 pageant.">
+                        Calendario de eventos y actividades del certamen Miss Star International 2025.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="expandable-section">
+                <h3 class="expandable-title" data-lang-es="Patrocinadores" data-lang-en="Sponsors">Patrocinadores</h3>
+                <div class="expandable-content">
+                    <p data-lang-es="Nuestros patrocinadores oficiales que hacen posible este evento." data-lang-en="Our official sponsors who make this event possible.">
+                        Nuestros patrocinadores oficiales que hacen posible este evento.
+                    </p>
+                </div>
+            </div>
         </section>
     </main>
 
