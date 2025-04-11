@@ -3,8 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us</title>
+    <title>About Us - Miss Star International</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .founder-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .founder-image {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .founder-bio {
+            padding: 2rem;
+        }
+
+        .founder-bio h2 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .founder-bio p {
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: #555;
+        }
+
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .achievement-item {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .founder-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -33,6 +88,42 @@
     <main>
         <h1 data-lang-es="Sobre Nosotros" data-lang-en="About Us">Sobre Nosotros</h1>
         <p data-lang-es="Información sobre nosotros..." data-lang-en="Information about us...">Información sobre nosotros...</p>
+        <section class="founder-section">
+            <div class="founder-image-container">
+                <img src="assets/founder/founder-portrait.jpg" alt="Fundadora de Miss Star International" class="founder-image">
+            </div>
+            <div class="founder-bio">
+                <h2 data-lang-es="Nuestra Fundadora" data-lang-en="Our Founder">Nuestra Fundadora</h2>
+                <div class="bio-content">
+                    <p data-lang-es="Como cofundadora y Directora Ejecutiva de Miss Star International desde 2018, he dedicado mi vida a transformar la industria del entretenimiento y empoderar a la comunidad trans a nivel global." 
+                       data-lang-en="As co-founder and Executive Director of Miss Star International since 2018, I have dedicated my life to transforming the entertainment industry and empowering the trans community globally."></p>
+                    
+                    <p data-lang-es="Mi trayectoria académica incluye una Licenciatura en Ciencias Políticas, complementada con mi experiencia como doctora cosmética y emprendedora. Como inmigrante argentina, entiendo profundamente la importancia de la representación y la inclusión." 
+                       data-lang-en="My academic background includes a BA in Political Science, complemented by my experience as a cosmetic doctor and entrepreneur. As an immigrant from Argentina, I deeply understand the importance of representation and inclusion."></p>
+
+                    <div class="achievements">
+                        <span class="achievement-item">Directora Ejecutiva MSI</span>
+                        <span class="achievement-item">Doctora Cosmética</span>
+                        <span class="achievement-item">Emprendedora</span>
+                        <span class="achievement-item">Activista Trans</span>
+                        <span class="achievement-item">Líder Global</span>
+                    </div>
+                </div>
+            </div>
+            <div class="recommendation">
+                <h3 data-lang-es="Recomendación del Alcalde" data-lang-en="Mayor's Recommendation">Recomendación del Alcalde</h3>
+                <p data-lang-es="Es un honor recomendar a nuestra distinguida fundadora, cuya dedicación y liderazgo han transformado nuestra comunidad." 
+                   data-lang-en="It is an honor to recommend our distinguished founder, whose dedication and leadership have transformed our community."></p>
+                <p><strong>- Alcalde de Santa Susana</strong></p>
+            </div>
+            <div class="video-section">
+                <h3 data-lang-es="Discurso del 10º Aniversario" data-lang-en="10th Anniversary Speech">Discurso del 10º Aniversario</h3>
+                <video controls width="100%">
+                    <source src="assets/videos/10th-anniversary-speech.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </section>
     </main>
 
     <footer>
