@@ -3,6 +3,14 @@ module.exports = {
     'postcss-import': {},
     'tailwindcss/nesting': {},
     'tailwindcss': {},
-    'autoprefixer': {},
+    'autoprefixer': {
+      overrideBrowserslist: ['last 2 versions', '> 1%'],
+      grid: true
+    },
+    'postcss-preset-env': {
+      features: {
+        'nesting-rules': false
+      }
+    }
   }
 } 

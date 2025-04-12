@@ -1,23 +1,23 @@
-// Función para manejar el menú responsive
+// Handle responsive menu
 document.addEventListener('DOMContentLoaded', () => {
-    // Aquí puedes agregar funcionalidad JavaScript según sea necesario
-    console.log('Sitio web cargado correctamente');
+    // Add JavaScript functionality as needed
+    console.log('Website loaded successfully');
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Buscar todos los elementos con la clase 'expandable-title'
+    // Find all elements with 'expandable-title' class
     const expandableTitles = document.querySelectorAll('.expandable-title');
     
-    // Agregar evento de clic a cada título expandible
+    // Add click event to each expandable title
     expandableTitles.forEach(title => {
         title.addEventListener('click', function() {
-            // Alternar la clase 'active' en el título
+            // Toggle 'active' class on title
             this.classList.toggle('active');
             
-            // Obtener el contenido asociado con este título
+            // Get content associated with this title
             const content = this.nextElementSibling;
             
-            // Alternar la visibilidad del contenido
+            // Toggle content visibility
             if (content.style.maxHeight) {
                 content.style.maxHeight = null;
             } else {
@@ -26,17 +26,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Inicializar el idioma en español por defecto
-    let currentLanguage = 'es';
+    // Initialize language to English by default
+    let currentLanguage = 'en';
 
-    // Función para cambiar el idioma
+    // Function to change language
     function changeLanguage(lang) {
         currentLanguage = lang;
         
-        // Obtener todos los elementos con atributos de traducción
+        // Get all elements with translation attributes
         const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
         
-        // Cambiar el texto de cada elemento según el idioma seleccionado
+        // Change text of each element based on selected language
         elements.forEach(el => {
             if (lang === 'es' && el.hasAttribute('data-lang-es')) {
                 el.textContent = el.getAttribute('data-lang-es');
@@ -46,14 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Agregar eventos a los botones de idioma
+    // Add events to language buttons
     const langButtons = document.querySelectorAll('.language-switcher button');
     if (langButtons) {
         langButtons.forEach(button => {
             button.addEventListener('click', function() {
                 changeLanguage(this.getAttribute('data-lang'));
                 
-                // Marcar el botón actual como activo
+                // Mark current button as active
                 langButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
             });
@@ -137,12 +137,22 @@ class LanguageController {
 class VideoController {
     constructor() {
         this.video = document.querySelector('.hero-video');
+        this.audioContext = null;
         if (this.video) {
             this.initializeVideo();
         }
     }
 
     initializeVideo() {
+        // Create AudioContext only after user interaction
+        const initAudio = () => {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            document.removeEventListener('click', initAudio);
+        };
+        document.addEventListener('click', initAudio);
+
         // Ensure video plays automatically and handles mobile devices
         this.video.play().catch(() => {
             // Handle autoplay failure (common on mobile)
@@ -154,8 +164,14 @@ class VideoController {
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.video.pause();
+                if (this.audioContext) {
+                    this.audioContext.suspend();
+                }
             } else {
                 this.video.play().catch(() => {});
+                if (this.audioContext) {
+                    this.audioContext.resume();
+                }
             }
         });
     }
@@ -174,6 +190,25 @@ class VideoController {
 
 // Initialize everything when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize performance observer
+    if ('PerformanceObserver' in window) {
+        try {
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    // Only log tasks that take more than 100ms
+                    if (entry.duration > 100) {
+                        console.warn('Long task detected:', entry);
+                    }
+                }
+            });
+            
+            // Observe only paint metrics
+            observer.observe({ entryTypes: ['paint'] });
+        } catch (e) {
+            console.warn('PerformanceObserver not fully supported:', e);
+        }
+    }
+
     new ScrollController();
     new LanguageController();
     new VideoController();
