@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
+
+@layer components {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply overflow-x-hidden;
+  }
+
+  .title-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-star-gold to-[#FFFFFF];
+  }
+
+  .glow-text {
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+  }
+
+  .hero-section {
+    @apply relative min-h-screen flex items-center justify-center bg-star-black overflow-hidden snap-start;
+  }
+
+  .section-fullscreen {
+    @apply relative min-h-screen flex items-center justify-center py-20 snap-start;
+    scroll-margin-top: 0px;
+  }
+
+  .hero-video {
+    @apply absolute inset-0 w-full h-full object-cover opacity-50;
+  }
+
+  .hero-overlay {
+    @apply absolute inset-0 bg-star-black/60 z-[1];
+  }
+
+  .section-title {
+    @apply text-5xl font-bold mb-6 font-cinzel;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .section-title.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-content {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+  }
+
+  .section-content.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-divider {
+    @apply w-32 h-1 mx-auto mb-8 bg-gradient-to-r from-star-gold to-[#FFFFFF];
+    opacity: 0;
+    transform: scaleX(0);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .section-divider.visible {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .btn-primary {
+    @apply inline-block bg-star-gold text-star-black px-8 py-4 rounded-full font-bold 
+           hover:bg-opacity-80 transition transform hover:scale-105 shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply inline-block bg-transparent border-2 border-star-gold text-star-gold px-8 py-4 
+           rounded-full font-bold hover:bg-star-gold hover:text-star-black transition transform 
+           hover:scale-105 shadow-lg;
+  }
+
+  .card {
+    @apply bg-star-black/50 backdrop-blur-sm rounded-xl p-6 border border-star-gold/20 
+           hover:border-star-gold/50 transition-all duration-300;
+  }
+
+  .nav-link {
+    @apply text-gray-400 hover:text-star-gold transition-colors duration-300;
+  }
+
+  .footer-link {
+    @apply text-gray-400 hover:text-star-gold transition-colors duration-300;
+  }
+
+  .scroll-indicator {
+    @apply fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2;
+  }
+
+  .scroll-dot {
+    @apply w-3 h-3 rounded-full bg-white/30 cursor-pointer transition-all duration-300;
+  }
+
+  .scroll-dot.active {
+    @apply bg-star-gold;
+    transform: scale(1.5);
+  }
+
+  .main-container {
+    @apply snap-y snap-mandatory h-screen overflow-y-auto;
+    scroll-behavior: smooth;
+  }
+} 

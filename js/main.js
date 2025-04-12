@@ -60,3 +60,121 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Scroll and Animation Controller
+class ScrollController {
+    constructor() {
+        this.initializeObserver();
+        this.initializeScrollDots();
+    }
+
+    initializeObserver() {
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    this.updateScrollIndicator(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.3
+        });
+
+        // Observe all animated elements
+        document.querySelectorAll('.section-title, .section-divider, .section-content')
+            .forEach(el => this.observer.observe(el));
+    }
+
+    updateScrollIndicator(target) {
+        const section = target.closest('section');
+        if (!section) return;
+
+        document.querySelectorAll('.scroll-dot').forEach(dot => {
+            dot.classList.toggle('active', dot.dataset.section === section.id);
+        });
+    }
+
+    initializeScrollDots() {
+        document.querySelectorAll('.scroll-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const section = document.getElementById(dot.dataset.section);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    }
+}
+
+// Language Controller
+class LanguageController {
+    constructor() {
+        this.currentLang = 'en';
+        this.initializeLanguageButtons();
+    }
+
+    initializeLanguageButtons() {
+        document.querySelectorAll('[data-lang]').forEach(button => {
+            button.addEventListener('click', () => this.switchLanguage(button.dataset.lang));
+        });
+    }
+
+    switchLanguage(lang) {
+        if (this.currentLang === lang) return;
+
+        document.querySelectorAll('[data-lang]').forEach(button => {
+            const isSelected = button.dataset.lang === lang;
+            button.classList.toggle('btn-primary', isSelected);
+            button.classList.toggle('btn-secondary', !isSelected);
+        });
+
+        this.currentLang = lang;
+        // Here we would trigger the translation logic
+    }
+}
+
+// Video Controller
+class VideoController {
+    constructor() {
+        this.video = document.querySelector('.hero-video');
+        if (this.video) {
+            this.initializeVideo();
+        }
+    }
+
+    initializeVideo() {
+        // Ensure video plays automatically and handles mobile devices
+        this.video.play().catch(() => {
+            // Handle autoplay failure (common on mobile)
+            const playButton = this.createPlayButton();
+            document.querySelector('.hero-section').appendChild(playButton);
+        });
+
+        // Handle visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.video.pause();
+            } else {
+                this.video.play().catch(() => {});
+            }
+        });
+    }
+
+    createPlayButton() {
+        const button = document.createElement('button');
+        button.className = 'absolute z-20 btn-primary';
+        button.innerHTML = '<i class="fas fa-play mr-2"></i>Play Video';
+        button.addEventListener('click', () => {
+            this.video.play();
+            button.remove();
+        });
+        return button;
+    }
+}
+
+// Initialize everything when the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new ScrollController();
+    new LanguageController();
+    new VideoController();
+});

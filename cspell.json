@@ -2,13 +2,25 @@
     "version": "0.2",
     "language": "en",
     "words": [
+        "Kayra",
+        "Hernández",
+        "Simoes",
+        "Ambrosio",
+        "Rubi",
+        "Validor",
+        "Relayze",
+        "Bernalillo",
         "Maxima",
+        "Caram",
+        "Albuquerque",
+        "Cinzel",
+        "Montserrat",
+        "stardust",
+        "playsinline",
         "Victoria",
         "Perla",
-        "Caram",
         "Susanna",
         "Campolier",
-        "Montsant",
         "Maresme",
         "Daniela",
         "Santiago",
@@ -16,6 +28,10 @@
         "Hanna",
         "Dynasty",
         "inclusiveness",
+        "inclusivity",
+        "Inclusivity",
+        "inclusive",
+        "Inclusive",
         "Sobre",
         "Nosotros",
         "Información",
@@ -40,5 +56,7 @@
         "data-lang-es=\"[^\"]*\"",
         "span[^>]*>[^<]*</span>"
     ],
-    "ignorePaths": []
+    "ignorePaths": [
+        "node_modules/**"
+    ]
 } 
