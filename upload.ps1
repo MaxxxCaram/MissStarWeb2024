@@ -1,29 +1,74 @@
 # FTP Upload Script
 $ftpUrl = "ftp://web0151.zxcs.nl"
 $user = "u127684p143111"
-$pass = '`9h[Np*.K0_>`*=64}F'
-$workingDir = "E:\MissStarWeb2024"
-
-# Set working directory
-Set-Location -Path $workingDir
+$pass = "`9h[Np*.K0_>`*=64}F"
 
 # Create FTP request
-$webclient = New-Object System.Net.WebClient
-$webclient.Credentials = New-Object System.Net.NetworkCredential($user, $pass)
+$ftp = [System.Net.FtpWebRequest]::Create("$ftpUrl/public_html/")
+$ftp.Method = [System.Net.WebRequestMethods+Ftp]::MakeDirectory
+$ftp.Credentials = New-Object System.Net.NetworkCredential($user, $pass)
 
-# Get all files recursively
-$files = Get-ChildItem -Path $workingDir -Recurse -File | Where-Object { $_.Name -notmatch '^\.' -and $_.Name -ne 'upload.ps1' -and $_.Name -ne 'upload.txt' }
+try {
+    $response = $ftp.GetResponse()
+    Write-Host "Directory created successfully"
+} catch {
+    Write-Host "Directory might already exist or error occurred"
+}
 
-foreach ($file in $files) {
-    $relativePath = $file.FullName.Substring($workingDir.Length + 1).Replace("\", "/")
-    $targetPath = "$ftpUrl/domains/missstarinternational.com/public_html/$relativePath"
-    
-    Write-Host "Uploading $relativePath to $targetPath"
+# Function to upload file
+function Upload-FTPFile {
+    param($sourcePath, $targetPath)
     
     try {
-        $webclient.UploadFile($targetPath, $file.FullName)
-        Write-Host "Successfully uploaded $relativePath" -ForegroundColor Green
+        $webclient = New-Object System.Net.WebClient
+        $webclient.Credentials = New-Object System.Net.NetworkCredential($user, $pass)
+        
+        Write-Host "Uploading $sourcePath to $targetPath"
+        $webclient.UploadFile("$ftpUrl/$targetPath", $sourcePath)
+        Write-Host "Uploaded successfully"
     } catch {
-        Write-Host "Failed to upload $relativePath : $_" -ForegroundColor Red
+        Write-Host "Error uploading $sourcePath : $_"
     }
-} 
+}
+
+# Get all files recursively
+$files = Get-ChildItem -Recurse -File | Where-Object { 
+    $_.FullName -notlike "*\node_modules\*" -and 
+    $_.FullName -notlike "*\.git\*" -and
+    $_.FullName -notlike "*\.vscode\*"
+}
+
+# Upload each file
+foreach ($file in $files) {
+    $relativePath = $file.FullName.Replace($PWD.Path + "\", "").Replace("\", "/")
+    Upload-FTPFile $file.FullName "public_html/$relativePath"
+}
+
+# Install WinSCP if not already installed
+if (-not (Get-Command winscp.com -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing WinSCP..."
+    choco install winscp -y
+}
+
+# Create WinSCP script
+$winscp = @"
+option batch abort
+option confirm off
+open ftp://u127684p143111:`9h[Np*.K0_>`*=64}F@web0151.zxcs.nl/
+cd /public_html
+lcd "$PWD"
+put -resume -transfer=binary *
+put -resume -transfer=binary css/* css/
+put -resume -transfer=binary js/* js/
+put -resume -transfer=binary assets/* assets/
+exit
+"@
+
+# Save WinSCP script
+$winscp | Out-File -Encoding ASCII "winscp.txt"
+
+# Run WinSCP script
+winscp.com /script=winscp.txt
+
+# Clean up
+Remove-Item "winscp.txt" 

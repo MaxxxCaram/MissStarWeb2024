@@ -1,3 +1,5 @@
+/* cSpell:words zxcs Zilla */
+
 Host: web0151.zxcs.nl
 Username: u127684p143111
 Password: `9h[Np*.K0_>`*=64}F
