@@ -8,16 +8,17 @@ SSLCompression off
 # Enable rewrite engine
 RewriteEngine On
 
-# Force HTTPS with www
-RewriteCond %{HTTPS} off [OR]
+# Force HTTPS and add/remove www appropriately
 RewriteCond %{HTTP_HOST} !^www\. [NC]
-RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
-RewriteRule ^ https://www.%1%{REQUEST_URI} [L,R=301,NE]
+RewriteRule ^(.*)$ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# Rate limiting
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Less aggressive rate limiting
 <IfModule mod_ratelimit.c>
     SetOutputFilter RATE_LIMIT
-    SetEnv rate-limit 400
+    SetEnv rate-limit 1000
 </IfModule>
 
 # Enable Keep-Alive
@@ -79,8 +80,8 @@ ErrorDocument 429 /429.html
     php_value memory_limit 256M
 </IfModule>
 
-# Allow cross-origin for fonts
-<FilesMatch "\.(ttf|otf|eot|woff|woff2)$">
+# Allow cross-origin for fonts and images
+<FilesMatch "\.(ttf|otf|eot|woff|woff2|jpg|jpeg|png|gif|webp)$">
     Header set Access-Control-Allow-Origin "*"
 </FilesMatch>
 
@@ -89,7 +90,6 @@ ErrorDocument 429 /429.html
     Protocols h2 h2c http/1.1
 </IfModule>
 
-# Block bad bots with less aggressive rules
-RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
-RewriteCond %{HTTP_USER_AGENT} ^(java|wget).* [NC]
+# Block bad bots with minimal rules
+RewriteCond %{HTTP_USER_AGENT} ^$ [NC]
 RewriteRule .* - [F,L] 
