@@ -2,6 +2,7 @@
 # This script performs a comprehensive diagnosis of the website
 
 # Configuration
+# cSpell:ignore missstarinternational clickjacking
 $domain = "missstarinternational.com"
 $fullDomain = "https://www.$domain"
 $alternativeDomain = "https://$domain"
