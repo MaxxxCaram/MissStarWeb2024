@@ -1,17 +1,17 @@
-/* Importar fuentes */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;600;700&display=swap');
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Cinzel:wght@400;700&display=swap');
 
-/* Variables globales */
+/* Global variables */
 :root {
-    --gold: #D4AF37;
     --dark: #000000;
     --light: #ffffff;
+    --gold: #D4AF37;
     --gray: #333333;
     --hologram-primary: #00fff2;
     --hologram-secondary: #ff00ea;
 }
 
-/* Reset básico */
+/* Basic reset */
 * {
     margin: 0;
     padding: 0;
@@ -27,25 +27,16 @@ body {
     overflow-x: hidden;
 }
 
-/* Header y navegación */
-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-}
-
+/* Navigation styles */
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    transition: all 0.3s ease;
 }
 
 .logo img {
@@ -70,7 +61,7 @@ nav a:hover {
     color: var(--gold);
 }
 
-/* Selector de idioma */
+/* Language switcher */
 .language-switcher {
     display: flex;
     gap: 0.5rem;
@@ -91,46 +82,34 @@ nav a:hover {
     color: var(--dark);
 }
 
-/* Contenido principal */
-main {
-    padding-top: 80px;
-}
-
-/* Estilos de sección */
+/* Section styles */
 .section-fullscreen {
     min-height: 100vh;
     display: flex;
     align-items: center;
+    justify-content: center;
     padding: 4rem 0;
-    position: relative;
 }
 
-/* Efectos holográficos */
-@keyframes hologram {
-    from {
-        text-shadow: 
-            0 0 5px rgba(212, 175, 55, 0.8),
-            0 0 10px rgba(212, 175, 55, 0.5),
-            0 0 15px rgba(212, 175, 55, 0.3);
-    }
-    to {
-        text-shadow: 
-            0 0 10px rgba(212, 175, 55, 0.8),
-            0 0 20px rgba(212, 175, 55, 0.5),
-            0 0 30px rgba(212, 175, 55, 0.3);
-    }
-}
-
+/* Holographic effects */
 .hologram-text {
-    color: var(--gold);
-    text-shadow: 
-        0 0 5px rgba(212, 175, 55, 0.8),
-        0 0 10px rgba(212, 175, 55, 0.5),
-        0 0 15px rgba(212, 175, 55, 0.3);
-    animation: hologram 2s infinite alternate;
+    background: linear-gradient(
+        45deg,
+        var(--gold) 0%,
+        #ffffff 25%,
+        var(--gold) 50%,
+        #ffffff 75%,
+        var(--gold) 100%
+    );
+    background-size: 200% auto;
+    color: #000;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 5s linear infinite;
 }
 
-/* Títulos y textos */
+/* Titles and text */
 .title-font {
     font-family: 'Cinzel', serif;
 }
@@ -143,13 +122,14 @@ main {
     color: var(--gold);
 }
 
-/* Cards y contenedores */
+/* Containers */
 .content-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(212, 175, 55, 0.2);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(212, 175, 55, 0.3);
     border-radius: 15px;
     padding: 2rem;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin: 1rem;
+    transition: all 0.3s ease;
 }
 
 .content-card:hover {
@@ -677,4 +657,161 @@ header {
     0% { transform: translateX(-100%); }
     50% { transform: translateX(200%); }
     100% { transform: translateX(-100%); }
+}
+
+/* Bangkok Initiative Styles */
+.bangkok-initiative {
+    position: relative;
+    padding: 2rem;
+}
+
+.initiative-header {
+    position: relative;
+}
+
+.initiative-header .divider {
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 2rem auto;
+}
+
+.initiative-content {
+    position: relative;
+}
+
+.donation-stats {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.donation-stats i {
+    animation: pulse-heart 2s infinite;
+}
+
+.donation-stats ul {
+    text-align: left;
+}
+
+.legacy-section .content-card {
+    background: linear-gradient(45deg, rgba(0,0,0,0.8), rgba(212,175,55,0.1));
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.legacy-section .content-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 15px;
+    pointer-events: none;
+}
+
+@keyframes pulse-heart {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+        color: #ff4d4d;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Application Form Styles */
+.apply-now-container {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 20px;
+    padding: 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.application-form {
+    position: relative;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    letter-spacing: 1px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--light);
+    transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.submit-button {
+    width: 100%;
+    background: linear-gradient(45deg, #D4AF37, #FFD700);
+    color: var(--dark);
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+}
+
+.submit-button i {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .apply-now-container {
+        padding: 2rem;
+    }
 }

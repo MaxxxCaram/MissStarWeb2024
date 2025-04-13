@@ -145,21 +145,21 @@ class VideoController {
     }
 
     initializeVideo() {
-        // Solo crear AudioContext después de interacción del usuario
+        // Only create AudioContext after user interaction
         document.addEventListener('click', () => {
             if (!this.audioContext) {
                 try {
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.audioContext.resume();
                 } catch (e) {
-                    console.warn('AudioContext no soportado:', e);
+                    console.warn('AudioContext not supported:', e);
                 }
             }
         }, { once: true });
 
-        // Manejar reproducción de video
+        // Handle video playback
         if (this.video) {
-            // Verificar si el video existe antes de reproducir
+            // Check if video exists before playing
             const videoSource = this.video.querySelector('source');
             if (videoSource && videoSource.src) {
                 this.video.play().catch(() => {
@@ -174,11 +174,7 @@ class VideoController {
     handleVideoErrors() {
         if (!this.video) return;
 
-        this.video.addEventListener('error', () => {
-            this.handleVideoError();
-        });
-
-        // Verificar si el video falla en cargar
+        // Check if video fails to load
         const videoSource = this.video.querySelector('source');
         if (videoSource) {
             videoSource.addEventListener('error', () => {
@@ -188,7 +184,7 @@ class VideoController {
     }
 
     handleVideoError() {
-        // Ocultar el video y mostrar un fondo de respaldo
+        // Hide video and show backup background
         if (this.video) {
             this.video.style.display = 'none';
             const heroSection = document.querySelector('.hero-section');
@@ -217,28 +213,41 @@ class VideoController {
 
 // Initialize everything when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize performance observer
-    if ('PerformanceObserver' in window) {
-        try {
-            const observer = new PerformanceObserver((list) => {
-                list.getEntries().forEach(entry => {
-                    // Ignorar recursos de video y solo mostrar otros problemas de rendimiento
-                    if (entry.duration > 100 && entry.initiatorType !== 'video') {
-                        console.warn('Performance issue detected:', entry);
-                    }
-                });
-            });
-            
-            // Solo observar métricas de paint y resource
-            observer.observe({ entryTypes: ['paint', 'resource'] });
-        } catch (e) {
-            console.warn('PerformanceObserver error:', e);
-        }
-    }
-
+    // Initialize controllers
     new ScrollController();
     new LanguageController();
     new VideoController();
+    
+    // Initialize mobile menu
+    initializeMobileMenu();
+    
+    // Initialize smooth scroll
+    initializeSmoothScroll();
+    
+    // Initialize navbar animation
+    initializeNavbar();
+    
+    // Initialize custom cursor
+    initializeCustomCursor();
+    
+    // Initialize parallax effect
+    initializeParallax();
+    
+    // Initialize AOS
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100,
+            disable: 'mobile'
+        });
+    }
+    
+    // Initialize forms
+    initializeForms();
+    
+    // Initialize performance monitoring
+    initializePerformanceMonitoring();
 });
 
 // Smooth Scroll
@@ -392,15 +401,6 @@ document.addEventListener('mousemove', (e) => {
     });
 });
 
-// Initialize AOS (Animate on Scroll)
-if (typeof AOS !== 'undefined') {
-    AOS.init({
-        duration: 1000,
-        once: true,
-        offset: 100
-    });
-}
-
 // Custom Cursor
 const cursor = document.createElement('div');
 cursor.className = 'custom-cursor';
@@ -420,3 +420,298 @@ interactiveElements.forEach(element => {
     element.addEventListener('mouseenter', () => cursor.classList.add('hover'));
     element.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
 });
+
+// Application Form Handler
+const applicationForm = document.querySelector('.application-form');
+if (applicationForm) {
+    // Populate country select
+    const countrySelect = applicationForm.querySelector('#country');
+    const countries = [
+        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+        "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina",
+        "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic",
+        "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo",
+        "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
+        "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala",
+        "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+        "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
+        "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
+        "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco",
+        "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea",
+        "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines",
+        "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+        "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
+        "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan",
+        "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+        "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+        "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+    ];
+
+    countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countrySelect.appendChild(option);
+    });
+
+    // Form submission handler
+    applicationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(applicationForm);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            // Here you would add your API call to submit the form
+            console.log('Application data:', data);
+            
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-message';
+            successMessage.textContent = 'Thank you for your application! We will review it and contact you soon.';
+            applicationForm.appendChild(successMessage);
+            
+            // Reset form
+            applicationForm.reset();
+            
+            // Remove success message after 5 seconds
+            setTimeout(() => {
+                successMessage.remove();
+            }, 5000);
+            
+        } catch (error) {
+            console.error('Error submitting application:', error);
+            
+            // Show error message
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message';
+            errorMessage.textContent = 'An error occurred. Please try again later.';
+            applicationForm.appendChild(errorMessage);
+            
+            // Remove error message after 5 seconds
+            setTimeout(() => {
+                errorMessage.remove();
+            }, 5000);
+        }
+    });
+
+    // Word count for biography
+    const biographyTextarea = applicationForm.querySelector('#biography');
+    const maxWords = 200;
+
+    biographyTextarea.addEventListener('input', () => {
+        const words = biographyTextarea.value.trim().split(/\s+/).length;
+        if (words > maxWords) {
+            const text = biographyTextarea.value.trim().split(/\s+/).slice(0, maxWords).join(' ');
+            biographyTextarea.value = text;
+        }
+    });
+}
+
+function initializeMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const header = document.querySelector('header');
+
+    if (menuToggle && mobileMenu) {
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuToggle.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
+                menuToggle.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                document.body.classList.remove('menu-open');
+            }
+        });
+
+        // Prevent menu from closing when clicking inside
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+}
+
+function initializeSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Close mobile menu if open
+                const mobileMenu = document.querySelector('.mobile-menu');
+                const menuToggle = document.querySelector('.menu-toggle');
+                if (mobileMenu && mobileMenu.classList.contains('active')) {
+                    mobileMenu.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                }
+            }
+        });
+    });
+}
+
+function initializeNavbar() {
+    const header = document.querySelector('header');
+    let lastScroll = 0;
+    let scrollTimer = null;
+
+    window.addEventListener('scroll', () => {
+        if (scrollTimer !== null) {
+            clearTimeout(scrollTimer);
+        }
+
+        scrollTimer = setTimeout(() => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll <= 0) {
+                header.classList.remove('scroll-up');
+                header.classList.remove('scroll-down');
+                return;
+            }
+            
+            if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
+                header.classList.remove('scroll-up');
+                header.classList.add('scroll-down');
+            } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
+                header.classList.remove('scroll-down');
+                header.classList.add('scroll-up');
+            }
+            lastScroll = currentScroll;
+        }, 50);
+    });
+}
+
+function initializeCustomCursor() {
+    if (window.matchMedia('(pointer: fine)').matches) {
+        const cursor = document.createElement('div');
+        cursor.className = 'custom-cursor';
+        document.body.appendChild(cursor);
+
+        let cursorVisible = false;
+        let cursorEnlarged = false;
+
+        document.addEventListener('mousemove', (e) => {
+            if (!cursorVisible) {
+                cursor.style.opacity = 1;
+                cursorVisible = true;
+            }
+            cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        });
+
+        document.addEventListener('mousedown', () => {
+            cursor.classList.add('click');
+            cursorEnlarged = true;
+        });
+
+        document.addEventListener('mouseup', () => {
+            cursor.classList.remove('click');
+            cursorEnlarged = false;
+        });
+
+        document.querySelectorAll('a, button, .interactive').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                cursor.classList.add('hover');
+                cursorEnlarged = true;
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                cursor.classList.remove('hover');
+                cursorEnlarged = false;
+            });
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = 0;
+            cursorVisible = false;
+        });
+
+        document.addEventListener('mouseenter', () => {
+            cursor.style.opacity = 1;
+            cursorVisible = true;
+        });
+    }
+}
+
+function initializeParallax() {
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+        document.addEventListener('mousemove', (e) => {
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.parallax').forEach(element => {
+                    const speed = element.getAttribute('data-speed') || 0.1;
+                    const x = (window.innerWidth - e.pageX * speed) / 100;
+                    const y = (window.innerHeight - e.pageY * speed) / 100;
+                    
+                    element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                });
+            });
+        });
+    }
+}
+
+function initializeForms() {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showMessage(form, 'success', 'Thank you! We will contact you soon.');
+                form.reset();
+            } catch (error) {
+                console.error('Form submission error:', error);
+                showMessage(form, 'error', 'An error occurred. Please try again later.');
+            }
+        });
+    });
+}
+
+function showMessage(form, type, text) {
+    const message = document.createElement('div');
+    message.className = `${type}-message`;
+    message.textContent = text;
+    
+    // Remove any existing messages
+    form.querySelectorAll('.success-message, .error-message').forEach(msg => msg.remove());
+    
+    form.appendChild(message);
+    setTimeout(() => message.remove(), 5000);
+}
+
+function initializePerformanceMonitoring() {
+    if ('PerformanceObserver' in window) {
+        try {
+            const observer = new PerformanceObserver((list) => {
+                list.getEntries().forEach(entry => {
+                    if (entry.duration > 100 && entry.initiatorType !== 'video') {
+                        console.warn('Performance issue detected:', {
+                            name: entry.name,
+                            duration: entry.duration,
+                            type: entry.initiatorType
+                        });
+                    }
+                });
+            });
+            
+            observer.observe({ entryTypes: ['resource', 'paint', 'largest-contentful-paint'] });
+        } catch (e) {
+            console.warn('PerformanceObserver error:', e);
+        }
+    }
+}

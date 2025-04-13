@@ -1,0 +1,13 @@
+Host: web0151.zxcs.nl
+Username: u127684p143111
+Password: `9h[Np*.K0_>`*=64}F
+Protocol: FTP
+Port: 21
+
+Steps:
+1. Open FileZilla
+2. Go to File -> Site Manager
+3. Create New Site -> MissStar
+4. Enter connection details
+5. Click Connect
+6. Upload all files to public_html/ directory 

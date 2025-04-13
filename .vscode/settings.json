@@ -14,5 +14,16 @@
     },
     "tailwindCSS.experimental.classRegex": [
         ["@apply\\s+([^;}]+)", "[\"'`]([^\"'`]+)[\"'`]"]
+    ],
+    "cSpell.words": [
+        "Álvarez",
+        "Burkina",
+        "Faso",
+        "Cabo",
+        "Rica",
+        "Eswatini",
+        "Kitts",
+        "Marino",
+        "Leste"
     ]
 } 

@@ -106,7 +106,7 @@
             pointer-events: none;
         }
 
-        /* Estilos para el header y navegación */
+        /* Styles for header and navigation */
         header {
             position: fixed;
             top: 0;
@@ -335,6 +335,58 @@
                             <img src="https://placehold.co/600x400/gold/black?text=Sponsors+Coming+Soon" alt="Sponsors" class="w-full h-auto">
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Apply Now Section -->
+        <section class="section-fullscreen bg-black relative overflow-hidden">
+            <div class="container mx-auto px-4 relative z-10">
+                <div class="apply-now-container">
+                    <h2 class="text-center">
+                        <span class="block hologram-text text-6xl mb-4">Apply Now</span>
+                    </h2>
+                    <p class="text-xl text-center mb-12">Applications are now open for Miss Star International 2024.</p>
+                    
+                    <form class="application-form max-w-3xl mx-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="form-group">
+                                <label for="fullName">FULL NAME</label>
+                                <input type="text" id="fullName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">EMAIL</label>
+                                <input type="email" id="email" class="form-input" required>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="form-group">
+                                <label for="country">COUNTRY</label>
+                                <select id="country" class="form-select" required>
+                                    <option value="">Select your country</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="age">AGE</label>
+                                <input type="number" id="age" class="form-input" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-8">
+                            <label for="biography">BIOGRAPHY (200 WORDS MAX)</label>
+                            <textarea id="biography" class="form-textarea" rows="6" maxlength="1200" required></textarea>
+                        </div>
+                        
+                        <div class="form-group mb-12">
+                            <label for="socialImpact">SOCIAL IMPACT PLATFORM</label>
+                            <textarea id="socialImpact" class="form-textarea" rows="4" placeholder="What cause would you champion as Miss Star International?" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-button">
+                            Submit Application <i class="fas fa-crown ml-2"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>
