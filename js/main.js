@@ -140,40 +140,63 @@ class VideoController {
         this.audioContext = null;
         if (this.video) {
             this.initializeVideo();
+            this.handleVideoErrors();
         }
     }
 
     initializeVideo() {
-        // Create AudioContext only after user interaction
-        const initAudio = () => {
+        // Solo crear AudioContext después de interacción del usuario
+        document.addEventListener('click', () => {
             if (!this.audioContext) {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            document.removeEventListener('click', initAudio);
-        };
-        document.addEventListener('click', initAudio);
-
-        // Ensure video plays automatically and handles mobile devices
-        this.video.play().catch(() => {
-            // Handle autoplay failure (common on mobile)
-            const playButton = this.createPlayButton();
-            document.querySelector('.hero-section').appendChild(playButton);
-        });
-
-        // Handle visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.video.pause();
-                if (this.audioContext) {
-                    this.audioContext.suspend();
-                }
-            } else {
-                this.video.play().catch(() => {});
-                if (this.audioContext) {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.audioContext.resume();
+                } catch (e) {
+                    console.warn('AudioContext no soportado:', e);
                 }
             }
+        }, { once: true });
+
+        // Manejar reproducción de video
+        if (this.video) {
+            // Verificar si el video existe antes de reproducir
+            const videoSource = this.video.querySelector('source');
+            if (videoSource && videoSource.src) {
+                this.video.play().catch(() => {
+                    this.handleVideoError();
+                });
+            } else {
+                this.handleVideoError();
+            }
+        }
+    }
+
+    handleVideoErrors() {
+        if (!this.video) return;
+
+        this.video.addEventListener('error', () => {
+            this.handleVideoError();
         });
+
+        // Verificar si el video falla en cargar
+        const videoSource = this.video.querySelector('source');
+        if (videoSource) {
+            videoSource.addEventListener('error', () => {
+                this.handleVideoError();
+            });
+        }
+    }
+
+    handleVideoError() {
+        // Ocultar el video y mostrar un fondo de respaldo
+        if (this.video) {
+            this.video.style.display = 'none';
+            const heroSection = document.querySelector('.hero-section');
+            if (heroSection) {
+                heroSection.style.background = 'linear-gradient(to bottom, #000000, #1a1a1a)';
+                heroSection.style.minHeight = '100vh';
+            }
+        }
     }
 
     createPlayButton() {
@@ -181,7 +204,11 @@ class VideoController {
         button.className = 'absolute z-20 btn-primary';
         button.innerHTML = '<i class="fas fa-play mr-2"></i>Play Video';
         button.addEventListener('click', () => {
-            this.video.play();
+            if (this.video) {
+                this.video.play().catch(() => {
+                    this.handleVideoError();
+                });
+            }
             button.remove();
         });
         return button;
@@ -194,22 +221,202 @@ document.addEventListener('DOMContentLoaded', () => {
     if ('PerformanceObserver' in window) {
         try {
             const observer = new PerformanceObserver((list) => {
-                for (const entry of list.getEntries()) {
-                    // Only log tasks that take more than 100ms
-                    if (entry.duration > 100) {
-                        console.warn('Long task detected:', entry);
+                list.getEntries().forEach(entry => {
+                    // Ignorar recursos de video y solo mostrar otros problemas de rendimiento
+                    if (entry.duration > 100 && entry.initiatorType !== 'video') {
+                        console.warn('Performance issue detected:', entry);
                     }
-                }
+                });
             });
             
-            // Observe only paint metrics
-            observer.observe({ entryTypes: ['paint'] });
+            // Solo observar métricas de paint y resource
+            observer.observe({ entryTypes: ['paint', 'resource'] });
         } catch (e) {
-            console.warn('PerformanceObserver not fully supported:', e);
+            console.warn('PerformanceObserver error:', e);
         }
     }
 
     new ScrollController();
     new LanguageController();
     new VideoController();
+});
+
+// Smooth Scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+
+// Navbar Animation
+const header = document.querySelector('header');
+let lastScroll = 0;
+
+window.addEventListener('scroll', () => {
+    const currentScroll = window.pageYOffset;
+    
+    if (currentScroll <= 0) {
+        header.classList.remove('scroll-up');
+        return;
+    }
+    
+    if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
+        header.classList.remove('scroll-up');
+        header.classList.add('scroll-down');
+    } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
+        header.classList.remove('scroll-down');
+        header.classList.add('scroll-up');
+    }
+    lastScroll = currentScroll;
+});
+
+// Language Switcher
+const languageButtons = document.querySelectorAll('.language-switcher button');
+const contentElements = document.querySelectorAll('[data-lang]');
+
+languageButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const lang = button.getAttribute('data-lang');
+        
+        // Update active button
+        languageButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        // Show/hide content based on language
+        contentElements.forEach(element => {
+            if (element.getAttribute('data-lang') === lang) {
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Intersection Observer for Animations
+const observerOptions = {
+    root: null,
+    threshold: 0.1,
+    rootMargin: '0px'
+};
+
+const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('animate');
+            observer.unobserve(entry.target);
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.animate-on-scroll').forEach(element => {
+    observer.observe(element);
+});
+
+// Form Validation and Submission
+const contactForm = document.querySelector('#contact-form');
+if (contactForm) {
+    contactForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(contactForm);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            // Add your form submission logic here
+            console.log('Form data:', data);
+            
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-message';
+            successMessage.textContent = 'Thank you for your interest! We will contact you soon.';
+            contactForm.appendChild(successMessage);
+            
+            // Reset form
+            contactForm.reset();
+            
+            // Remove success message after 5 seconds
+            setTimeout(() => {
+                successMessage.remove();
+            }, 5000);
+            
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            
+            // Show error message
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message';
+            errorMessage.textContent = 'An error occurred. Please try again later.';
+            contactForm.appendChild(errorMessage);
+            
+            // Remove error message after 5 seconds
+            setTimeout(() => {
+                errorMessage.remove();
+            }, 5000);
+        }
+    });
+}
+
+// Mobile Menu Toggle
+const menuToggle = document.querySelector('.menu-toggle');
+const mobileMenu = document.querySelector('.mobile-menu');
+
+if (menuToggle && mobileMenu) {
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.classList.toggle('menu-open');
+    });
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
+            menuToggle.classList.remove('active');
+            mobileMenu.classList.remove('active');
+            document.body.classList.remove('menu-open');
+        }
+    });
+}
+
+// Parallax Effect
+document.addEventListener('mousemove', (e) => {
+    document.querySelectorAll('.parallax').forEach(element => {
+        const speed = element.getAttribute('data-speed');
+        const x = (window.innerWidth - e.pageX * speed) / 100;
+        const y = (window.innerHeight - e.pageY * speed) / 100;
+        
+        element.style.transform = `translateX(${x}px) translateY(${y}px)`;
+    });
+});
+
+// Initialize AOS (Animate on Scroll)
+if (typeof AOS !== 'undefined') {
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 100
+    });
+}
+
+// Custom Cursor
+const cursor = document.createElement('div');
+cursor.className = 'custom-cursor';
+document.body.appendChild(cursor);
+
+document.addEventListener('mousemove', (e) => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+});
+
+document.addEventListener('mousedown', () => cursor.classList.add('click'));
+document.addEventListener('mouseup', () => cursor.classList.remove('click'));
+
+// Add hover effect to interactive elements
+const interactiveElements = document.querySelectorAll('a, button, .interactive');
+interactiveElements.forEach(element => {
+    element.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+    element.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
 });

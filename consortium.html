@@ -4,637 +4,169 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consortium - Miss Star International</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* General Styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000;
-            color: #fff;
-            margin: 0;
-            overflow-x: hidden;
-            padding-top: 100px;
-        }
-
-        /* Navigation Styles */
-        .nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 5px 20px;
-            z-index: 100;
-            background-color: rgba(0, 0, 0, 0.7);
-            height: auto;
-            min-height: 60px;
-        }
-
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .logo-container img {
-            width: 80px;
-            height: auto;
-        }
-
-        .nav-links {
-            display: flex;
-        }
-
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            margin-left: 20px;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #D4AF37;
-        }
-
-        /* Page Header Styles */
-        .page-header {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 220px 0 60px;
-            text-align: center;
-            background: linear-gradient(45deg, rgba(0, 0, 0, 0.9), rgba(212, 175, 55, 0.1));
-            background-size: cover;
-            background-position: center;
-            margin-top: -100px;
-        }
-
-        .page-title {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: #D4AF37;
-            font-family: 'Cinzel', serif;
-        }
-
-        .page-subtitle {
-            font-size: 1.5rem;
-            color: #fff;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* Content Section Styles */
-        .content-section {
-            padding: 80px 0;
-            margin-top: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .content-block {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 30px;
-            margin-bottom: 40px;
-            margin-top: 40px !important;
-        }
-
-        .content-block h2 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #D4AF37;
-        }
-
-        .content-block p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .content-block ul {
-            margin-bottom: 20px;
-        }
-
-        .content-block li {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            line-height: 1.6;
-        }
-
-        /* Franchise Grid Styles */
-        .franchise-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .franchise-card {
-            width: 300px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .franchise-card:hover {
-            transform: translateY(-10px);
-        }
-
-        .franchise-card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-        }
-
-        .director-profile {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .director-image {
-            width: 80px !important;
-            height: 80px !important;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #D4AF37;
-        }
-
-        .director-details {
-            flex: 1;
-        }
-
-        .franchise-info {
-            padding: 20px;
-        }
-
-        .franchise-info h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #D4AF37;
-        }
-
-        .franchise-info p {
-            font-size: 1rem;
-            margin-bottom: 15px;
-        }
-
-        .franchise-info .director {
-            font-style: italic;
-            color: #ccc;
-        }
-
-        .franchise-info .email {
-            font-size: 0.9rem;
-            color: #D4AF37;
-            margin-top: 5px;
-        }
-
-        .current-queen {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(212, 175, 55, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .queen-image {
-            width: 100px !important;
-            height: 100px !important;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #D4AF37;
-        }
-
-        .queen-details {
-            flex: 1;
-        }
-
-        .queen-title {
-            color: #D4AF37;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .queen-name {
-            color: #fff;
-            font-size: 1.1rem;
-        }
-
-        /* Call to Action Styles */
-        .cta-section {
-            background-color: rgba(212, 175, 55, 0.1);
-            padding: 60px 0;
-            text-align: center;
-        }
-
-        .cta-button {
-            display: inline-block;
-            padding: 15px 30px;
-            background-color: #D4AF37;
-            color: #000;
-            text-decoration: none;
-            font-size: 1.2rem;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-            margin-top: 20px;
-        }
-
-        .cta-button:hover {
-            background-color: #fff;
-            color: #000;
-        }
-
-        /* Footer Styles */
-        footer {
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 40px 0;
-            text-align: center;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .footer-links a {
-            color: #fff;
-            text-decoration: none;
-            margin: 0 15px;
-            transition: color 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: #D4AF37;
-        }
-
-        .copyright {
-            color: #D4AF37;
-            font-size: 0.9rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .page-title {
-                font-size: 2.5rem;
-            }
-
-            .page-subtitle {
-                font-size: 1.2rem;
-            }
-
-            .content-block h2 {
-                font-size: 1.8rem;
-            }
-
-            .franchise-card {
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .nav-links {
-                display: none;
-            }
-        }
-
-        .current-title-holder {
-            margin: 40px 0;
-            text-align: center;
-        }
-        
-        .title-holder-card {
-            display: inline-flex;
-            align-items: center;
-            background: linear-gradient(45deg, rgba(212, 175, 55, 0.1), rgba(255, 255, 255, 0.05));
-            border-radius: 15px;
-            padding: 20px;
-        }
-
-        .franchise-logo {
-            width: 300px !important;
-            height: 120px !important;
-            margin-bottom: 30px;
-            object-fit: contain;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Franchise Title Image Styles */
-        .franchise-title-image {
-            width: 100% !important;
-            height: auto !important;
-            background-color: #111;
-            padding: 15px;
-            object-fit: contain !important;
-            max-height: 180px !important;
-            margin-bottom: 30px;
-            display: block;
-        }
-
-        .franchise-card {
-            width: 400px;
-            text-align: center;
-            padding: 40px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            transition: transform 0.3s ease;
-        }
-
-        .franchise-info {
-            padding: 0;
-        }
-
-        .franchise-info h3 {
-            display: none;
-        }
-
-        .director-profile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 25px;
-            margin-top: 25px;
-        }
-
-        .director-image {
-            width: 300px !important;
-            height: 300px !important;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #D4AF37;
-            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
-        }
-
-        .director-details {
-            text-align: center;
-        }
-
-        .director {
-            font-size: 1.1rem;
-            color: #fff;
-            margin-bottom: 8px;
-        }
-
-        .email {
-            font-size: 0.9rem;
-            color: #D4AF37;
-        }
-
-        /* Asegurarse de que el contenido principal tenga suficiente espacio */
-        main {
-            padding-top: 50px !important;
-        }
-
-        .company-info {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .company-info h4 {
-            color: #D4AF37;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-        
-        .company-info p {
-            margin: 5px 0;
-            font-size: 0.9rem;
-        }
-        
-        .company-info a {
-            color: #fff;
-            text-decoration: none;
-        }
-        
-        .company-info a:hover {
-            color: #D4AF37;
-        }
-
-        .consortium-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .consortium-card {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-
-        .consortium-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .card-content {
-            padding: 1.5rem;
-        }
-
-        .card-content h3 {
-            color: #333;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .card-content p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .social-links a {
-            color: #333;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .social-links a:hover {
-            color: #D4AF37;
-        }
-
-        .consortium-intro {
-            text-align: center;
-            padding: 3rem 1rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .consortium-intro h1 {
-            color: #333;
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .consortium-intro p {
-            color: #666;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="nav">
-        <div class="nav-content">
-            <div class="logo-container">
-                <a href="index.html">
-                    <img src="assets/logo/logo-main.png" alt="Miss Star International Logo">
-                </a>
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="assets/logo/logo-main.png" alt="Miss Star International 2025">
             </div>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="company.html">The Company</a>
-                <a href="about.html">About Us</a>
-                <a href="consortium.html">Consortium</a>
-                <a href="empower.html">EmpowerTransNation</a>
-                <a href="dynasty.html">Dynasty Platform</a>
-                <a href="halloffame.html">Hall of Fame</a>
-                <a href="partners.html">Partners</a>
-                <a href="news.html">News</a>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="company.html">The Company</a></li>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="consortium.html">Consortium</a></li>
+                <li><a href="empower.html">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html">Dynasty Platform</a></li>
+                <li><a href="halloffame.html">Hall of Fame</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="news.html">News</a></li>
+            </ul>
+            <div class="language-switcher">
+                <button data-lang="es">ES</button>
+                <button data-lang="en" class="active">EN</button>
+            </div>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+        <div class="mobile-menu">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="company.html">The Company</a></li>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="consortium.html">Consortium</a></li>
+                <li><a href="empower.html">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html">Dynasty Platform</a></li>
+                <li><a href="halloffame.html">Hall of Fame</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="news.html">News</a></li>
+            </ul>
+            <div class="language-switcher">
+                <button data-lang="es">ES</button>
+                <button data-lang="en" class="active">EN</button>
             </div>
         </div>
-    </nav>
-
-    <!-- Page Header -->
-    <header class="page-header" style="position: relative; z-index: 1; margin-top: 0;">
-        <div style="padding-top: 100px;"></div> <!-- Espaciador adicional al inicio del encabezado -->
-        <h1 class="page-title" style="margin-top: 50px;">Our Consortium</h1>
-        <p class="page-subtitle">Meet our exceptional team of national directors who work tirelessly to discover and nurture talent across the globe. Each director brings unique expertise and passion to our mission of empowering transgender women through beauty, advocacy, and leadership.</p>
     </header>
 
-    <!-- Main Content -->
-    <main style="padding-top: 50px !important; position: relative; z-index: 1;">
-        <div style="margin-top: 50px;"></div> <!-- Espaciador adicional -->
-        <section class="consortium-intro">
-            <h1>Our Consortium</h1>
-            <p>Meet our exceptional team of national directors who work tirelessly to discover and nurture talent across the globe. Each director brings unique expertise and passion to our mission of empowering transgender women through beauty, advocacy, and leadership.</p>
+    <main>
+        <!-- Hero Section -->
+        <section class="section-fullscreen">
+            <div class="container mx-auto px-4 relative z-10 flex flex-col items-center justify-center min-h-screen">
+                <h1 class="welcome-text text-8xl md:text-[12rem] font-extrabold mb-16">
+                    <span class="block hologram-text">Miss Star</span>
+                    <span class="block hologram-text mt-8">Consortium</span>
+                </h1>
+                <p class="text-xl text-gray-200 max-w-4xl text-center">A revolutionary approach to empower transgender women worldwide through a collaborative platform that combines entertainment, empowerment, and opportunity.</p>
+            </div>
         </section>
 
-        <div class="consortium-grid">
-            <div class="consortium-card">
-                <img src="assets/directors/kayra.jpg" alt="Kayra - National Director" class="card-image">
-                <div class="card-content">
-                    <h3>Kayra</h3>
-                    <p>National Director - Thailand</p>
-                    <p>A pioneering force in Thailand's transgender community, Kayra brings over 15 years of experience in pageantry and advocacy. Her work has been instrumental in creating opportunities and visibility for Thai transgender women.</p>
-                    <div class="social-links">
-                        <a href="https://instagram.com/kayra" target="_blank">Instagram</a>
-                        <a href="https://facebook.com/kayra" target="_blank">Facebook</a>
+        <!-- Vision Section -->
+        <section class="section-fullscreen bg-black relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-black to-transparent opacity-90"></div>
+            <div class="container mx-auto px-4 relative z-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div class="content-card">
+                        <h2 class="text-4xl gold-text title-font mb-8">Our Vision</h2>
+                        <p class="text-xl mb-6">To transform Miss Star International into a global platform that truly empowers transgender women, delivers on its promises, and elevates its global standing.</p>
+                        <ul class="space-y-4">
+                            <li class="flex items-center"><i class="fas fa-star text-gold mr-4"></i>Restore Trust and Transparency</li>
+                            <li class="flex items-center"><i class="fas fa-star text-gold mr-4"></i>Empower National Directors</li>
+                            <li class="flex items-center"><i class="fas fa-star text-gold mr-4"></i>Elevate Contestant Experiences</li>
+                            <li class="flex items-center"><i class="fas fa-star text-gold mr-4"></i>Innovate the Pageant Format</li>
+                            <li class="flex items-center"><i class="fas fa-star text-gold mr-4"></i>Foster Global Collaboration</li>
+                        </ul>
+                    </div>
+                    <div class="content-card">
+                        <h2 class="text-4xl gold-text title-font mb-8">Legal Authority</h2>
+                        <p class="text-xl mb-6">Miss Star International operates under registered trademark No. 4.238.776, legally owned by Victoria Perla Alvarez Caram, filed with the Spanish Patent and Trademark Office.</p>
+                        <div class="mt-8">
+                            <a href="#contact" class="btn-primary">Join the Consortium</a>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="consortium-card">
-                <img src="assets/directors/hernandez.jpg" alt="Maria Hernández - National Director" class="card-image">
-                <div class="card-content">
-                    <h3>Maria Hernández</h3>
-                    <p>National Director - Mexico</p>
-                    <p>With a background in human rights activism and event management, Maria has transformed the Mexican pageant scene. Her focus on empowerment and education has created lasting impact in the community.</p>
-                    <div class="social-links">
-                        <a href="https://instagram.com/mariahernandez" target="_blank">Instagram</a>
-                        <a href="https://facebook.com/mariahernandez" target="_blank">Facebook</a>
+        <!-- Equity Structure -->
+        <section class="section-fullscreen bg-black relative overflow-hidden">
+            <div class="container mx-auto px-4 relative z-10">
+                <h2 class="text-5xl md:text-7xl text-center mb-16 gold-text title-font">Equity Structure</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="content-card">
+                        <h3 class="text-2xl gold-text title-font mb-4">Initial Participation</h3>
+                        <p>1-2% equity stake for National Directors joining at launch</p>
+                        <div class="mt-4 text-4xl gold-text">1-2%</div>
+                    </div>
+                    <div class="content-card">
+                        <h3 class="text-2xl gold-text title-font mb-4">Performance Incentives</h3>
+                        <ul class="space-y-2">
+                            <li>Market Expansion: +3%</li>
+                            <li>Media Partnerships: +2%</li>
+                            <li>Strategic Alliances: +3%</li>
+                            <li>Format Innovation: +1%</li>
+                        </ul>
+                    </div>
+                    <div class="content-card">
+                        <h3 class="text-2xl gold-text title-font mb-4">Vesting Period</h3>
+                        <p>3-year vesting schedule to ensure long-term commitment and stability</p>
+                        <div class="mt-4 text-4xl gold-text">3 Years</div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="consortium-card">
-                <img src="assets/directors/simoes.jpg" alt="Isabella Simoes - National Director" class="card-image">
-                <div class="card-content">
-                    <h3>Isabella Simoes</h3>
-                    <p>National Director - Brazil</p>
-                    <p>A former model and activist, Isabella has revolutionized Brazil's transgender pageant industry. Her innovative approach combines beauty with social impact initiatives.</p>
-                    <div class="social-links">
-                        <a href="https://instagram.com/isabellasimoes" target="_blank">Instagram</a>
-                        <a href="https://facebook.com/isabellasimoes" target="_blank">Facebook</a>
+        <!-- Reality Show Format -->
+        <section class="section-fullscreen bg-black relative overflow-hidden">
+            <div class="container mx-auto px-4 relative z-10">
+                <h2 class="text-5xl md:text-7xl text-center mb-16 gold-text title-font">Reality Show Innovation</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                    <div class="content-card">
+                        <h3 class="text-2xl gold-text title-font mb-4">Format Features</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Live contestant interactions</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Skill development challenges</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Fashion and media training</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Activism opportunities</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Global audience engagement</li>
+                        </ul>
+                    </div>
+                    <div class="content-card">
+                        <h3 class="text-2xl gold-text title-font mb-4">Support System</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>One-year mentorship program</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Career development opportunities</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Industry partnerships</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Media exposure</li>
+                            <li class="flex items-center"><i class="fas fa-check text-gold mr-4"></i>Professional networking</li>
+                        </ul>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="consortium-card">
-                <img src="assets/directors/ambrosio.jpg" alt="Sofia Ambrosio - National Director" class="card-image">
-                <div class="card-content">
-                    <h3>Sofia Ambrosio</h3>
-                    <p>National Director - Philippines</p>
-                    <p>A respected figure in Asian pageantry, Sofia has dedicated her career to elevating transgender representation in the Philippines and across Southeast Asia.</p>
-                    <div class="social-links">
-                        <a href="https://instagram.com/sofiaambrosio" target="_blank">Instagram</a>
-                        <a href="https://facebook.com/sofiaambrosio" target="_blank">Facebook</a>
+        <!-- Contact Section -->
+        <section id="contact" class="section-fullscreen bg-black relative overflow-hidden">
+            <div class="container mx-auto px-4 relative z-10">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h2 class="text-5xl md:text-7xl mb-8 gold-text title-font">Join the Consortium</h2>
+                    <p class="text-xl mb-8">Take the first step towards being part of this revolutionary platform in transgender representation and empowerment.</p>
+                    <div class="content-card inline-block">
+                        <h3 class="text-2xl gold-text title-font mb-4">Contact Information</h3>
+                        <p class="mb-2">Victoria Pearl Álvarez Caram</p>
+                        <p class="mb-2">CEO, Miss Star International</p>
+                        <p class="mb-2"><a href="mailto:ceo@missstarinternational.com" class="text-gold hover:underline">ceo@missstarinternational.com</a></p>
+                        <p><a href="tel:+31647026348" class="text-gold hover:underline">+31 647 026 348</a></p>
                     </div>
                 </div>
-            </div>
-
-            <div class="consortium-card">
-                <img src="assets/directors/validor.jpg" alt="Rubi Validor - National Director" class="card-image">
-                <div class="card-content">
-                    <h3>Rubi Validor</h3>
-                    <p>National Director - Spain</p>
-                    <p>With extensive experience in fashion and entertainment, Rubi has established Spain as a key player in international transgender pageantry.</p>
-                    <div class="social-links">
-                        <a href="https://instagram.com/rubivalidor" target="_blank">Instagram</a>
-                        <a href="https://facebook.com/rubivalidor" target="_blank">Facebook</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="consortium-card">
-                <img src="assets/directors/relayze.jpg" alt="Alexandra Relayze - National Director" class="card-image">
-                <div class="card-content">
-                    <h3>Alexandra Relayze</h3>
-                    <p>National Director - United States</p>
-                    <p>A champion for transgender rights and visibility, Alexandra has created groundbreaking platforms for American transgender women in pageantry.</p>
-                    <div class="social-links">
-                        <a href="https://instagram.com/alexandrarelayze" target="_blank">Instagram</a>
-                        <a href="https://facebook.com/alexandrarelayze" target="_blank">Facebook</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Call to Action -->
-        <section class="cta-section">
-            <div class="container">
-                <h2>Become a Franchise Holder</h2>
-                <p>Interested in joining our prestigious consortium? We are currently accepting applications for franchise opportunities in select territories.</p>
-                <a href="contact.html" class="cta-button">Apply Now</a>
             </div>
         </section>
     </main>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-content">
             <div class="company-info">

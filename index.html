@@ -13,6 +13,8 @@
         :root {
             --gold: #FFD700;
             --dark: #000000;
+            --hologram-primary: #00fff2;
+            --hologram-secondary: #ff00ea;
         }
         
         body {
@@ -25,6 +27,63 @@
             font-family: 'Cinzel', serif;
             letter-spacing: 2px;
         }
+
+        @keyframes hologramEffect {
+            0%, 100% {
+                text-shadow: 
+                    0 0 20px var(--hologram-primary),
+                    0 0 40px var(--hologram-primary),
+                    0 0 80px var(--hologram-primary),
+                    0 0 160px var(--hologram-primary);
+                color: #fff;
+            }
+            33% {
+                text-shadow: 
+                    0 0 20px var(--hologram-secondary),
+                    0 0 40px var(--hologram-secondary),
+                    0 0 80px var(--hologram-secondary),
+                    0 0 160px var(--hologram-secondary);
+                color: #fff;
+            }
+            66% {
+                text-shadow: 
+                    0 0 20px var(--gold),
+                    0 0 40px var(--gold),
+                    0 0 80px var(--gold),
+                    0 0 160px var(--gold);
+                color: var(--gold);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .hologram-text {
+            animation: hologramEffect 8s infinite;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 8px;
+            position: relative;
+            background: linear-gradient(45deg, var(--hologram-primary), var(--hologram-secondary), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 242, 0.5));
+            text-transform: uppercase;
+        }
+
+        .welcome-text {
+            line-height: 1.2;
+            font-weight: 700;
+        }
         
         .glow-text {
             text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
@@ -33,12 +92,127 @@
         .gold-text {
             color: var(--gold);
         }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 242, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 30% 70%, rgba(255, 0, 234, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Estilos para el header y navegación */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav ul li a:hover {
+            color: var(--gold);
+        }
+
+        nav .language-switcher {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        nav .language-switcher button {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            border-radius: 4px;
+        }
+
+        nav .language-switcher button.active {
+            background: var(--gold);
+            color: var(--dark);
+        }
+
+        nav .language-switcher button:hover {
+            background: var(--gold);
+            color: var(--dark);
+        }
+
+        @media (max-width: 1024px) {
+            nav ul {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="assets/logo/logo-main.png" alt="Miss Star International 2025">
+            </div>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="company.html">The Company</a></li>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="consortium.html">Consortium</a></li>
+                <li><a href="empower.html">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html">Dynasty Platform</a></li>
+                <li><a href="halloffame.html">Hall of Fame</a></li>
+                <li><a href="partners.html">Partners</a></li>
+                <li><a href="news.html">News</a></li>
+            </ul>
+            <div class="language-switcher">
+                <button data-lang="es">ES</button>
+                <button data-lang="en" class="active">EN</button>
+            </div>
+        </nav>
+    </header>
+
     <div class="scroll-indicator">
         <div class="scroll-dot active" data-section="hero"></div>
-        <div class="scroll-dot" data-section="home"></div>
         <div class="scroll-dot" data-section="pageant"></div>
         <div class="scroll-dot" data-section="contestants"></div>
         <div class="scroll-dot" data-section="events"></div>
@@ -47,39 +221,25 @@
 
     <div class="main-container">
         <!-- Hero Section with Logo -->
-        <section id="hero" class="hero-section">
-            <video autoplay muted loop playsinline class="hero-video">
-                <source src="assets/videos/hero-video.mp4" type="video/mp4">
-            </video>
-            <div class="hero-overlay"></div>
-            <div class="container mx-auto px-4 relative z-10">
-                <div class="flex flex-col items-center justify-center">
-                    <img src="assets/logo/logo-star.png" alt="Miss Star International" class="w-[600px] mb-20">
-                    <div class="text-center">
-                        <h2 class="text-6xl md:text-8xl font-light italic tracking-wider leading-relaxed">
-                            <span class="block text-white mb-8 glow-text">Fearlessly Feminine.</span>
-                            <span class="block title-gradient glow-text">Unapologetically Powerful</span>
-                        </h2>
-                    </div>
+        <section id="hero" class="hero-section min-h-screen bg-black relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-black to-transparent opacity-90"></div>
+            <div class="container mx-auto px-4 relative z-10 flex flex-col items-center justify-center min-h-screen">
+                <img src="assets/logo/logo-star.png" alt="Miss Star International" class="w-[600px] mb-20 animate-float">
+                <div class="text-center">
+                    <h1 class="welcome-text text-8xl md:text-[12rem] font-extrabold mb-16">
+                        <span class="block hologram-text">Welcome to</span>
+                        <span class="block hologram-text mt-8">Miss Star</span>
+                        <span class="block hologram-text mt-8">International</span>
+                    </h1>
+                    <h2 class="text-5xl md:text-7xl font-light italic tracking-wider leading-relaxed mt-16">
+                        <span class="block text-white mb-8 glow-text">Fearlessly Feminine.</span>
+                        <span class="block title-gradient glow-text">Unapologetically Powerful</span>
+                    </h2>
                 </div>
             </div>
             <div class="language-switcher flex space-x-4 absolute top-8 right-8 z-20">
                 <button data-lang="es" class="btn-secondary">ES</button>
                 <button data-lang="en" class="btn-primary">EN</button>
-            </div>
-        </section>
-
-        <!-- Home Section -->
-        <section id="home" class="section-fullscreen">
-            <div class="absolute inset-0 bg-stardust opacity-20"></div>
-            <div class="max-w-7xl mx-auto px-4 relative z-10">
-                <div class="text-center mb-12">
-                    <h2 class="section-title">Welcome to Miss Star International</h2>
-                    <div class="section-divider"></div>
-                    <div class="section-content">
-                        <p class="text-xl text-gray-200">Join us in celebrating the most prestigious international beauty pageant for transgender women. A platform that celebrates diversity, empowerment, and representation on a global stage.</p>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -172,7 +332,7 @@
                     </div>
                     <div class="relative">
                         <div class="card overflow-hidden shadow-2xl">
-                            <img src="assets/images/sponsors.jpg" alt="Sponsors" class="w-full h-auto">
+                            <img src="https://placehold.co/600x400/gold/black?text=Sponsors+Coming+Soon" alt="Sponsors" class="w-full h-auto">
                         </div>
                     </div>
                 </div>
