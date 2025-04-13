@@ -4,7 +4,7 @@
 # FTP Server Configuration
 $ftpServer = "web0151.zxcs.nl"
 $ftpUser = "u127684p143111"
-$ftpPass = $null # Will prompt for password securely
+$ftpPass = "C^F]TDaQ0h579taQ2oKI|(o"  # Contraseña preconfigurada
 $remotePath = "/domains/missstarinternational.com/public_html"
 
 # Local directories to upload
