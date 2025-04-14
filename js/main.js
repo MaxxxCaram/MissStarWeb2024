@@ -26,39 +26,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize language to English by default
-    let currentLanguage = 'en';
-
-    // Function to change language
-    function changeLanguage(lang) {
-        currentLanguage = lang;
-        
-        // Get all elements with translation attributes
-        const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
-        
-        // Change text of each element based on selected language
-        elements.forEach(el => {
-            if (lang === 'es' && el.hasAttribute('data-lang-es')) {
-                el.textContent = el.getAttribute('data-lang-es');
-            } else if (lang === 'en' && el.hasAttribute('data-lang-en')) {
-                el.textContent = el.getAttribute('data-lang-en');
-            }
+    // Initialize controllers
+    new ScrollController();
+    new VideoController();
+    
+    // Initialize mobile menu
+    initializeMobileMenu();
+    
+    // Initialize smooth scroll
+    initializeSmoothScroll();
+    
+    // Initialize navbar animation
+    initializeNavbar();
+    
+    // Initialize custom cursor
+    initializeCustomCursor();
+    
+    // Initialize parallax effect
+    initializeParallax();
+    
+    // Initialize AOS
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100,
+            disable: 'mobile'
         });
     }
-
-    // Add events to language buttons
-    const langButtons = document.querySelectorAll('.language-switcher button');
-    if (langButtons) {
-        langButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                changeLanguage(this.getAttribute('data-lang'));
-                
-                // Mark current button as active
-                langButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-    }
+    
+    // Initialize forms
+    initializeForms();
+    
+    // Initialize performance monitoring
+    initializePerformanceMonitoring();
+    
+    // Initialize language switcher
+    initializeLanguageSwitcher();
 });
 
 // Scroll and Animation Controller
@@ -103,33 +107,6 @@ class ScrollController {
                 }
             });
         });
-    }
-}
-
-// Language Controller
-class LanguageController {
-    constructor() {
-        this.currentLang = 'en';
-        this.initializeLanguageButtons();
-    }
-
-    initializeLanguageButtons() {
-        document.querySelectorAll('[data-lang]').forEach(button => {
-            button.addEventListener('click', () => this.switchLanguage(button.dataset.lang));
-        });
-    }
-
-    switchLanguage(lang) {
-        if (this.currentLang === lang) return;
-
-        document.querySelectorAll('[data-lang]').forEach(button => {
-            const isSelected = button.dataset.lang === lang;
-            button.classList.toggle('btn-primary', isSelected);
-            button.classList.toggle('btn-secondary', !isSelected);
-        });
-
-        this.currentLang = lang;
-        // Here we would trigger the translation logic
     }
 }
 
@@ -213,213 +190,370 @@ class VideoController {
 
 // Initialize everything when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize controllers
-    new ScrollController();
-    new LanguageController();
-    new VideoController();
-    
-    // Initialize mobile menu
-    initializeMobileMenu();
-    
-    // Initialize smooth scroll
-    initializeSmoothScroll();
-    
-    // Initialize navbar animation
-    initializeNavbar();
-    
-    // Initialize custom cursor
-    initializeCustomCursor();
-    
-    // Initialize parallax effect
-    initializeParallax();
-    
-    // Initialize AOS
-    if (typeof AOS !== 'undefined') {
-        AOS.init({
-            duration: 1000,
-            once: true,
-            offset: 100,
-            disable: 'mobile'
-        });
-    }
-    
-    // Initialize forms
-    initializeForms();
-    
-    // Initialize performance monitoring
-    initializePerformanceMonitoring();
+    // Initialize controllers handled in the main DOMContentLoaded event above
 });
 
 // Smooth Scroll
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
-    });
-});
-
-// Navbar Animation
-const header = document.querySelector('header');
-let lastScroll = 0;
-
-window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    
-    if (currentScroll <= 0) {
-        header.classList.remove('scroll-up');
-        return;
-    }
-    
-    if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
-        header.classList.remove('scroll-up');
-        header.classList.add('scroll-down');
-    } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
-        header.classList.remove('scroll-down');
-        header.classList.add('scroll-up');
-    }
-    lastScroll = currentScroll;
-});
-
-// Language Switcher
-const languageButtons = document.querySelectorAll('.language-switcher button');
-const contentElements = document.querySelectorAll('[data-lang]');
-
-languageButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const lang = button.getAttribute('data-lang');
-        
-        // Update active button
-        languageButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        
-        // Show/hide content based on language
-        contentElements.forEach(element => {
-            if (element.getAttribute('data-lang') === lang) {
-                element.style.display = 'block';
-            } else {
-                element.style.display = 'none';
+function initializeSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Close mobile menu if open
+                const mobileMenu = document.querySelector('.mobile-menu');
+                const menuToggle = document.querySelector('.menu-toggle');
+                if (mobileMenu && mobileMenu.classList.contains('active')) {
+                    mobileMenu.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                }
             }
         });
     });
-});
+}
 
-// Intersection Observer for Animations
-const observerOptions = {
-    root: null,
-    threshold: 0.1,
-    rootMargin: '0px'
-};
+// Navbar Animation
+function initializeNavbar() {
+    const header = document.querySelector('header');
+    let lastScroll = 0;
+    let scrollTimer = null;
 
-const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('animate');
-            observer.unobserve(entry.target);
+    window.addEventListener('scroll', () => {
+        if (scrollTimer !== null) {
+            clearTimeout(scrollTimer);
         }
-    });
-}, observerOptions);
 
-document.querySelectorAll('.animate-on-scroll').forEach(element => {
-    observer.observe(element);
-});
+        scrollTimer = setTimeout(() => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll <= 0) {
+                header.classList.remove('scroll-up');
+                header.classList.remove('scroll-down');
+                return;
+            }
+            
+            if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
+                header.classList.remove('scroll-up');
+                header.classList.add('scroll-down');
+            } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
+                header.classList.remove('scroll-down');
+                header.classList.add('scroll-up');
+            }
+            lastScroll = currentScroll;
+        }, 50);
+    });
+}
+
+// Updated Language Switcher Function
+function initializeLanguageSwitcher() {
+    // Get language buttons
+    const languageButtons = document.querySelectorAll('.language-switcher button');
+    if (!languageButtons.length) {
+        console.warn('Language switcher buttons not found');
+        return;
+    }
+    
+    // Get stored language or default to English
+    const savedLanguage = localStorage.getItem('missstar-language') || 'en';
+    
+    // Set initial language
+    setLanguage(savedLanguage);
+    
+    // Update UI to show active language
+    languageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        button.classList.toggle('active', buttonLang === savedLanguage);
+        
+        // Add click event listeners
+        button.addEventListener('click', function() {
+            const newLang = this.getAttribute('data-lang');
+            if (newLang) {
+                // Update active states
+                languageButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Set language
+                setLanguage(newLang);
+                
+                // Save preference
+                localStorage.setItem('missstar-language', newLang);
+            }
+        });
+    });
+}
 
 // Form Validation and Submission
-const contactForm = document.querySelector('#contact-form');
-if (contactForm) {
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(contactForm);
-        const data = Object.fromEntries(formData);
-        
-        try {
-            // Add your form submission logic here
-            console.log('Form data:', data);
+function initializeForms() {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Show success message
-            const successMessage = document.createElement('div');
-            successMessage.className = 'success-message';
-            successMessage.textContent = 'Thank you for your interest! We will contact you soon.';
-            contactForm.appendChild(successMessage);
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
             
-            // Reset form
-            contactForm.reset();
-            
-            // Remove success message after 5 seconds
-            setTimeout(() => {
-                successMessage.remove();
-            }, 5000);
-            
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            
-            // Show error message
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'error-message';
-            errorMessage.textContent = 'An error occurred. Please try again later.';
-            contactForm.appendChild(errorMessage);
-            
-            // Remove error message after 5 seconds
-            setTimeout(() => {
-                errorMessage.remove();
-            }, 5000);
-        }
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showMessage(form, 'success', 'Thank you! We will contact you soon.');
+                form.reset();
+            } catch (error) {
+                console.error('Form submission error:', error);
+                showMessage(form, 'error', 'An error occurred. Please try again later.');
+            }
+        });
     });
+}
+
+function showMessage(form, type, text) {
+    const message = document.createElement('div');
+    message.className = `${type}-message`;
+    message.textContent = text;
+    
+    // Remove any existing messages
+    form.querySelectorAll('.success-message, .error-message').forEach(msg => msg.remove());
+    
+    form.appendChild(message);
+    setTimeout(() => message.remove(), 5000);
 }
 
 // Mobile Menu Toggle
-const menuToggle = document.querySelector('.menu-toggle');
-const mobileMenu = document.querySelector('.mobile-menu');
+function initializeMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const header = document.querySelector('header');
 
-if (menuToggle && mobileMenu) {
-    menuToggle.addEventListener('click', () => {
-        menuToggle.classList.toggle('active');
-        mobileMenu.classList.toggle('active');
-        document.body.classList.toggle('menu-open');
-    });
-    
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
-            menuToggle.classList.remove('active');
-            mobileMenu.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        }
-    });
+    if (menuToggle && mobileMenu) {
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuToggle.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
+                menuToggle.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                document.body.classList.remove('menu-open');
+            }
+        });
+
+        // Prevent menu from closing when clicking inside
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
 }
 
 // Parallax Effect
-document.addEventListener('mousemove', (e) => {
-    document.querySelectorAll('.parallax').forEach(element => {
-        const speed = element.getAttribute('data-speed');
-        const x = (window.innerWidth - e.pageX * speed) / 100;
-        const y = (window.innerHeight - e.pageY * speed) / 100;
-        
-        element.style.transform = `translateX(${x}px) translateY(${y}px)`;
-    });
-});
+function initializeParallax() {
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+        document.addEventListener('mousemove', (e) => {
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.parallax').forEach(element => {
+                    const speed = element.getAttribute('data-speed') || 0.1;
+                    const x = (window.innerWidth - e.pageX * speed) / 100;
+                    const y = (window.innerHeight - e.pageY * speed) / 100;
+                    
+                    element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                });
+            });
+        });
+    }
+}
 
 // Custom Cursor
-const cursor = document.createElement('div');
-cursor.className = 'custom-cursor';
-document.body.appendChild(cursor);
+function initializeCustomCursor() {
+    if (window.matchMedia('(pointer: fine)').matches) {
+        const cursor = document.createElement('div');
+        cursor.className = 'custom-cursor';
+        document.body.appendChild(cursor);
 
-document.addEventListener('mousemove', (e) => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-});
+        let cursorVisible = false;
+        let cursorEnlarged = false;
 
-document.addEventListener('mousedown', () => cursor.classList.add('click'));
-document.addEventListener('mouseup', () => cursor.classList.remove('click'));
+        document.addEventListener('mousemove', (e) => {
+            if (!cursorVisible) {
+                cursor.style.opacity = 1;
+                cursorVisible = true;
+            }
+            cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        });
 
-// Add hover effect to interactive elements
-const interactiveElements = document.querySelectorAll('a, button, .interactive');
-interactiveElements.forEach(element => {
-    element.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-    element.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
-});
+        document.addEventListener('mousedown', () => {
+            cursor.classList.add('click');
+            cursorEnlarged = true;
+        });
+
+        document.addEventListener('mouseup', () => {
+            cursor.classList.remove('click');
+            cursorEnlarged = false;
+        });
+
+        document.querySelectorAll('a, button, .interactive').forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                cursor.classList.add('hover');
+                cursorEnlarged = true;
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                cursor.classList.remove('hover');
+                cursorEnlarged = false;
+            });
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = 0;
+            cursorVisible = false;
+        });
+
+        document.addEventListener('mouseenter', () => {
+            cursor.style.opacity = 1;
+            cursorVisible = true;
+        });
+    }
+}
+
+function initializePerformanceMonitoring() {
+    if ('PerformanceObserver' in window) {
+        try {
+            const observer = new PerformanceObserver((list) => {
+                list.getEntries().forEach(entry => {
+                    if (entry.duration > 100 && entry.initiatorType !== 'video') {
+                        console.warn('Performance issue detected:', {
+                            name: entry.name,
+                            duration: entry.duration,
+                            type: entry.initiatorType
+                        });
+                    }
+                });
+            });
+            
+            observer.observe({ entryTypes: ['resource', 'paint', 'largest-contentful-paint'] });
+        } catch (e) {
+            console.warn('PerformanceObserver error:', e);
+        }
+    }
+}
+
+// Main language functionality
+function setLanguage(lang) {
+    console.log('Setting language to:', lang);
+    
+    // Update all text elements with data-lang attributes
+    const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
+    elements.forEach(el => {
+        if (lang === 'es' && el.hasAttribute('data-lang-es')) {
+            el.textContent = el.getAttribute('data-lang-es');
+        } else if (lang === 'en' && el.hasAttribute('data-lang-en')) {
+            el.textContent = el.getAttribute('data-lang-en');
+        }
+    });
+    
+    // Handle content sections with data-lang attribute
+    const contentSections = document.querySelectorAll('[data-lang]');
+    contentSections.forEach(section => {
+        if (section.tagName !== 'BUTTON') { // Skip language switcher buttons
+            if (section.getAttribute('data-lang') === lang) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+    });
+    
+    // Handle form labels and placeholders if needed
+    translateFormElements(lang);
+    
+    // Handle page-specific translations
+    const pageName = getCurrentPage();
+    translatePageContent(pageName, lang);
+}
+
+function getCurrentPage() {
+    const path = window.location.pathname;
+    const filename = path.split('/').pop();
+    if (!filename || filename === '' || filename === 'index.html') {
+        return 'index';
+    }
+    return filename.replace('.html', '');
+}
+
+function translateFormElements(lang) {
+    // Translate form elements if needed
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        const labels = form.querySelectorAll('label');
+        labels.forEach(label => {
+            const key = label.getAttribute('data-i18n');
+            if (key && translations[lang] && translations[lang][key]) {
+                label.textContent = translations[lang][key];
+            }
+        });
+        
+        const inputs = form.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            const key = input.getAttribute('data-i18n-placeholder');
+            if (key && translations[lang] && translations[lang][key]) {
+                input.placeholder = translations[lang][key];
+            }
+        });
+    });
+}
+
+// Basic translations
+const translations = {
+    en: {
+        apply_now: "Apply Now",
+        full_name: "FULL NAME",
+        email: "EMAIL",
+        country: "COUNTRY",
+        age: "AGE",
+        biography: "BIOGRAPHY (200 WORDS MAX)",
+        social_impact: "SOCIAL IMPACT PLATFORM",
+        submit: "Submit Application"
+    },
+    es: {
+        apply_now: "Aplica Ahora",
+        full_name: "NOMBRE COMPLETO",
+        email: "CORREO ELECTRÓNICO",
+        country: "PAÍS",
+        age: "EDAD",
+        biography: "BIOGRAFÍA (MÁXIMO 200 PALABRAS)",
+        social_impact: "PLATAFORMA DE IMPACTO SOCIAL",
+        submit: "Enviar Solicitud"
+    }
+};
+
+// Page-specific translations function
+function translatePageContent(pageName, lang) {
+    console.log(`Translating ${pageName} page to ${lang}`);
+    
+    switch(pageName) {
+        case 'index':
+            translateIndexPage(translations[lang]);
+            break;
+        case 'company':
+            translateCompanyPage(translations[lang]);
+            break;
+        case 'about':
+            translateAboutPage(translations[lang]);
+            break;
+        case 'consortium':
+            translateConsortiumPage(translations[lang]);
+            break;
+        // Add other pages as needed
+    }
+}
 
 // Application Form Handler
 const applicationForm = document.querySelector('.application-form');
@@ -508,210 +642,23 @@ if (applicationForm) {
     });
 }
 
-function initializeMobileMenu() {
-    const menuToggle = document.querySelector('.menu-toggle');
-    const mobileMenu = document.querySelector('.mobile-menu');
-    const header = document.querySelector('header');
-
-    if (menuToggle && mobileMenu) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuToggle.classList.toggle('active');
-            mobileMenu.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
-                menuToggle.classList.remove('active');
-                mobileMenu.classList.remove('active');
-                document.body.classList.remove('menu-open');
-            }
-        });
-
-        // Prevent menu from closing when clicking inside
-        mobileMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
+// Page-specific translation functions
+function translateIndexPage(translations) {
+    if (!translations) return;
+    // Add index page specific translations here
 }
 
-function initializeSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-                
-                // Close mobile menu if open
-                const mobileMenu = document.querySelector('.mobile-menu');
-                const menuToggle = document.querySelector('.menu-toggle');
-                if (mobileMenu && mobileMenu.classList.contains('active')) {
-                    mobileMenu.classList.remove('active');
-                    menuToggle.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                }
-            }
-        });
-    });
+function translateCompanyPage(translations) {
+    if (!translations) return;
+    // Add company page specific translations here
 }
 
-function initializeNavbar() {
-    const header = document.querySelector('header');
-    let lastScroll = 0;
-    let scrollTimer = null;
-
-    window.addEventListener('scroll', () => {
-        if (scrollTimer !== null) {
-            clearTimeout(scrollTimer);
-        }
-
-        scrollTimer = setTimeout(() => {
-            const currentScroll = window.pageYOffset;
-            
-            if (currentScroll <= 0) {
-                header.classList.remove('scroll-up');
-                header.classList.remove('scroll-down');
-                return;
-            }
-            
-            if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
-                header.classList.remove('scroll-up');
-                header.classList.add('scroll-down');
-            } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
-                header.classList.remove('scroll-down');
-                header.classList.add('scroll-up');
-            }
-            lastScroll = currentScroll;
-        }, 50);
-    });
+function translateAboutPage(translations) {
+    if (!translations) return;
+    // Add about page specific translations here
 }
 
-function initializeCustomCursor() {
-    if (window.matchMedia('(pointer: fine)').matches) {
-        const cursor = document.createElement('div');
-        cursor.className = 'custom-cursor';
-        document.body.appendChild(cursor);
-
-        let cursorVisible = false;
-        let cursorEnlarged = false;
-
-        document.addEventListener('mousemove', (e) => {
-            if (!cursorVisible) {
-                cursor.style.opacity = 1;
-                cursorVisible = true;
-            }
-            cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-        });
-
-        document.addEventListener('mousedown', () => {
-            cursor.classList.add('click');
-            cursorEnlarged = true;
-        });
-
-        document.addEventListener('mouseup', () => {
-            cursor.classList.remove('click');
-            cursorEnlarged = false;
-        });
-
-        document.querySelectorAll('a, button, .interactive').forEach(element => {
-            element.addEventListener('mouseenter', () => {
-                cursor.classList.add('hover');
-                cursorEnlarged = true;
-            });
-            
-            element.addEventListener('mouseleave', () => {
-                cursor.classList.remove('hover');
-                cursorEnlarged = false;
-            });
-        });
-
-        document.addEventListener('mouseleave', () => {
-            cursor.style.opacity = 0;
-            cursorVisible = false;
-        });
-
-        document.addEventListener('mouseenter', () => {
-            cursor.style.opacity = 1;
-            cursorVisible = true;
-        });
-    }
-}
-
-function initializeParallax() {
-    if (!window.matchMedia('(max-width: 768px)').matches) {
-        document.addEventListener('mousemove', (e) => {
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.parallax').forEach(element => {
-                    const speed = element.getAttribute('data-speed') || 0.1;
-                    const x = (window.innerWidth - e.pageX * speed) / 100;
-                    const y = (window.innerHeight - e.pageY * speed) / 100;
-                    
-                    element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-                });
-            });
-        });
-    }
-}
-
-function initializeForms() {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                showMessage(form, 'success', 'Thank you! We will contact you soon.');
-                form.reset();
-            } catch (error) {
-                console.error('Form submission error:', error);
-                showMessage(form, 'error', 'An error occurred. Please try again later.');
-            }
-        });
-    });
-}
-
-function showMessage(form, type, text) {
-    const message = document.createElement('div');
-    message.className = `${type}-message`;
-    message.textContent = text;
-    
-    // Remove any existing messages
-    form.querySelectorAll('.success-message, .error-message').forEach(msg => msg.remove());
-    
-    form.appendChild(message);
-    setTimeout(() => message.remove(), 5000);
-}
-
-function initializePerformanceMonitoring() {
-    if ('PerformanceObserver' in window) {
-        try {
-            const observer = new PerformanceObserver((list) => {
-                list.getEntries().forEach(entry => {
-                    if (entry.duration > 100 && entry.initiatorType !== 'video') {
-                        console.warn('Performance issue detected:', {
-                            name: entry.name,
-                            duration: entry.duration,
-                            type: entry.initiatorType
-                        });
-                    }
-                });
-            });
-            
-            observer.observe({ entryTypes: ['resource', 'paint', 'largest-contentful-paint'] });
-        } catch (e) {
-            console.warn('PerformanceObserver error:', e);
-        }
-    }
+function translateConsortiumPage(translations) {
+    if (!translations) return;
+    // Add consortium page specific translations here
 }
