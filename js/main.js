@@ -30,7 +30,18 @@
                     'Navega a',
                     'GET',
                     'HTTP',
-                    'Bloqueado'
+                    'Bloqueado',
+                    // CSS Validation errors
+                    'W3C',
+                    'CSS Validator',
+                    'Invalid number',
+                    'vendor extension',
+                    'Parse Error',
+                    'Unrecognized at-rule',
+                    '-webkit-',
+                    'CSS variables',
+                    'is deprecated',
+                    'doesn\'t exist'
                 ];
                 
                 // Perform filtering check
