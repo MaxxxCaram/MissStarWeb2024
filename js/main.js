@@ -572,8 +572,8 @@ function setLanguage(lang) {
     const applyNowDescription = document.querySelector('.apply-now-container > p');
     if (applyNowDescription) {
         applyNowDescription.textContent = lang === 'es'
-            ? 'Las solicitudes ya están abiertas para Miss Star International 2024.'
-            : 'Applications are now open for Miss Star International 2024.';
+            ? 'Las solicitudes ya están abiertas para Miss Star International 2025.'
+            : 'Applications are now open for Miss Star International 2025.';
     }
 
     // Update form labels
@@ -941,7 +941,7 @@ function translateIndexPage(translations) {
     
     // Apply Now section
     const applyNowDescription = document.querySelector('.apply-now-container > p');
-    if (applyNowDescription) applyNowDescription.textContent = translations.applyNowDescription || "Applications are now open for Miss Star International 2024.";
+    if (applyNowDescription) applyNowDescription.textContent = translations.applyNowDescription || "Applications are now open for Miss Star International 2025.";
 }
 
 function translateCompanyPage(translations) {
