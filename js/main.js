@@ -387,23 +387,53 @@ function initializeLanguageSwitcher() {
     // Set initial language
     setLanguage(savedLanguage);
     
-    // Update UI to show active language (this is now handled in setLanguage)
+    // Update UI to show active language immediately
+    languageButtons.forEach(button => {
+        const buttonLang = button.getAttribute('data-lang');
+        button.classList.toggle('active', buttonLang === savedLanguage);
+        
+        // Add visual feedback (glow effect for active language)
+        if (buttonLang === savedLanguage) {
+            button.classList.add('language-active');
+        } else {
+            button.classList.remove('language-active');
+        }
+    });
     
-    // Add click event listeners
+    // Add click event listeners with improved visual feedback
     languageButtons.forEach(button => {
         button.addEventListener('click', function() {
             const newLang = this.getAttribute('data-lang');
             if (newLang) {
-                // Set language
-                setLanguage(newLang);
+                // Provide immediate visual feedback
+                languageButtons.forEach(btn => {
+                    btn.classList.remove('active', 'language-active');
+                });
+                this.classList.add('active', 'language-active');
                 
-                // Save preference
-                localStorage.setItem('missstar-language', newLang);
+                // Apply a subtle animation to show change is happening
+                document.body.classList.add('language-changing');
                 
-                console.log(`Language changed to ${newLang}`);
+                // Set language with slight delay for visual effect
+                setTimeout(() => {
+                    // Set language
+                    setLanguage(newLang);
+                    
+                    // Save preference
+                    localStorage.setItem('missstar-language', newLang);
+                    
+                    // Remove animation class
+                    document.body.classList.remove('language-changing');
+                    
+                    console.log(`Language changed to ${newLang}`);
+                }, 50);
             }
         });
     });
+    
+    // Add debugging to help identify any issues
+    console.log('Language switcher initialized with language:', savedLanguage);
+    console.log('Language buttons found:', languageButtons.length);
 }
 
 // Form Validation and Submission
@@ -700,7 +730,10 @@ function setLanguage(lang) {
     const pageName = getCurrentPage();
     translatePageContent(pageName, lang, translationsData);
     
-    // Special case for fixed text in the hero section
+    // Debug: output to console what page we're on and what translations we're using
+    console.log(`Current page: ${pageName}`, translationsData[pageName]?.[lang] ? 'Translations found' : 'No translations found');
+    
+    // Force translations for specific elements
     if (document.querySelector('.welcome-text')) {
         const welcomeToText = document.querySelector('.welcome-text .hologram-text:nth-child(1)');
         if (welcomeToText) {
@@ -891,6 +924,31 @@ function setLanguage(lang) {
                 '<a href="tel:+15056218615" class="text-star-gold hover:text-opacity-80">+1 (505) 621-8615</a>';
         }
     }
+    
+    // Force update on all navigation links
+    const navigationLinks = document.querySelectorAll('nav a');
+    navigationLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === 'index.html' || href === './index.html' || href === '/' || href === './') {
+            link.textContent = lang === 'es' ? 'Inicio' : 'Home';
+        } else if (href === 'company.html' || href === './company.html') {
+            link.textContent = lang === 'es' ? 'La Compañía' : 'The Company';
+        } else if (href === 'about.html' || href === './about.html') {
+            link.textContent = lang === 'es' ? 'Sobre Nosotros' : 'About Us';
+        } else if (href === 'consortium.html' || href === './consortium.html') {
+            link.textContent = lang === 'es' ? 'Consorcio' : 'Consortium';
+        } else if (href === 'empower.html' || href === './empower.html') {
+            link.textContent = lang === 'es' ? 'EmpowerTransNation' : 'EmpowerTransNation';
+        } else if (href === 'dynasty.html' || href === './dynasty.html') {
+            link.textContent = lang === 'es' ? 'Plataforma Dynasty' : 'Dynasty Platform';
+        } else if (href === 'halloffame.html' || href === './halloffame.html') {
+            link.textContent = lang === 'es' ? 'Salón de la Fama' : 'Hall of Fame';
+        } else if (href === 'partners.html' || href === './partners.html') {
+            link.textContent = lang === 'es' ? 'Colaboradores' : 'Partners';
+        } else if (href === 'news.html' || href === './news.html') {
+            link.textContent = lang === 'es' ? 'Noticias' : 'News';
+        }
+    });
 }
 
 // Add function to translate common elements
@@ -1237,27 +1295,168 @@ function translateConsortiumPage(translations) {
 
 // Basic translations as fallback
 const translations = {
-    en: {
-        apply_now: "Apply Now",
-        full_name: "FULL NAME",
-        email: "EMAIL",
-        country: "COUNTRY",
-        age: "AGE",
-        biography: "BIOGRAPHY (200 WORDS MAX)",
-        social_impact: "SOCIAL IMPACT PLATFORM",
-        submit: "Submit Application"
+    common: {
+        en: {
+            home: "Home",
+            company: "The Company",
+            aboutUs: "About Us",
+            consortium: "Consortium",
+            empowerTransNation: "EmpowerTransNation",
+            dynastyPlatform: "Dynasty Platform",
+            hallOfFame: "Hall of Fame",
+            partners: "Partners",
+            news: "News",
+            copyright: "© 2025 Miss Star International. All rights reserved.",
+            companyInfo: "Miss Star International",
+            phone: "Phone: +1 (505) 621-8615"
+        },
+        es: {
+            home: "Inicio",
+            company: "La Compañía",
+            aboutUs: "Sobre Nosotros",
+            consortium: "Consorcio",
+            empowerTransNation: "EmpowerTransNation",
+            dynastyPlatform: "Plataforma Dynasty",
+            hallOfFame: "Salón de la Fama",
+            partners: "Colaboradores",
+            news: "Noticias",
+            copyright: "© 2025 Miss Star International. Todos los derechos reservados.",
+            companyInfo: "Miss Star International",
+            phone: "Teléfono: +1 (505) 621-8615"
+        }
     },
-    es: {
-        apply_now: "Aplica Ahora",
-        full_name: "NOMBRE COMPLETO",
-        email: "CORREO ELECTRÓNICO",
-        country: "PAÍS",
-        age: "EDAD",
-        biography: "BIOGRAFÍA (MÁXIMO 200 PALABRAS)",
-        social_impact: "PLATAFORMA DE IMPACTO SOCIAL",
-        submit: "Enviar Solicitud"
+    index: {
+        en: {
+            welcomeTitle: "Welcome to",
+            heroDescription: "A global celebration of diversity, empowerment and beauty.",
+            pageantTitle: "The Pageant",
+            pageantDescription: "Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.",
+            learnMore: "Learn More",
+            contestantsTitle: "Contestants",
+            contestantsDescription: "Meet our amazing contestants who will represent their countries in this year's competition.",
+            meetQueens: "Meet the Queens",
+            eventsTitle: "Events",
+            eventsDescription: "Check out our calendar of events and activities throughout the pageant.",
+            viewCalendar: "View Calendar",
+            sponsorsTitle: "Sponsors",
+            sponsorsDescription: "Our official sponsors who make this event possible.",
+            ourPartners: "Our Partners",
+            applyNow: "Apply Now",
+            applyNowDescription: "Applications are now open for Miss Star International 2025.",
+            fullName: "FULL NAME",
+            email: "EMAIL",
+            country: "COUNTRY",
+            age: "AGE",
+            biography: "BIOGRAPHY (200 WORDS MAX)",
+            socialImpact: "SOCIAL IMPACT PLATFORM",
+            socialImpactPlaceholder: "What cause would you champion as Miss Star International?",
+            selectCountry: "Select your country",
+            submit: "Submit Application",
+            fearlessly: "Fearlessly Feminine.",
+            unapologetically: "Unapologetically Powerful"
+        },
+        es: {
+            welcomeTitle: "Bienvenido a",
+            heroDescription: "Una celebración global de diversidad, empoderamiento y belleza.",
+            pageantTitle: "El Concurso",
+            pageantDescription: "Experimenta el glamour y la elegancia de nuestro concurso de belleza internacional que celebra la diversidad y el empoderamiento.",
+            learnMore: "Más Información",
+            contestantsTitle: "Concursantes",
+            contestantsDescription: "Conoce a nuestras increíbles concursantes que representarán a sus países en la competencia de este año.",
+            meetQueens: "Conoce a las Reinas",
+            eventsTitle: "Eventos",
+            eventsDescription: "Consulta nuestro calendario de eventos y actividades durante todo el concurso.",
+            viewCalendar: "Ver Calendario",
+            sponsorsTitle: "Patrocinadores",
+            sponsorsDescription: "Nuestros patrocinadores oficiales que hacen posible este evento.",
+            ourPartners: "Nuestros Socios",
+            applyNow: "Aplica Ahora",
+            applyNowDescription: "Las solicitudes ya están abiertas para Miss Star International 2025.",
+            fullName: "NOMBRE COMPLETO",
+            email: "CORREO ELECTRÓNICO",
+            country: "PAÍS",
+            age: "EDAD",
+            biography: "BIOGRAFÍA (MÁXIMO 200 PALABRAS)",
+            socialImpact: "PLATAFORMA DE IMPACTO SOCIAL",
+            socialImpactPlaceholder: "¿Qué causa defenderías como Miss Star International?",
+            selectCountry: "Selecciona tu país",
+            submit: "Enviar Solicitud",
+            fearlessly: "Intrépidamente Femenina.",
+            unapologetically: "Decididamente Poderosa"
+        }
+    },
+    company: {
+        en: {
+            pageTitle: "The Company",
+            introText: "Miss Star International is a pioneering pageant organization dedicated to celebrating beauty, diversity, and empowerment.",
+            valuesTitle: "Our Values",
+            vision: "Vision",
+            mission: "Mission",
+            impact: "Impact"
+        },
+        es: {
+            pageTitle: "La Compañía",
+            introText: "Miss Star International es una organización pionera de certámenes dedicada a celebrar la belleza, la diversidad y el empoderamiento.",
+            valuesTitle: "Nuestros Valores",
+            vision: "Visión",
+            mission: "Misión",
+            impact: "Impacto"
+        }
+    },
+    about: {
+        en: {
+            pageTitle: "About Us",
+            introText: "Learn about the team and vision behind Miss Star International.",
+            founderTitle: "Our Founder",
+            teamTitle: "Our Team",
+            historyTitle: "Our History"
+        },
+        es: {
+            pageTitle: "Sobre Nosotros",
+            introText: "Conoce al equipo y la visión detrás de Miss Star International.",
+            founderTitle: "Nuestra Fundadora",
+            teamTitle: "Nuestro Equipo",
+            historyTitle: "Nuestra Historia"
+        }
+    },
+    consortium: {
+        en: {
+            pageTitle: "Miss Star Consortium",
+            introText: "A global network of partners and affiliates dedicated to advancing the mission of Miss Star International.",
+            visionTitle: "Our Vision",
+            partnersTitle: "Our Partners",
+            joinTitle: "Join the Consortium"
+        },
+        es: {
+            pageTitle: "Consorcio Miss Star",
+            introText: "Una red global de socios y afiliados dedicados a avanzar en la misión de Miss Star International.",
+            visionTitle: "Nuestra Visión",
+            partnersTitle: "Nuestros Socios",
+            joinTitle: "Únete al Consorcio"
+        }
+    },
+    empower: {
+        en: {
+            pageTitle: "EmpowerTransNation",
+            introText: "Our initiative to empower transgender communities worldwide.",
+            missionTitle: "Our Mission",
+            programsTitle: "Our Programs",
+            impactTitle: "Our Impact",
+            joinTitle: "Join the Movement"
+        },
+        es: {
+            pageTitle: "EmpowerTransNation",
+            introText: "Nuestra iniciativa para empoderar a las comunidades transgénero en todo el mundo.",
+            missionTitle: "Nuestra Misión",
+            programsTitle: "Nuestros Programas",
+            impactTitle: "Nuestro Impacto",
+            joinTitle: "Únete al Movimiento"
+        }
     }
 };
+
+// Ensure window.translations is available
+window.translations = translations;
 
 // Application Form Handler
 const applicationForm = document.querySelector('.application-form');
@@ -1270,19 +1469,19 @@ if (applicationForm) {
         "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic",
         "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo",
         "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
-        "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala",
-        "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
-        "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
-        "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
-        "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco",
-        "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea",
-        "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines",
-        "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
-        "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
-        "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan",
-        "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
-        "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
-        "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+        "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada",
+        "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+        "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon",
+        "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
+        "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+        "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia",
+        "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+        "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
+        "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia",
+        "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden",
+        "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia",
+        "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
+        "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
     ];
 
     countries.forEach(country => {
