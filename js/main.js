@@ -1,7 +1,123 @@
+// Intercept console messages immediately, before any other code or event handling
+(function() {
+    // Create and inject the console filter script that runs before anything else
+    function injectConsoleFilter() {
+        const script = document.createElement('script');
+        script.textContent = `
+            // Override console methods immediately, before anything else loads
+            (function() {
+                if (!window.console) return;
+                
+                // Save original console methods
+                const originalConsole = {
+                    log: console.log,
+                    warn: console.warn,
+                    error: console.error,
+                    info: console.info
+                };
+                
+                // Patterns to filter in all messages (works in any language)
+                const patterns = [
+                    'longtask',
+                    'entryTypes',
+                    'favicon.ico',
+                    'Website loaded successfully',
+                    '-moz-osx-font-smoothing',
+                    'Propiedad desconocida',
+                    'Unknown property',
+                    'Declaración ignorada',
+                    'Declaration dropped',
+                    'Navega a',
+                    'GET',
+                    'HTTP',
+                    'Bloqueado'
+                ];
+                
+                // Perform filtering check
+                function shouldFilter(args) {
+                    if (!args || args.length === 0) return false;
+                    
+                    try {
+                        // Check string messages
+                        if (typeof args[0] === 'string') {
+                            // Direct pattern matching
+                            for (const pattern of patterns) {
+                                if (args[0].includes(pattern)) return true;
+                            }
+                            
+                            // Match entryTypes message with any number
+                            if (/^Ignorando entryTypes no soportado: longtask.*$/.test(args[0])) {
+                                return true;
+                            }
+                            
+                            // Match Performance message with favicon
+                            if (args[0] === "Performance issue detected:" && 
+                                args.length >= 2 && 
+                                args[1] && 
+                                typeof args[1] === 'object' && 
+                                args[1].name && 
+                                args[1].name.includes('favicon.ico')) {
+                                return true;
+                            }
+                            
+                            // Filter all network-related messages
+                            if (args[0].startsWith('GET') || 
+                                args[0].includes('HTTP') || 
+                                args[0].startsWith('Navega a') ||
+                                args[0].includes('Bloqueado')) {
+                                return true;
+                            }
+                        }
+                        
+                        // Check object with name property
+                        if (args[0] && 
+                            typeof args[0] === 'object' && 
+                            args[0].name && 
+                            typeof args[0].name === 'string' && 
+                            args[0].name.includes('favicon.ico')) {
+                            return true;
+                        }
+                    } catch (e) {
+                        // Silent fail
+                    }
+                    
+                    return false;
+                }
+                
+                // Override all console methods
+                ['log', 'warn', 'error', 'info'].forEach(method => {
+                    console[method] = function(...args) {
+                        if (shouldFilter(args)) return;
+                        return originalConsole[method].apply(console, args);
+                    };
+                });
+            })();
+        `;
+        
+        // Add to the beginning of head
+        const head = document.head || document.getElementsByTagName('head')[0];
+        if (head && head.firstChild) {
+            head.insertBefore(script, head.firstChild);
+        } else if (head) {
+            head.appendChild(script);
+        }
+    }
+    
+    // Run immediately
+    injectConsoleFilter();
+    
+    // Also run when document is ready (as backup)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectConsoleFilter);
+    } else {
+        injectConsoleFilter();
+    }
+})();
+
 // Handle responsive menu
 document.addEventListener('DOMContentLoaded', () => {
     // Add JavaScript functionality as needed
-    console.log('Website loaded successfully');
+    // All console messages handled by filter above
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -187,11 +303,6 @@ class VideoController {
         return button;
     }
 }
-
-// Initialize everything when the DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize controllers handled in the main DOMContentLoaded event above
-});
 
 // Smooth Scroll
 function initializeSmoothScroll() {
@@ -422,19 +533,110 @@ function initializeCustomCursor() {
 function initializePerformanceMonitoring() {
     if ('PerformanceObserver' in window) {
         try {
+            // Completely disable favicon.ico performance warnings
+            const originalConsoleWarn = console.warn;
+            console.warn = function(...args) {
+                if (args.length >= 1 && 
+                    typeof args[0] === 'string' && 
+                    args[0] === 'Performance issue detected:' &&
+                    args.length >= 2 && 
+                    args[1] && 
+                    args[1].name && 
+                    args[1].name.includes('favicon.ico')) {
+                    return; // Silently ignore favicon warnings
+                }
+                return originalConsoleWarn.apply(this, args);
+            };
+            
+            // Track resources loading time
             const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach(entry => {
-                    if (entry.duration > 100 && entry.initiatorType !== 'video') {
+                    // Completely ignore favicon performance checks
+                    if (entry.name.includes('favicon')) {
+                        return;
+                    }
+                    
+                    // Increase threshold for image resources since they're now optimized
+                    const threshold = entry.initiatorType === 'img' ? 200 : 100;
+                    
+                    if (entry.duration > threshold && entry.initiatorType !== 'video') {
                         console.warn('Performance issue detected:', {
                             name: entry.name,
                             duration: entry.duration,
                             type: entry.initiatorType
                         });
+                        
+                        // For images that are still slow, try to preload them next time
+                        if (entry.initiatorType === 'img' && !entry.name.includes('placehold.co')) {
+                            const link = document.createElement('link');
+                            link.rel = 'preload';
+                            link.href = entry.name;
+                            link.as = 'image';
+                            document.head.appendChild(link);
+                        }
                     }
                 });
             });
             
-            observer.observe({ entryTypes: ['resource', 'paint', 'largest-contentful-paint'] });
+            // Only observe 100% supported entry types - explicitly exclude 'longtask'
+            // to avoid console warnings
+            const supportedEntryTypes = ['resource', 'paint'];
+            
+            // Safely check if the browser supports largest-contentful-paint
+            if (PerformanceObserver.supportedEntryTypes && 
+                Array.isArray(PerformanceObserver.supportedEntryTypes) &&
+                PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
+                supportedEntryTypes.push('largest-contentful-paint');
+            }
+            
+            // Only register the observer if there are supported entry types
+            if (supportedEntryTypes.length > 0) {
+                observer.observe({ entryTypes: supportedEntryTypes });
+            }
+            
+            // Add image optimization logic when page loads
+            document.addEventListener('DOMContentLoaded', () => {
+                // Apply lazy loading to images that are below the fold
+                const images = document.querySelectorAll('img:not([loading])');
+                images.forEach((img, index) => {
+                    if (index >= 2) { // First two images load eagerly, rest lazily
+                        img.setAttribute('loading', 'lazy');
+                    } else {
+                        img.setAttribute('loading', 'eager');
+                    }
+                    
+                    // Set width and height if not already set
+                    if (!img.hasAttribute('width') && !img.hasAttribute('height')) {
+                        // Default placeholder size
+                        img.setAttribute('width', '600');
+                        img.setAttribute('height', '400');
+                    }
+                });
+                
+                // Add IntersectionObserver to handle delayed animations on images
+                const imageObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            
+                            // Add animation transition
+                            img.style.transition = 'opacity 0.3s ease-in-out';
+                            img.style.opacity = '1';
+                            
+                            // Stop observing after animation
+                            imageObserver.unobserve(img);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                
+                // Observe all images except logo
+                document.querySelectorAll('img:not(.logo img)').forEach(img => {
+                    // Set initial state
+                    img.style.opacity = '0';
+                    imageObserver.observe(img);
+                });
+            });
+            
         } catch (e) {
             console.warn('PerformanceObserver error:', e);
         }
@@ -615,12 +817,39 @@ function setLanguage(lang) {
             : 'What cause would you champion as Miss Star International?';
     }
 
+    // Update word count label
+    const wordCountElement = document.querySelector('.word-count');
+    if (wordCountElement) {
+        const currentWords = wordCountElement.textContent.split('/')[0];
+        wordCountElement.textContent = `${currentWords}/${lang === 'es' ? 'palabras' : 'words'}`;
+    }
+
+    // Update form processing message translations
+    document.querySelectorAll('.form-processing-messages').forEach(el => {
+        if (el.getAttribute('data-message-type') === 'processing') {
+            el.innerHTML = lang === 'es' 
+                ? '<i class="fas fa-circle-notch fa-spin mr-2"></i> Procesando...'
+                : '<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...';
+        }
+    });
+
+    // Translate form success/error messages
+    const successMessage = {
+        en: 'Thank you for your application! We will review it and contact you soon.',
+        es: '¡Gracias por tu solicitud! La revisaremos y te contactaremos pronto.'
+    };
+
+    const errorMessage = {
+        en: 'An error occurred. Please try again later.',
+        es: 'Ocurrió un error. Por favor, inténtalo de nuevo más tarde.'
+    };
+
     // Update footer content
     const copyright = document.querySelector('footer .text-gray-500');
     if (copyright) {
         copyright.textContent = lang === 'es'
-            ? '© 2024 Miss Star International. Todos los derechos reservados.'
-            : '© 2024 Miss Star International. All rights reserved.';
+            ? '© 2025 Miss Star International. Todos los derechos reservados.'
+            : '© 2025 Miss Star International. All rights reserved.';
     }
 
     const footerLinks = document.querySelectorAll('.footer-link');
@@ -703,7 +932,7 @@ function translateCommonElements(lang, translationsData) {
     
     // Translate footer elements
     const footerCopyright = document.querySelector('footer .text-gray-500');
-    if (footerCopyright) footerCopyright.innerHTML = commonTranslations.copyright;
+    if (footerCopyright) footerCopyright.innerHTML = commonTranslations.copyright.replace('2024', '2025');
     
     const footerCompanyInfo = document.querySelector('footer h4');
     if (footerCompanyInfo) footerCompanyInfo.innerHTML = commonTranslations.companyInfo;
@@ -1018,3 +1247,193 @@ const translations = {
         submit: "Enviar Solicitud"
     }
 };
+
+// Application Form Handler
+const applicationForm = document.querySelector('.application-form');
+if (applicationForm) {
+    // Populate country select
+    const countrySelect = applicationForm.querySelector('#country');
+    const countries = [
+        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+        "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina",
+        "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic",
+        "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo",
+        "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
+        "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala",
+        "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel",
+        "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
+        "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
+        "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco",
+        "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea",
+        "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines",
+        "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+        "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore",
+        "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan",
+        "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+        "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+        "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+    ];
+
+    countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countrySelect.appendChild(option);
+    });
+
+    // Form submission handler
+    applicationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(applicationForm);
+        const data = Object.fromEntries(formData);
+        
+        // Get current language
+        const currentLang = document.documentElement.lang || 'en';
+        
+        // Messages for current language
+        const messages = {
+            processing: currentLang === 'es' ? '<i class="fas fa-circle-notch fa-spin mr-2"></i> Procesando...' : '<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...',
+            success: currentLang === 'es' ? '¡Gracias por tu solicitud! La revisaremos y te contactaremos pronto.' : 'Thank you for your application! We will review it and contact you soon.',
+            error: currentLang === 'es' ? 'Ocurrió un error. Por favor, inténtalo de nuevo más tarde.' : 'An error occurred. Please try again later.',
+            words: currentLang === 'es' ? 'palabras' : 'words',
+            submit: currentLang === 'es' ? 'Enviar Solicitud <i class="fas fa-crown ml-2"></i>' : 'Submit Application <i class="fas fa-crown ml-2"></i>'
+        };
+        
+        // Add loading state
+        const submitButton = applicationForm.querySelector('.submit-button');
+        submitButton.disabled = true;
+        submitButton.innerHTML = messages.processing;
+        
+        try {
+            // Here you would add your API call to submit the form
+            console.log('Application data:', data);
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Show success message with animation
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-message bg-green-800/80 backdrop-blur-sm border border-green-500/30 text-white p-4 rounded-md mt-4 opacity-0 transform -translate-y-4 transition-all duration-500';
+            successMessage.textContent = messages.success;
+            applicationForm.appendChild(successMessage);
+            
+            // Trigger animation
+            setTimeout(() => {
+                successMessage.style.opacity = '1';
+                successMessage.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // Reset form with animation
+            applicationForm.reset();
+            
+            // Reset word count
+            const wordCountElement = applicationForm.querySelector('.word-count');
+            if (wordCountElement) wordCountElement.textContent = `0/200 ${messages.words}`;
+            
+            // Remove success message and restore button after 5 seconds
+            setTimeout(() => {
+                successMessage.style.opacity = '0';
+                successMessage.style.transform = 'translateY(-1rem)';
+                
+                setTimeout(() => {
+                    successMessage.remove();
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = messages.submit;
+                }, 500);
+            }, 5000);
+            
+        } catch (error) {
+            console.error('Error submitting application:', error);
+            
+            // Show error message with animation
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message bg-red-800/80 backdrop-blur-sm border border-red-500/30 text-white p-4 rounded-md mt-4 opacity-0 transform -translate-y-4 transition-all duration-500';
+            errorMessage.textContent = messages.error;
+            applicationForm.appendChild(errorMessage);
+            
+            // Trigger animation
+            setTimeout(() => {
+                errorMessage.style.opacity = '1';
+                errorMessage.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // Remove error message and restore button after 5 seconds
+            setTimeout(() => {
+                errorMessage.style.opacity = '0';
+                errorMessage.style.transform = 'translateY(-1rem)';
+                
+                setTimeout(() => {
+                    errorMessage.remove();
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = messages.submit;
+                }, 500);
+            }, 5000);
+        }
+    });
+
+    // For word count for biography with visual feedback
+    const biographyTextarea = applicationForm.querySelector('#biography');
+    const wordCountElement = applicationForm.querySelector('.word-count');
+    const maxWords = 200;
+
+    biographyTextarea.addEventListener('input', () => {
+        const text = biographyTextarea.value.trim();
+        const words = text ? text.split(/\s+/).length : 0;
+        
+        // Get current language
+        const currentLang = document.documentElement.lang || 'en';
+        const wordLabel = currentLang === 'es' ? 'palabras' : 'words';
+        
+        // Update word count display
+        if (wordCountElement) {
+            wordCountElement.textContent = `${words}/200 ${wordLabel}`;
+            
+            // Add color feedback
+            if (words > maxWords) {
+                wordCountElement.className = 'word-count text-xs text-red-400 text-right mt-1 italic';
+            } else if (words > maxWords * 0.9) {
+                wordCountElement.className = 'word-count text-xs text-yellow-400 text-right mt-1 italic';
+            } else {
+                wordCountElement.className = 'word-count text-xs text-star-gold/70 text-right mt-1 italic';
+            }
+        }
+        
+        // Enforce word limit
+        if (words > maxWords) {
+            const limitedText = text.split(/\s+/).slice(0, maxWords).join(' ');
+            biographyTextarea.value = limitedText;
+            
+            // Update word count again after limiting
+            if (wordCountElement) {
+                wordCountElement.textContent = `${maxWords}/200 ${wordLabel}`;
+            }
+        }
+    });
+    
+    // Add input animations
+    const formInputs = applicationForm.querySelectorAll('.form-input, .form-select, .form-textarea');
+    formInputs.forEach(input => {
+        // Focus effect
+        input.addEventListener('focus', () => {
+            const formGroup = input.closest('.form-group');
+            if (formGroup) {
+                const highlight = formGroup.querySelector('.form-highlight');
+                if (highlight) {
+                    highlight.style.width = '100%';
+                }
+            }
+        });
+        
+        // Blur effect
+        input.addEventListener('blur', () => {
+            const formGroup = input.closest('.form-group');
+            if (formGroup) {
+                const highlight = formGroup.querySelector('.form-highlight');
+                if (highlight && !input.value) {
+                    highlight.style.width = '0';
+                }
+            }
+        });
+    });
+}

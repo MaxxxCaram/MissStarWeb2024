@@ -4,8 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Miss Star International</title>
+    
+    <!-- Performance optimization meta tags -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Miss Star International - The world's premier platform celebrating transgender beauty, talent, and advocacy">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="./css/output.css" as="style">
+    <link rel="preload" href="./js/main.js" as="script">
+    <link rel="preload" href="./js/translations.js" as="script">
+    <link rel="preload" href="./assets/logo/logo-main.png" as="image">
+    <link rel="preload" href="./assets/logo/logo-star.png" as="image">
+    
+    <!-- Favicon properly defined -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600;700&display=swap" crossorigin>
+    
+    <!-- Actual stylesheets and scripts -->
     <link href="./css/output.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load Font Awesome with noCors to avoid CSS validation errors -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="./js/translations.js" defer></script>
     <script src="./js/main.js" defer></script>
     <style>
@@ -22,11 +46,29 @@
             font-family: 'Montserrat', sans-serif;
             background-color: var(--dark);
             color: #f8f8f8;
+            /* Properly prefixed font-smoothing properties */
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         
         .title-font {
             font-family: 'Cinzel', serif;
             letter-spacing: 2px;
+        }
+
+        /* Uniform font-size for h1 */
+        h1 {
+            font-size: 2.5rem;
+            margin-block-start: 0.67em;
+            margin-block-end: 0.67em;
+            margin-inline-start: 0;
+            margin-inline-end: 0;
+        }
+
+        /* Responsive h1 for our specific design */
+        .welcome-text.text-8xl {
+            font-size: clamp(2.5rem, 8vw, 12rem);
+            line-height: 1.2;
         }
 
         @keyframes hologramEffect {
@@ -115,6 +157,7 @@
             right: 0;
             z-index: 1000;
             background: rgba(0, 0, 0, 0.8);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 215, 0, 0.1);
         }
@@ -186,13 +229,31 @@
                 display: none;
             }
         }
+        
+        /* Image optimization */
+        img {
+            max-width: 100%;
+            height: auto;
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: translateZ(0);
+            contain: paint;
+            display: block; /* Prevent extra space under images */
+        }
+        
+        /* Content visibility optimization */
+        section:not(:first-child) {
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 1000px;
+        }
     </style>
 </head>
 <body>
     <header>
         <nav>
             <div class="logo">
-                <img src="assets/logo/logo-main.png" alt="Miss Star International 2025">
+                <img src="assets/logo/logo-main.png" alt="Miss Star International 2025" width="50" height="50" loading="eager">
             </div>
             <ul>
                 <li><a href="index.html">Home</a></li>
@@ -225,7 +286,7 @@
         <section id="hero" class="hero-section min-h-screen bg-black relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-b from-black to-transparent opacity-90"></div>
             <div class="container mx-auto px-4 relative z-10 flex flex-col items-center justify-center min-h-screen">
-                <img src="assets/logo/logo-star.png" alt="Miss Star International" class="w-[600px] mb-20 animate-float">
+                <img src="assets/logo/logo-star.png" alt="Miss Star International" class="w-[600px] mb-20 animate-float" width="600" height="300" loading="eager" fetchpriority="high">
                 <div class="text-center">
                     <h1 class="welcome-text text-8xl md:text-[12rem] font-extrabold mb-16">
                         <span class="block hologram-text">Welcome to</span>
@@ -251,7 +312,7 @@
                 <div class="grid md:grid-cols-2 gap-12 items-center section-content">
                     <div class="relative">
                         <div class="rounded-3xl overflow-hidden shadow-2xl">
-                            <img src="assets/images/pageant.jpg" alt="The Pageant" class="w-full h-auto">
+                            <img src="assets/images/pageant.jpg" alt="The Pageant" class="w-full h-auto" width="600" height="400" loading="lazy">
                         </div>
                     </div>
                     <div>
@@ -281,7 +342,7 @@
                     </div>
                     <div class="relative">
                         <div class="card overflow-hidden shadow-2xl">
-                            <img src="assets/images/contestants.jpg" alt="Contestants" class="w-full h-auto">
+                            <img src="assets/images/contestants.jpg" alt="Contestants" class="w-full h-auto" width="600" height="400" loading="lazy">
                         </div>
                     </div>
                 </div>
@@ -299,7 +360,7 @@
                 <div class="grid md:grid-cols-2 gap-12 items-center section-content">
                     <div class="relative">
                         <div class="card overflow-hidden shadow-2xl">
-                            <img src="assets/images/events.jpg" alt="Events" class="w-full h-auto">
+                            <img src="assets/images/events.jpg" alt="Events" class="w-full h-auto" width="600" height="400" loading="lazy">
                         </div>
                     </div>
                     <div>
@@ -329,7 +390,7 @@
                     </div>
                     <div class="relative">
                         <div class="card overflow-hidden shadow-2xl">
-                            <img src="https://placehold.co/600x400/gold/black?text=Sponsors+Coming+Soon" alt="Sponsors" class="w-full h-auto">
+                            <img src="https://placehold.co/600x400/gold/black?text=Sponsors+Coming+Soon" alt="Sponsors" class="w-full h-auto" width="600" height="400" loading="lazy">
                         </div>
                     </div>
                 </div>
@@ -338,49 +399,60 @@
 
         <!-- Apply Now Section -->
         <section class="section-fullscreen bg-black relative overflow-hidden">
+            <div class="apply-now-bg absolute inset-0 z-0">
+                <div class="absolute inset-0 bg-gradient-to-b from-purple-900/70 to-black"></div>
+                <div class="absolute inset-0 bg-[url('assets/images/stars-bg.jpg')] bg-cover opacity-30 mix-blend-overlay"></div>
+            </div>
             <div class="container mx-auto px-4 relative z-10">
-                <div class="apply-now-container">
+                <div class="apply-now-container max-w-4xl mx-auto bg-black/60 backdrop-blur-md rounded-2xl p-8 border border-star-gold/20 shadow-[0_0_30px_rgba(255,215,0,0.2)]">
                     <h2 class="text-center">
                         <span class="block hologram-text text-6xl mb-4">Apply Now</span>
                     </h2>
-                    <p class="text-xl text-center mb-12">Applications are now open for Miss Star International 2024.</p>
+                    <p class="text-xl text-center mb-12">Applications are now open for Miss Star International 2025.</p>
                     
                     <form class="application-form max-w-3xl mx-auto">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div class="form-group">
-                                <label for="fullName">FULL NAME</label>
-                                <input type="text" id="fullName" class="form-input" required>
+                            <div class="form-group relative group">
+                                <label for="fullName" class="form-label">FULL NAME</label>
+                                <input type="text" id="fullName" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent" required>
+                                <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                             </div>
-                            <div class="form-group">
-                                <label for="email">EMAIL</label>
-                                <input type="email" id="email" class="form-input" required>
+                            <div class="form-group relative group">
+                                <label for="email" class="form-label">EMAIL</label>
+                                <input type="email" id="email" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent" required>
+                                <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                             </div>
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div class="form-group">
-                                <label for="country">COUNTRY</label>
-                                <select id="country" class="form-select" required>
+                            <div class="form-group relative group">
+                                <label for="country" class="form-label">COUNTRY</label>
+                                <select id="country" class="form-select peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent" required>
                                     <option value="">Select your country</option>
                                 </select>
+                                <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                             </div>
-                            <div class="form-group">
-                                <label for="age">AGE</label>
-                                <input type="number" id="age" class="form-input" required>
+                            <div class="form-group relative group">
+                                <label for="age" class="form-label">AGE</label>
+                                <input type="number" id="age" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent" required>
+                                <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                             </div>
                         </div>
                         
-                        <div class="form-group mb-8">
-                            <label for="biography">BIOGRAPHY (200 WORDS MAX)</label>
-                            <textarea id="biography" class="form-textarea" rows="6" maxlength="1200" required></textarea>
+                        <div class="form-group relative group mb-8">
+                            <label for="biography" class="form-label">BIOGRAPHY (200 WORDS MAX)</label>
+                            <textarea id="biography" class="form-textarea peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent resize-none" rows="6" maxlength="1200" required></textarea>
+                            <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                            <div class="word-count text-xs text-star-gold/70 text-right mt-1 italic">0/200 words</div>
                         </div>
                         
-                        <div class="form-group mb-12">
-                            <label for="socialImpact">SOCIAL IMPACT PLATFORM</label>
-                            <textarea id="socialImpact" class="form-textarea" rows="4" placeholder="What cause would you champion as Miss Star International?" required></textarea>
+                        <div class="form-group relative group mb-12">
+                            <label for="socialImpact" class="form-label">SOCIAL IMPACT PLATFORM</label>
+                            <textarea id="socialImpact" class="form-textarea peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent resize-none" rows="4" placeholder="What cause would you champion as Miss Star International?" required></textarea>
+                            <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                         </div>
                         
-                        <button type="submit" class="submit-button">
+                        <button type="submit" class="submit-button w-full bg-gradient-to-r from-star-gold to-star-gold/80 hover:from-star-gold/80 hover:to-star-gold text-black font-bold py-4 px-6 rounded-md transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] focus:outline-none focus:ring-2 focus:ring-star-gold focus:ring-opacity-50">
                             Submit Application <i class="fas fa-crown ml-2"></i>
                         </button>
                     </form>
@@ -408,7 +480,7 @@
                     <a href="news.html" class="footer-link">News</a>
                 </div>
                 <div class="text-center text-gray-500">
-                    &copy; 2024 Miss Star International. All rights reserved.
+                    &copy; 2025 Miss Star International. All rights reserved.
                 </div>
             </div>
         </footer>
