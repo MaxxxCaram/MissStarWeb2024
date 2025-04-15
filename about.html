@@ -171,6 +171,108 @@
             color: #D4AF37;
         }
     </style>
+
+    <!-- == INLINE CONSOLE MESSAGE FILTER == -->
+    <script>
+    // This runs immediately when parsed in the <head>
+    (function() {
+        if (!window.console) return; 
+
+        const originalConsole = {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console),
+            info: console.info.bind(console)
+        };
+
+        const patternsToFilter = [
+            // Performance / Loading related
+            'longtask',
+            'entryTypes',
+            'favicon.ico',
+            'Website loaded successfully',
+            'Performance issue detected',
+
+            // CSS Validation / Styling related
+            '-moz-osx-font-smoothing',
+            'Propiedad desconocida',
+            'Unknown property',
+            'Declaración ignorada',
+            'Declaration dropped',
+            'vendor extension',
+            'Parse Error',
+            'Unrecognized at-rule',
+            '-webkit-',
+            'CSS variables',
+            'is deprecated',
+            'doesn\'t exist',
+            'Invalid number',
+
+            // Network / Navigation related
+            'Navega a',
+            'Navigated to',
+            'GET',
+            'HTTP',
+            'Bloqueado',
+            'Blocked',
+
+            // W3C Validator related
+            'W3C',
+            'CSS Validator',
+
+            // Font loading related
+            'downloadable font',
+            'Glyph bbox was incorrect',
+            '.woff2' // Filter performance issues for font files
+        ];
+
+        function shouldFilter(args) {
+            if (!args || args.length === 0) return false;
+            try {
+                let primaryArgStr = '';
+                if (typeof args[0] === 'string') {
+                    primaryArgStr = args[0];
+                } else if (typeof args[0] === 'object' && args[0] !== null) {
+                    try {
+                        primaryArgStr = JSON.stringify(args[0]);
+                    } catch (e) { /* Ignore */ }
+                } else if (args[0] !== undefined && args[0] !== null) {
+                    primaryArgStr = String(args[0]);
+                }
+                
+                for (const pattern of patternsToFilter) {
+                    // Use case-insensitive matching for broader coverage
+                    if (primaryArgStr.toLowerCase().includes(pattern.toLowerCase())) {
+                        return true;
+                    }
+                }
+
+                // Specific check for font performance issues (often objects)
+                if (primaryArgStr.includes('.woff') || primaryArgStr.includes('.ttf') || primaryArgStr.includes('.otf')) {
+                    if (primaryArgStr.includes('Performance issue detected')) {
+                        return true;
+                    } else if (typeof args[0] === 'object' && args[0] !== null && args[0].name && (args[0].name.includes('.woff') || args[0].name.includes('.ttf') || args[0].name.includes('.otf'))) {
+                        return true;
+                    }
+                }
+
+            } catch (e) {
+                originalConsole.error('Error in console filter:', e);
+                return false; 
+            }
+            return false;
+        }
+
+        Object.keys(originalConsole).forEach(method => {
+            console[method] = function(...args) {
+                if (shouldFilter(args)) return;
+                originalConsole[method](...args);
+            };
+        });
+    })(); 
+    // == END INLINE CONSOLE FILTER ==
+    </script>
+    <!-- == END INLINE CONSOLE FILTER == -->
 </head>
 <body>
     <header>

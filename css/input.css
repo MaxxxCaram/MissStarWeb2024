@@ -9,6 +9,15 @@
     font-family: 'Montserrat', sans-serif;
     background-color: #000000;
     color: #ffffff;
+    -moz-osx-font-smoothing: auto;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 }
 
