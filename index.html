@@ -127,6 +127,33 @@
         Object.keys(originalConsole).forEach(method => {
             console[method] = function(...args) {
                 if (shouldFilter(args)) return;
+                
+                // Interceptor específico para problemas de rendimiento que son objetos
+                if (args.length > 0 && typeof args[0] === 'object' && args[0] !== null) {
+                    try {
+                        // Verificar si es un objeto de rendimiento
+                        if (args[0].entryType || 
+                            args[0].duration || 
+                            args[0].startTime || 
+                            args[0].detail && args[0].detail.entryType) {
+                            // Es un objeto de rendimiento, filtrarlo
+                            return;
+                        }
+                        
+                        // Verificar serialization para casos no obvios
+                        const objStr = JSON.stringify(args[0]);
+                        if (objStr.includes('Performance') || 
+                            objStr.includes('performance') || 
+                            objStr.includes('longtask') || 
+                            objStr.includes('duration') ||
+                            objStr.includes('entryType')) {
+                            return;
+                        }
+                    } catch (e) {
+                        // Ignorar errores de serialization
+                    }
+                }
+                
                 originalConsole[method](...args);
             };
         });
@@ -372,6 +399,12 @@
                 <li><a href="halloffame.html">Hall of Fame</a></li>
                 <li><a href="partners.html">Partners</a></li>
                 <li><a href="news.html">News</a></li>
+                <!-- Language Switcher -->
+                <li class="language-switcher ml-4 flex items-center space-x-2">
+                    <button class="lang-btn px-2 py-1 rounded-md text-sm hover:text-star-gold" data-lang="en">EN</button>
+                    <span class="text-gray-500">|</span>
+                    <button class="lang-btn px-2 py-1 rounded-md text-sm hover:text-star-gold" data-lang="es">ES</button>
+                </li>
             </ul>
         </nav>
     </header>

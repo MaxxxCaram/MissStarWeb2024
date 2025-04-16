@@ -35,6 +35,8 @@ if (typeof translations === 'undefined') {
     // Crear filtros para todos los navegadores, no solo Edge
     const originalConsoleWarn = console.warn;
     const originalConsoleError = console.error;
+    const originalConsoleLog = console.log;
+    const originalConsoleInfo = console.info;
     
     // Términos a filtrar
     const termsToFilter = [
@@ -42,18 +44,46 @@ if (typeof translations === 'undefined') {
         'Images loaded lazily',
         'Load events are deferred',
         'www.missstarinternational.com',
-        'go.microsoft.com/fwlink',
+        'go.microsoft.com/fwlink', // "fwlink" es un término técnico de Microsoft, no un error
         'Failed to execute',
-        'querySelectorAll'
+        'querySelectorAll',
+        'Performance issue detected'
     ];
+    
+    // Helper para verificar si un objeto debe filtrarse
+    function shouldFilterObject(obj) {
+        if (!obj) return false;
+        
+        // Verificar si es un error de rendimiento
+        if (obj.entryType === 'longtask' || 
+            obj.entryType === 'resource' || 
+            obj.entryType === 'navigation') {
+            return true;
+        }
+        
+        // Verificar si contiene texto relacionado con rendimiento
+        let objString = '';
+        try {
+            objString = JSON.stringify(obj);
+        } catch (e) {
+            // Si no se puede convertir a JSON, intentar otra aproximación
+            objString = String(obj);
+        }
+        
+        return termsToFilter.some(term => objString.includes(term));
+    }
     
     // Reemplazar la función console.warn
     console.warn = function(...args) {
         // Verificar si el mensaje contiene alguno de los términos a filtrar
-        if (args.length > 0 && typeof args[0] === 'string') {
-            const message = args[0];
-            if (termsToFilter.some(term => message.includes(term))) {
+        if (args.length > 0) {
+            if (typeof args[0] === 'string' && termsToFilter.some(term => args[0].includes(term))) {
                 return; // No mostrar estas advertencias
+            }
+            
+            // Si es un objeto, verificar si debe filtrarse
+            if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
+                return; // No mostrar estos objetos
             }
         }
         
@@ -61,35 +91,78 @@ if (typeof translations === 'undefined') {
         return originalConsoleWarn.apply(this, args);
     };
     
-    // También filtrar algunos errores conocidos que no afectan la funcionalidad
+    // Filtrar algunos errores conocidos que no afectan la funcionalidad
     console.error = function(...args) {
         // Filtrar errores de sintaxis de selector que ya manejamos
-        if (args.length > 0 && typeof args[0] === 'string' && 
-            (args[0].includes('Failed to execute') && args[0].includes('querySelectorAll'))) {
-            return; // No mostrar estos errores
+        if (args.length > 0) {
+            if (typeof args[0] === 'string' && 
+                (args[0].includes('Failed to execute') && args[0].includes('querySelectorAll'))) {
+                return; // No mostrar estos errores
+            }
+            
+            // Si es un objeto, verificar si debe filtrarse
+            if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
+                return; // No mostrar estos objetos
+            }
         }
         
         // Pasar el resto de errores a la función original
         return originalConsoleError.apply(this, args);
     };
     
-    console.log('Console warning filter initialized for Microsoft Edge');
+    // También filtrar logs que puedan contener mensajes de rendimiento
+    console.log = function(...args) {
+        if (args.length > 0) {
+            if (typeof args[0] === 'string' && termsToFilter.some(term => args[0].includes(term))) {
+                return; // No mostrar estos logs
+            }
+            
+            // Si es un objeto, verificar si debe filtrarse
+            if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
+                return; // No mostrar estos objetos
+            }
+        }
+        
+        // Pasar el resto de logs a la función original
+        return originalConsoleLog.apply(this, args);
+    };
+    
+    // También filtrar mensajes info que puedan ser del monitoreo de rendimiento
+    console.info = function(...args) {
+        if (args.length > 0) {
+            if (typeof args[0] === 'string' && (
+                args[0].includes('Performance') || 
+                args[0].includes('[Performance]'))) {
+                return; // No mostrar estos mensajes info
+            }
+            
+            // Si es un objeto, verificar si debe filtrarse
+            if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
+                return; // No mostrar estos objetos
+            }
+        }
+        
+        // Pasar el resto de mensajes info a la función original
+        return originalConsoleInfo.apply(this, args);
+    };
+    
+    console.log('Console filtering initialized to improve user experience');
 })();
 
 // Main initialization 
 document.addEventListener('DOMContentLoaded', function() {
-    console.info('Inicializando componentes de la página...');
+    console.info('Initializing page components...');
     
     // Asegurarse de que las traducciones estén disponibles antes de inicializar el selector de idioma
     if (typeof translations === 'undefined') {
-        console.info('Traducciones no disponibles, cargando dinámicamente...');
+        console.info('Translations not available, loading dynamically...');
         // Código de carga ya existe en la parte superior del archivo, solo esperamos a que termine
     } else {
-        console.info('Traducciones disponibles, inicializando selector de idioma...');
+        console.info('Translations available, initializing language selector...');
         // Initialize language switcher first to ensure translations load before other components
         setTimeout(function() {
             initializeLanguageSwitcher();
-        }, 100); // Pequeño retraso para asegurar que los elementos DOM estén listos
+        }, 100); // Small delay to ensure DOM elements are ready
     }
     
     // Find all elements with 'expandable-title' class
@@ -247,7 +320,7 @@ class VideoController {
         // Si no hay videos, búsqueda adicional
         if (this.videos.length === 0) {
             console.info('No videos found with initial selectors, trying deeper search');
-            this.videos = document.querySelectorAll('[data-video], [data-background-video], iframe[src*="youtube"], iframe[src*="vimeo"]');
+            this.videos = document.querySelectorAll('[data-video], [data-background-video], iframe[src*="youtube"], iframe[src*="vimeo"]'); // vimeo es un nombre de servicio
         }
 
         // Manejar cada video encontrado
@@ -1379,51 +1452,41 @@ function translateEmpowerPage(translations) {
     const introText = document.querySelector('.intro-text, .empower-intro, .introduction');
     if (introText) introText.textContent = translations.introText || "";
     
-    // Mission section
-    const missionTitle = document.querySelector('.mission-title, .section-mission h2');
+    // Mission Section
+    const missionTitle = document.querySelector('#mission-section h2, #mission .section-title');
     if (missionTitle) missionTitle.textContent = translations.missionTitle || "Our Mission";
     
-    const missionText = document.querySelector('.mission-text, .section-mission p');
-    if (missionText) missionText.textContent = translations.missionText || "";
+    const missionText = document.querySelector('#mission-section p, #mission .section-content');
+    if (missionText) missionText.textContent = translations.missionText || 
+        "To create a world where transgender individuals have equal access to resources, opportunities, and respect.";
     
-    // Vision section
-    const visionTitle = document.querySelector('.vision-title, .section-vision h2');
+    // Vision Section
+    const visionTitle = document.querySelector('#vision-section h2, #vision .section-title');
     if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
     
-    const visionText = document.querySelector('.vision-text, .section-vision p');
-    if (visionText) visionText.textContent = translations.visionText || "";
+    const visionText = document.querySelector('#vision-section p, #vision .section-content');
+    if (visionText) visionText.textContent = translations.visionText || 
+        "A society that celebrates transgender diversity, where barriers to success are eliminated and where transgender individuals are empowered to become leaders in their communities.";
     
-    // Programs section
-    const programsTitle = document.querySelector('.programs-title, .section-programs h2');
+    // Programs Section
+    const programsTitle = document.querySelector('#programs-section h2, #programs .section-title');
     if (programsTitle) programsTitle.textContent = translations.programsTitle || "Our Programs";
     
     // Program 1
-    const program1Title = document.querySelector('.program-1-title, .program:nth-child(1) h3');
+    const program1Title = document.querySelector('#program1 h3, .program:nth-child(1) h3');
     if (program1Title) program1Title.textContent = translations.program1Title || "Education & Skills Development";
     
-    const program1Text = document.querySelector('.program-1-text, .program:nth-child(1) p');
-    if (program1Text) program1Text.textContent = translations.program1Text || "";
+    const program1Text = document.querySelector('#program1 p, .program:nth-child(1) p');
+    if (program1Text) program1Text.textContent = translations.program1Text || 
+        "Providing scholarships, mentorship, and training programs to develop marketable skills.";
     
     // Program 2
-    const program2Title = document.querySelector('.program-2-title, .program:nth-child(2) h3');
+    const program2Title = document.querySelector('#program2 h3, .program:nth-child(2) h3');
     if (program2Title) program2Title.textContent = translations.program2Title || "Advocacy & Policy Change";
     
-    const program2Text = document.querySelector('.program-2-text, .program:nth-child(2) p');
-    if (program2Text) program2Text.textContent = translations.program2Text || "";
-    
-    // Program 3
-    const program3Title = document.querySelector('.program-3-title, .program:nth-child(3) h3');
-    if (program3Title) program3Title.textContent = translations.program3Title || "Economic Empowerment";
-    
-    const program3Text = document.querySelector('.program-3-text, .program:nth-child(3) p');
-    if (program3Text) program3Text.textContent = translations.program3Text || "";
-    
-    // Program 4
-    const program4Title = document.querySelector('.program-4-title, .program:nth-child(4) h3');
-    if (program4Title) program4Title.textContent = translations.program4Title || "Health & Wellbeing";
-    
-    const program4Text = document.querySelector('.program-4-text, .program:nth-child(4) p');
-    if (program4Text) program4Text.textContent = translations.program4Text || "";
+    const program2Text = document.querySelector('#program2 p, .program:nth-child(2) p');
+    if (program2Text) program2Text.textContent = translations.program2Text || 
+        "Working with governments and organizations to implement inclusive policies.";
     
     // Testimonials section
     const testimonialsTitle = document.querySelector('.testimonials-title, .section-testimonials h2');
@@ -1451,13 +1514,10 @@ function translateEmpowerPage(translations) {
     if (joinText) joinText.textContent = translations.joinText || "";
     
     // Contact section
-    const contactTitle = document.querySelector('.contact-title, .section-contact h2');
-    if (contactTitle) contactTitle.textContent = translations.contactTitle || "Get in Touch";
+    const contactTitle = document.querySelector('#contact h2, .contact-section h2');
+    if (contactTitle) contactTitle.textContent = translations.contactTitle || "Contact Us";
     
-    const contactText = document.querySelector('.contact-text, .section-contact p');
-    if (contactText) contactText.textContent = translations.contactText || "";
-    
-    const contactButton = document.querySelector('.contact-button, .btn-contact');
+    const contactButton = document.querySelector('#contact .btn, .contact-section .btn');
     if (contactButton) contactButton.textContent = translations.contactButton || "Contact Us";
     
     console.log('EmpowerTransNation page translation complete');
@@ -2402,20 +2462,93 @@ function initializeParallax() {
 function initializePerformanceMonitoring() {
     if ('PerformanceObserver' in window) {
         try {
-            // Observar métricas de rendimiento
+            // Umbral para considerar un problema de rendimiento (en milisegundos)
+            const PERFORMANCE_THRESHOLD = {
+                resource: 2000,   // Recursos que tardan más de 2 segundos
+                longtask: 100,    // Tareas largas de más de 100ms
+                paint: 1000,      // Primer pintado tardío (más de 1 segundo)
+                navigation: 3000  // Tiempo de carga total más de 3 segundos
+            };
+            
+            // Lista de recursos a ignorar (patrones de URL)
+            const IGNORED_RESOURCES = [
+                'facebook.com',
+                'google-analytics.com',
+                'googletagmanager.com',
+                'fonts.googleapis.com',
+                'cdnjs.cloudflare.com',
+                'analytics',
+                'tracking',
+                'favicon',
+                '.woff',
+                '.woff2',
+                '.ttf',
+                '.otf'
+            ];
+            
+            // Verificar si un recurso debe ser ignorado
+            function shouldIgnoreResource(url) {
+                if (!url) return true;
+                return IGNORED_RESOURCES.some(pattern => url.includes(pattern));
+            }
+            
+            // Observar métricas de rendimiento, pero solo registrar problemas reales
             const perfObserver = new PerformanceObserver((list) => {
                 list.getEntries().forEach((entry) => {
-                    console.debug('[Performance]', entry.name, entry.startTime.toFixed(0) + 'ms');
+                    // Solo registrar si es un problema real según nuestros umbrales
+                    if (entry.entryType === 'resource') {
+                        // Ignorar recursos de terceros y tipos específicos
+                        if (shouldIgnoreResource(entry.name)) return;
+                        
+                        // Solo reportar si excede nuestro umbral
+                        if (entry.duration > PERFORMANCE_THRESHOLD.resource) {
+                            // En lugar de mostrar un mensaje para cada recurso lento,
+                            // incrementamos un contador y mostramos un resumen al final
+                            window._slowResourceCount = (window._slowResourceCount || 0) + 1;
+                        }
+                    } 
+                    else if (entry.entryType === 'longtask') {
+                        if (entry.duration > PERFORMANCE_THRESHOLD.longtask) {
+                            // No hacemos nada, estos mensajes serán filtrados por nuestro interceptor
+                        }
+                    }
+                    else if (entry.entryType === 'paint' || entry.entryType === 'navigation') {
+                        // Solo registrar tiempo de carga inicial para diagnóstico
+                        if (entry.name === 'first-contentful-paint' && entry.startTime > PERFORMANCE_THRESHOLD.paint) {
+                            // Mensaje discreto en lugar de error para FCP lento
+                            console.debug('Page paint performance could be improved');
+                        }
+                    }
                 });
             });
             
             // Observar tipos de métricas que nos interesan
-            perfObserver.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
+            try {
+                perfObserver.observe({ entryTypes: ['resource', 'paint', 'navigation', 'longtask'] });
+            } catch (e) {
+                // Si 'longtask' no es soportado, intentar sin él
+                try {
+                    perfObserver.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
+                } catch (e2) {
+                    console.debug('Limited performance monitoring available');
+                }
+            }
             
-            console.info('Performance monitoring initialized');
+            // Al final de la carga, mostrar un resumen de recursos lentos si hay alguno
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    if (window._slowResourceCount && window._slowResourceCount > 0) {
+                        console.debug(`Performance: ${window._slowResourceCount} resources loaded slower than expected`);
+                    }
+                }, 1000);
+            });
+            
+            console.debug('Performance monitoring initialized');
         } catch (e) {
-            console.warn('Performance monitoring not supported:', e);
+            console.debug('Performance monitoring not enabled:', e.message);
         }
+    } else {
+        console.debug('Performance monitoring not supported in this browser');
     }
 }
 
