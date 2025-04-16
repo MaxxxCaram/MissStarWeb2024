@@ -20,11 +20,13 @@
     <!-- Favicon properly defined -->
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600;700&display=swap" crossorigin>
     
     <!-- Actual stylesheets and scripts -->
     <link href="./css/output.css" rel="stylesheet">
@@ -350,6 +352,34 @@
             content-visibility: auto;
             contain-intrinsic-size: 1px 1000px;
         }
+
+        /* Apply Now Section */
+        .section-fullscreen bg-black relative overflow-hidden {
+            /* Update background to use gradient instead of missing image */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.7));
+        }
+
+        .apply-now-bg absolute inset-0 z-0 {
+            /* Update to use gradient instead of missing image */
+            background: linear-gradient(135deg, #000000, #1a0033);
+        }
+
+        .absolute inset-0 bg-gradient-to-b from-purple-900/70 to-black {
+            /* Keep this as is */
+        }
+
+        .absolute inset-0 bg-[url('assets/images/stars-bg.jpg')] bg-cover opacity-30 mix-blend-overlay {
+            /* Replace with gradient */
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Fix stardust background in sections */
+        .absolute inset-0 bg-stardust opacity-20 {
+            /* Replace with gradient */
+            background: radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 1px, transparent 1px);
+            background-size: 15px 15px;
+        }
     </style>
 </head>
 <body>
@@ -406,7 +436,7 @@
 
         <!-- The Pageant Section -->
         <section id="pageant" class="section-fullscreen">
-            <div class="absolute inset-0 bg-stardust opacity-20"></div>
+            <div class="absolute inset-0 stardust-bg opacity-20"></div>
             <div class="max-w-7xl mx-auto px-4 relative z-10">
                 <div class="text-center mb-12">
                     <h2 class="section-title">The Pageant</h2>
@@ -430,7 +460,7 @@
 
         <!-- Contestants Section -->
         <section id="contestants" class="section-fullscreen">
-            <div class="absolute inset-0 bg-stardust opacity-20"></div>
+            <div class="absolute inset-0 stardust-bg opacity-20"></div>
             <div class="max-w-7xl mx-auto px-4 relative z-10">
                 <div class="text-center mb-12">
                     <h2 class="section-title">Contestants</h2>
@@ -454,7 +484,7 @@
 
         <!-- Events Section -->
         <section id="events" class="section-fullscreen">
-            <div class="absolute inset-0 bg-stardust opacity-20"></div>
+            <div class="absolute inset-0 stardust-bg opacity-20"></div>
             <div class="max-w-7xl mx-auto px-4 relative z-10">
                 <div class="text-center mb-12">
                     <h2 class="section-title">Events</h2>
@@ -478,7 +508,7 @@
 
         <!-- Sponsors Section -->
         <section id="sponsors" class="section-fullscreen">
-            <div class="absolute inset-0 bg-stardust opacity-20"></div>
+            <div class="absolute inset-0 stardust-bg opacity-20"></div>
             <div class="max-w-7xl mx-auto px-4 relative z-10">
                 <div class="text-center mb-12">
                     <h2 class="section-title">Sponsors</h2>
@@ -504,7 +534,7 @@
         <section class="section-fullscreen bg-black relative overflow-hidden">
             <div class="apply-now-bg absolute inset-0 z-0">
                 <div class="absolute inset-0 bg-gradient-to-b from-purple-900/70 to-black"></div>
-                <div class="absolute inset-0 bg-[url('assets/images/stars-bg.jpg')] bg-cover opacity-30 mix-blend-overlay"></div>
+                <div class="absolute inset-0 stars-bg opacity-30 mix-blend-overlay"></div>
             </div>
             <div class="container mx-auto px-4 relative z-10">
                 <div class="apply-now-container max-w-4xl mx-auto bg-black/60 backdrop-blur-md rounded-2xl p-8 border border-star-gold/20 shadow-[0_0_30px_rgba(255,215,0,0.2)]">

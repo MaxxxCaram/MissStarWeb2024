@@ -19,6 +19,52 @@
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
   }
+
+  /* cspell:ignore bangkok */
+  
+  /* Add starry background pattern */
+  .stars-bg {
+    background: 
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, #000000, #1a0033);
+    background-size: 20px 20px, 100% 100%;
+  }
+  
+  /* Add stardust background pattern */
+  .stardust-bg {
+    background: 
+      radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(45deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.95));
+    background-size: 15px 15px, 100% 100%;
+  }
 }
 
-@import './styles.css'; 
+@import './styles.css';
+
+@layer components {
+  .btn-primary {
+    @apply inline-block px-6 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold rounded-full transition-all hover:shadow-lg hover:scale-105;
+  }
+  
+  .section-title {
+    @apply text-4xl font-bold text-center mb-8 text-white;
+  }
+  
+  .section-divider {
+    @apply h-1 w-32 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mx-auto mb-10;
+  }
+  
+  .section-fullscreen {
+    @apply min-h-screen py-32 flex items-center relative;
+  }
+  
+  .card {
+    @apply bg-gray-900 p-6 rounded-lg shadow-lg border border-yellow-600/20;
+  }
+}
+
+@layer utilities {
+  .title-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-purple-500;
+  }
+} 

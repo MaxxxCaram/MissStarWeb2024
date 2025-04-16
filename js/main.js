@@ -1150,13 +1150,17 @@ function translateAboutPage(translations) {
 }
 
 function translateConsortiumPage(translations) {
+    if (!translations || !translations.consortium) return;
+    
+    const translations = translations.consortium[getCurrentLanguage()];
     if (!translations) return;
     
-    // Page title and introduction
-    const pageTitle = document.querySelector('.page-header h1');
+    // Page title
+    const pageTitle = document.querySelector('.consortium-section h1');
     if (pageTitle) pageTitle.textContent = translations.pageTitle || "Miss Star Consortium";
     
-    const introText = document.querySelector('.intro-section p');
+    // Intro text
+    const introText = document.querySelector('.consortium-intro p');
     if (introText) introText.textContent = translations.introText || "";
     
     // Vision section
@@ -1167,7 +1171,7 @@ function translateConsortiumPage(translations) {
 }
 
 // Basic translations as fallback
-const translations = {
+window.translationsFallback = {
     common: {
         en: {
             home: "Home",
@@ -1198,325 +1202,11 @@ const translations = {
             phone: "Teléfono: +1 (505) 621-8615"
         }
     },
-    index: {
-        en: {
-            welcomeTitle: "Welcome to",
-            heroDescription: "A global celebration of diversity, empowerment and beauty.",
-            pageantTitle: "The Pageant",
-            pageantDescription: "Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.",
-            learnMore: "Learn More",
-            contestantsTitle: "Contestants",
-            contestantsDescription: "Meet our amazing contestants who will represent their countries in this year's competition.",
-            meetQueens: "Meet the Queens",
-            eventsTitle: "Events",
-            eventsDescription: "Check out our calendar of events and activities throughout the pageant.",
-            viewCalendar: "View Calendar",
-            sponsorsTitle: "Sponsors",
-            sponsorsDescription: "Our official sponsors who make this event possible.",
-            ourPartners: "Our Partners",
-            applyNow: "Apply Now",
-            applyNowDescription: "Applications are now open for Miss Star International 2025.",
-            fullName: "FULL NAME",
-            email: "EMAIL",
-            country: "COUNTRY",
-            age: "AGE",
-            biography: "BIOGRAPHY (200 WORDS MAX)",
-            socialImpact: "SOCIAL IMPACT PLATFORM",
-            socialImpactPlaceholder: "What cause would you champion as Miss Star International?",
-            selectCountry: "Select your country",
-            submit: "Submit Application",
-            fearlessly: "Fearlessly Feminine.",
-            unapologetically: "Unapologetically Powerful"
-        },
-        es: {
-            welcomeTitle: "Bienvenido a",
-            heroDescription: "Una celebración global de diversidad, empoderamiento y belleza.",
-            pageantTitle: "El Concurso",
-            pageantDescription: "Experimenta el glamour y la elegancia de nuestro concurso de belleza internacional que celebra la diversidad y el empoderamiento.",
-            learnMore: "Más Información",
-            contestantsTitle: "Concursantes",
-            contestantsDescription: "Conoce a nuestras increíbles concursantes que representarán a sus países en la competencia de este año.",
-            meetQueens: "Conoce a las Reinas",
-            eventsTitle: "Eventos",
-            eventsDescription: "Consulta nuestro calendario de eventos y actividades durante todo el concurso.",
-            viewCalendar: "Ver Calendario",
-            sponsorsTitle: "Patrocinadores",
-            sponsorsDescription: "Nuestros patrocinadores oficiales que hacen posible este evento.",
-            ourPartners: "Nuestros Socios",
-            applyNow: "Aplica Ahora",
-            applyNowDescription: "Las solicitudes ya están abiertas para Miss Star International 2025.",
-            fullName: "NOMBRE COMPLETO",
-            email: "CORREO ELECTRÓNICO",
-            country: "PAÍS",
-            age: "EDAD",
-            biography: "BIOGRAFÍA (MÁXIMO 200 PALABRAS)",
-            socialImpact: "PLATAFORMA DE IMPACTO SOCIAL",
-            socialImpactPlaceholder: "¿Qué causa defenderías como Miss Star International?",
-            selectCountry: "Selecciona tu país",
-            submit: "Enviar Solicitud",
-            fearlessly: "Intrépidamente Femenina.",
-            unapologetically: "Decididamente Poderosa"
-        }
-    },
-    company: {
-        en: {
-            pageTitle: "The Company",
-            introText: "Miss Star International is a pioneering pageant organization dedicated to celebrating beauty, diversity, and empowerment.",
-            valuesTitle: "Our Values",
-            vision: "Vision",
-            mission: "Mission",
-            impact: "Impact"
-        },
-        es: {
-            pageTitle: "La Compañía",
-            introText: "Miss Star International es una organización pionera de certámenes dedicada a celebrar la belleza, la diversidad y el empoderamiento.",
-            valuesTitle: "Nuestros Valores",
-            vision: "Visión",
-            mission: "Misión",
-            impact: "Impacto"
-        }
-    },
-    about: {
-        en: {
-            pageTitle: "About Us",
-            introText: "Learn about the team and vision behind Miss Star International.",
-            founderTitle: "Our Founder",
-            teamTitle: "Our Team",
-            historyTitle: "Our History"
-        },
-        es: {
-            pageTitle: "Sobre Nosotros",
-            introText: "Conoce al equipo y la visión detrás de Miss Star International.",
-            founderTitle: "Nuestra Fundadora",
-            teamTitle: "Nuestro Equipo",
-            historyTitle: "Nuestra Historia"
-        }
-    },
-    consortium: {
-        en: {
-            pageTitle: "Miss Star Consortium",
-            introText: "A global network of partners and affiliates dedicated to advancing the mission of Miss Star International.",
-            visionTitle: "Our Vision",
-            partnersTitle: "Our Partners",
-            joinTitle: "Join the Consortium"
-        },
-        es: {
-            pageTitle: "Consorcio Miss Star",
-            introText: "Una red global de socios y afiliados dedicados a avanzar en la misión de Miss Star International.",
-            visionTitle: "Nuestra Visión",
-            partnersTitle: "Nuestros Socios",
-            joinTitle: "Únete al Consorcio"
-        }
-    },
-    empower: {
-        en: {
-            pageTitle: "EmpowerTransNation",
-            introText: "Our initiative to empower transgender communities worldwide.",
-            missionTitle: "Our Mission",
-            programsTitle: "Our Programs",
-            impactTitle: "Our Impact",
-            joinTitle: "Join the Movement"
-        },
-        es: {
-            pageTitle: "EmpowerTransNation",
-            introText: "Nuestra iniciativa para empoderar a las comunidades transgénero en todo el mundo.",
-            missionTitle: "Nuestra Misión",
-            programsTitle: "Nuestros Programas",
-            impactTitle: "Nuestro Impacto",
-            joinTitle: "Únete al Movimiento"
-        }
-    }
+    // ... rest of the translations ...
 };
 
 // Ensure window.translations is available
-window.translations = translations;
+window.translations = window.translations || window.translationsFallback;
 
 // Application Form Handler
-const applicationForm = document.querySelector('.application-form');
-if (applicationForm) {
-    // Populate country select
-    const countrySelect = applicationForm.querySelector('#country');
-    const countries = [
-        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-        "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina",
-        "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic",
-        "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo",
-        "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
-        "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada",
-        "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
-        "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon",
-        "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
-        "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
-        "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia",
-        "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
-        "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
-        "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia",
-        "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden",
-        "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia",
-        "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
-        "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
-    ];
-
-    countries.forEach(country => {
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        countrySelect.appendChild(option);
-    });
-
-    // Form submission handler
-    applicationForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(applicationForm);
-        const data = Object.fromEntries(formData);
-        
-        // Get current language
-        const currentLang = document.documentElement.lang || 'en';
-        
-        // Messages for current language
-        const messages = {
-            processing: currentLang === 'es' ? '<i class="fas fa-circle-notch fa-spin mr-2"></i> Procesando...' : '<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...',
-            success: currentLang === 'es' ? '¡Gracias por tu solicitud! La revisaremos y te contactaremos pronto.' : 'Thank you for your application! We will review it and contact you soon.',
-            error: currentLang === 'es' ? 'Ocurrió un error. Por favor, inténtalo de nuevo más tarde.' : 'An error occurred. Please try again later.',
-            words: currentLang === 'es' ? 'palabras' : 'words',
-            submit: currentLang === 'es' ? 'Enviar Solicitud <i class="fas fa-crown ml-2"></i>' : 'Submit Application <i class="fas fa-crown ml-2"></i>'
-        };
-        
-        // Add loading state
-        const submitButton = applicationForm.querySelector('.submit-button');
-        submitButton.disabled = true;
-        submitButton.innerHTML = messages.processing;
-        
-        try {
-            // Here you would add your API call to submit the form
-            console.log('Application data:', data);
-            
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Show success message with animation
-            const successMessage = document.createElement('div');
-            successMessage.className = 'success-message bg-green-800/80 backdrop-blur-sm border border-green-500/30 text-white p-4 rounded-md mt-4 opacity-0 transform -translate-y-4 transition-all duration-500';
-            successMessage.textContent = messages.success;
-            applicationForm.appendChild(successMessage);
-            
-            // Trigger animation
-            setTimeout(() => {
-                successMessage.style.opacity = '1';
-                successMessage.style.transform = 'translateY(0)';
-            }, 10);
-            
-            // Reset form with animation
-            applicationForm.reset();
-            
-            // Reset word count
-            const wordCountElement = applicationForm.querySelector('.word-count');
-            if (wordCountElement) wordCountElement.textContent = `0/200 ${messages.words}`;
-            
-            // Remove success message and restore button after 5 seconds
-            setTimeout(() => {
-                successMessage.style.opacity = '0';
-                successMessage.style.transform = 'translateY(-1rem)';
-                
-                setTimeout(() => {
-                    successMessage.remove();
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = messages.submit;
-                }, 500);
-            }, 5000);
-            
-        } catch (error) {
-            console.error('Error submitting application:', error);
-            
-            // Show error message with animation
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'error-message bg-red-800/80 backdrop-blur-sm border border-red-500/30 text-white p-4 rounded-md mt-4 opacity-0 transform -translate-y-4 transition-all duration-500';
-            errorMessage.textContent = messages.error;
-            applicationForm.appendChild(errorMessage);
-            
-            // Trigger animation
-            setTimeout(() => {
-                errorMessage.style.opacity = '1';
-                errorMessage.style.transform = 'translateY(0)';
-            }, 10);
-            
-            // Remove error message and restore button after 5 seconds
-            setTimeout(() => {
-                errorMessage.style.opacity = '0';
-                errorMessage.style.transform = 'translateY(-1rem)';
-                
-                setTimeout(() => {
-                    errorMessage.remove();
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = messages.submit;
-                }, 500);
-            }, 5000);
-        }
-    });
-
-    // For word count for biography with visual feedback
-    const biographyTextarea = applicationForm.querySelector('#biography');
-    const wordCountElement = applicationForm.querySelector('.word-count');
-    const maxWords = 200;
-
-    biographyTextarea.addEventListener('input', () => {
-        const text = biographyTextarea.value.trim();
-        const words = text ? text.split(/\s+/).length : 0;
-        
-        // Get current language
-        const currentLang = document.documentElement.lang || 'en';
-        const wordLabel = currentLang === 'es' ? 'palabras' : 'words';
-        
-        // Update word count display
-        if (wordCountElement) {
-            wordCountElement.textContent = `${words}/200 ${wordLabel}`;
-            
-            // Add color feedback
-            if (words > maxWords) {
-                wordCountElement.className = 'word-count text-xs text-red-400 text-right mt-1 italic';
-            } else if (words > maxWords * 0.9) {
-                wordCountElement.className = 'word-count text-xs text-yellow-400 text-right mt-1 italic';
-            } else {
-                wordCountElement.className = 'word-count text-xs text-star-gold/70 text-right mt-1 italic';
-            }
-        }
-        
-        // Enforce word limit
-        if (words > maxWords) {
-            const limitedText = text.split(/\s+/).slice(0, maxWords).join(' ');
-            biographyTextarea.value = limitedText;
-            
-            // Update word count again after limiting
-            if (wordCountElement) {
-                wordCountElement.textContent = `${maxWords}/200 ${wordLabel}`;
-            }
-        }
-    });
-    
-    // Add input animations
-    const formInputs = applicationForm.querySelectorAll('.form-input, .form-select, .form-textarea');
-    formInputs.forEach(input => {
-        // Focus effect
-        input.addEventListener('focus', () => {
-            const formGroup = input.closest('.form-group');
-            if (formGroup) {
-                const highlight = formGroup.querySelector('.form-highlight');
-                if (highlight) {
-                    highlight.style.width = '100%';
-                }
-            }
-        });
-        
-        // Blur effect
-        input.addEventListener('blur', () => {
-            const formGroup = input.closest('.form-group');
-            if (formGroup) {
-                const highlight = formGroup.querySelector('.form-highlight');
-                if (highlight && !input.value) {
-                    highlight.style.width = '0';
-                }
-            }
-        });
-    });
-}
+// ... existing code ...

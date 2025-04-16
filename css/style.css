@@ -659,6 +659,7 @@ header {
     100% { transform: translateX(-100%); }
 }
 
+/* cspell:ignore bangkok */
 /* Bangkok Initiative Styles */
 .bangkok-initiative {
     position: relative;
