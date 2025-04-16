@@ -31,7 +31,7 @@
     <!-- Actual stylesheets and scripts -->
     <link href="./css/output.css" rel="stylesheet">
     <!-- Load Font Awesome with noCors to avoid CSS validation errors -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <!-- == INLINE CONSOLE MESSAGE FILTER == -->
     <script>
@@ -351,16 +351,16 @@
         /* Content visibility optimization */
         section:not(:first-child) {
             content-visibility: auto;
-            contain-intrinsic-size: 1px 1000px;
+            contain: layout style paint;
         }
 
         /* Apply Now Section */
-        .section-fullscreen bg-black relative overflow-hidden {
+        .section-fullscreen.bg-black.relative.overflow-hidden {
             /* Update background to use gradient instead of missing image */
             background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.7));
         }
 
-        .apply-now-bg absolute inset-0 z-0 {
+        .apply-now-bg.absolute.inset-0.z-0 {
             /* Update to use gradient instead of missing image */
             background: linear-gradient(135deg, #000000, #1a0033);
         }
@@ -601,7 +601,7 @@
                             </div>
                             <div class="form-group relative group">
                                 <label for="age" class="form-label">AGE</label>
-                                <input type="number" id="age" name="age" autocomplete="age" min="18" max="120" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent" required>
+                                <input type="number" id="age" name="age" autocomplete="off" min="18" max="120" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent" required>
                                 <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                             </div>
                         </div>
@@ -627,12 +627,12 @@
                         
                         <div class="form-group relative group mb-12">
                             <label for="photo" class="form-label">PHOTO (OPTIONAL)</label>
-                            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,application/pdf" autocomplete="photo" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent">
+                            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,application/pdf" class="form-input peer transition-all duration-300 bg-black/50 border border-star-gold/30 text-white rounded-md p-3 w-full focus:outline-none focus:ring-2 focus:ring-star-gold/50 focus:border-transparent">
                             <span class="form-highlight absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-star-gold to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                             <div class="text-xs text-star-gold/70 text-right mt-1 italic">JPG, PNG or PDF up to 10MB</div>
                         </div>
                         
-                        <button type="submit" name="submit-application" autocomplete="off" class="submit-button w-full bg-gradient-to-r from-star-gold to-star-gold/80 hover:from-star-gold/80 hover:to-star-gold text-black font-bold py-4 px-6 rounded-md transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] focus:outline-none focus:ring-2 focus:ring-star-gold focus:ring-opacity-50">
+                        <button type="submit" name="submit-application" class="submit-button w-full bg-gradient-to-r from-star-gold to-star-gold/80 hover:from-star-gold/80 hover:to-star-gold text-black font-bold py-4 px-6 rounded-md transition-all duration-300 transform hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(255,215,0,0.5)] focus:outline-none focus:ring-2 focus:ring-star-gold focus:ring-opacity-50">
                             Submit Application <i class="fas fa-crown ml-2"></i>
                         </button>
                     </form>
