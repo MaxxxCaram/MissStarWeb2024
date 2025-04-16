@@ -126,7 +126,7 @@ class VideoController {
         document.addEventListener('click', () => {
             if (!this.audioContext) {
                 try {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.audioContext.resume();
                 } catch (e) {
                     console.warn('AudioContext not supported:', e);
@@ -139,7 +139,7 @@ class VideoController {
             // Check if video exists before playing
             const videoSource = this.video.querySelector('source');
             if (videoSource && videoSource.src) {
-                this.video.play().catch(() => {
+        this.video.play().catch(() => {
                     this.handleVideoError();
                 });
             } else {
@@ -247,66 +247,159 @@ function initializeNavbar() {
 
 // Updated Language Switcher Function
 function initializeLanguageSwitcher() {
-    // Get language buttons
-    const languageButtons = document.querySelectorAll('.language-switcher button');
-    if (!languageButtons.length) {
-        console.warn('Language switcher buttons not found');
+    const langButtons = document.querySelectorAll('.lang-btn');
+    
+    if (!langButtons || langButtons.length === 0) {
+        console.warn('Language buttons not found, skipping language switcher initialization');
         return;
     }
     
-    // Get stored language or default to English
-    const savedLanguage = localStorage.getItem('missstar-language') || 'en';
+    console.log(`Found ${langButtons.length} language buttons, initializing...`);
     
-    // Set initial language
-    setLanguage(savedLanguage);
+    // Check if translations are available
+    if (typeof translations === 'undefined') {
+        console.error('Translations object not found. Make sure translations.js is loaded before main.js');
+        return;
+    }
     
-    // Update UI to show active language immediately
-    languageButtons.forEach(button => {
-        const buttonLang = button.getAttribute('data-lang');
-        button.classList.toggle('active', buttonLang === savedLanguage);
-        
-        // Add visual feedback (glow effect for active language)
-        if (buttonLang === savedLanguage) {
-            button.classList.add('language-active');
-        } else {
-            button.classList.remove('language-active');
-        }
-    });
+    // Get saved language or default to English
+    let currentLang = localStorage.getItem('language') || 'en';
+    console.log(`Currently set language: ${currentLang}`);
     
-    // Add click event listeners with improved visual feedback
-    languageButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const newLang = this.getAttribute('data-lang');
-            if (newLang) {
-                // Provide immediate visual feedback
-                languageButtons.forEach(btn => {
-                    btn.classList.remove('active', 'language-active');
-                });
-                this.classList.add('active', 'language-active');
-                
-                // Apply a subtle animation to show change is happening
-                document.body.classList.add('language-changing');
-                
-                // Set language with slight delay for visual effect
-                setTimeout(() => {
-                    // Set language
-                    setLanguage(newLang);
-                    
-                    // Save preference
-                    localStorage.setItem('missstar-language', newLang);
-                    
-                    // Remove animation class
-                    document.body.classList.remove('language-changing');
-                    
-                    console.log(`Language changed to ${newLang}`);
-                }, 50);
+    // Initialize with saved language or default
+    updateLanguage(currentLang);
+
+    // Set active state on the current language button
+    setActiveLanguageButton(currentLang);
+    
+    // Add click event listeners to language buttons
+    langButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const lang = this.getAttribute('data-lang');
+            
+            if (!lang) {
+                console.error('Language button missing data-lang attribute');
+                return;
             }
+            
+            if (lang === currentLang) {
+                console.log(`Language ${lang} already selected`);
+                return;
+            }
+            
+            // Save language preference to localStorage
+            localStorage.setItem('language', lang);
+            currentLang = lang;
+            
+            // Update active button state
+            setActiveLanguageButton(lang);
+            
+            // Update content based on language
+            updateLanguage(lang);
         });
     });
     
-    // Add debugging to help identify any issues
-    console.log('Language switcher initialized with language:', savedLanguage);
-    console.log('Language buttons found:', languageButtons.length);
+    // Function to set active state on language button
+    function setActiveLanguageButton(lang) {
+        langButtons.forEach(btn => {
+            const btnLang = btn.getAttribute('data-lang');
+            if (btnLang === lang) {
+                btn.classList.add('lang-active');
+                btn.setAttribute('aria-pressed', 'true');
+            } else {
+                btn.classList.remove('lang-active');
+                btn.setAttribute('aria-pressed', 'false');
+            }
+        });
+    }
+}
+
+// Function to update content based on language
+function updateLanguage(lang) {
+    if (!lang || (lang !== 'en' && lang !== 'es')) {
+        console.error(`Invalid language code: ${lang}, defaulting to English`);
+        lang = 'en';
+    }
+    
+    console.log(`Updating content to language: ${lang}`);
+    
+    try {
+        // Determine current page for targeted translations
+        const currentPage = getCurrentPage();
+        console.log(`Current page identified as: ${currentPage}`);
+        
+        // Load translations
+        if (typeof translations !== 'undefined') {
+            // First translate common elements that appear on all pages
+            translateCommonElements(lang, translations);
+            
+            // Then translate page-specific content if available
+            if (translations[currentPage] && translations[currentPage][lang]) {
+                translatePageContent(lang, currentPage, translations);
+            } else {
+                console.warn(`No translations found for page: ${currentPage} in language: ${lang}`);
+            }
+        } else {
+            console.error('Translations not loaded. Make sure translations.js is included before main.js');
+        }
+        
+        // Update application form labels if they exist on the page
+        updateApplicationFormLabels(lang);
+        
+        // Dispatch custom event for other components that might need to react to language change
+        document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
+        
+    } catch (error) {
+        console.error('Error updating language:', error);
+    }
+}
+
+// Helper function to get current page identifier
+function getCurrentPage() {
+    const path = window.location.pathname;
+    const filename = path.split('/').pop() || 'index.html';
+    
+    // Remove file extension to match translation object keys
+    return filename.replace('.html', '') || 'index';
+}
+
+// Function to translate page-specific content
+function translatePageContent(lang, page, translationsData) {
+    const pageTranslations = translationsData[page][lang];
+    
+    if (!pageTranslations) {
+        console.warn(`No translations found for page ${page} in language ${lang}`);
+        return;
+    }
+    
+    // Find all elements with data-translate attribute
+    document.querySelectorAll('[data-translate]').forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (pageTranslations[key]) {
+            // Handle elements that should keep their inner HTML (like links or spans)
+            if (element.getAttribute('data-translate-html') === 'true') {
+                element.innerHTML = pageTranslations[key];
+            } else {
+                element.textContent = pageTranslations[key];
+            }
+        }
+    });
+    
+    // Additional page-specific translation elements
+    // Hero section
+    if (page === 'index') {
+        const heroTitle = document.querySelector('.hero-title');
+        if (heroTitle) heroTitle.textContent = pageTranslations.welcomeTitle || '';
+        
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        if (heroSubtitle) heroSubtitle.textContent = pageTranslations.welcomeSubtitle || '';
+        
+        const heroDescription = document.querySelector('.hero-description');
+        if (heroDescription) heroDescription.textContent = pageTranslations.heroDescription || '';
+        
+        const scrollDownText = document.querySelector('.scroll-indicator-text');
+        if (scrollDownText) scrollDownText.textContent = pageTranslations.scrollDown || '';
+    }
 }
 
 // Form Validation and Submission
@@ -904,15 +997,6 @@ function translateCommonElements(lang, translationsData) {
     });
 }
 
-function getCurrentPage() {
-    const path = window.location.pathname;
-    const filename = path.split('/').pop();
-    if (!filename || filename === '' || filename === 'index.html') {
-        return 'index';
-    }
-    return filename.replace('.html', '');
-}
-
 function translateFormElements(lang, translationsData) {
     // Get page-specific translations if available
     const pageName = getCurrentPage();
@@ -1019,13 +1103,30 @@ function translateFormElements(lang, translationsData) {
 function translatePageContent(pageName, lang, translationsData) {
     console.log(`Translating ${pageName} page to ${lang}`);
     
-    // Skip if translations not found
-    if (!translationsData || !translationsData[pageName] || !translationsData[pageName][lang]) {
+    // Intentar obtener traducciones de diferentes fuentes
+    let pageTranslations = null;
+    
+    // Primero, intentar obtenerlas directamente del objeto translations global
+    if (typeof translations !== 'undefined' && translations[pageName] && translations[pageName][lang]) {
+        pageTranslations = translations[pageName][lang];
+        console.log("Using global translations variable");
+    } 
+    // Segundo, intentar desde window.translations
+    else if (translationsData && translationsData[pageName] && translationsData[pageName][lang]) {
+        pageTranslations = translationsData[pageName][lang];
+        console.log("Using translationsData from parameter");
+    }
+    // Tercero, intentar desde window.translationsFallback
+    else if (window.translationsFallback && window.translationsFallback[pageName] && window.translationsFallback[pageName][lang]) {
+        pageTranslations = window.translationsFallback[pageName][lang];
+        console.log("Using fallback translations");
+    }
+    
+    // Si aún no tenemos traducciones, intentar buscarlas en otro lugar
+    if (!pageTranslations) {
         console.warn(`Translations not found for page ${pageName} in ${lang}`);
         return;
     }
-    
-    const pageTranslations = translationsData[pageName][lang];
     
     // Translate all elements with data-i18n attributes
     document.querySelectorAll('[data-i18n]').forEach(element => {
@@ -1150,22 +1251,36 @@ function translateAboutPage(translations) {
 }
 
 function translateConsortiumPage(translations) {
-    if (!translations || !translations.consortium) return;
+    if (!translations) return;
     
-    const translationsForPage = translations.consortium[getCurrentLanguage()];
-    if (!translationsForPage) return;
+    // No try to access translations.consortium directly
+    // Instead, check if the translations has the necessary data
+    let pageData = null;
+    
+    // Try to get the data from the right path
+    if (translations.consortium && translations.consortium[getCurrentLanguage()]) {
+        pageData = translations.consortium[getCurrentLanguage()];
+    } else if (translations[getCurrentLanguage()]) {
+        // Maybe the translations are directly organized by language
+        pageData = translations[getCurrentLanguage()];
+    } else {
+        // Fallback to using the translations object directly
+        pageData = translations;
+    }
+    
+    if (!pageData) return;
     
     // Page title
     const pageTitle = document.querySelector('.consortium-section h1');
-    if (pageTitle) pageTitle.textContent = translationsForPage.pageTitle || "Miss Star Consortium";
+    if (pageTitle) pageTitle.textContent = pageData.pageTitle || "Miss Star Consortium";
     
     // Intro text
     const introText = document.querySelector('.consortium-intro p');
-    if (introText) introText.textContent = translationsForPage.introText || "";
+    if (introText) introText.textContent = pageData.introText || "";
     
     // Vision section
     const visionTitle = document.querySelector('.vision-section h2');
-    if (visionTitle) visionTitle.textContent = translationsForPage.visionTitle || "Our Vision";
+    if (visionTitle) visionTitle.textContent = pageData.visionTitle || "Our Vision";
     
     // And additional translations specific to the consortium page...
 }
@@ -1202,7 +1317,70 @@ window.translationsFallback = {
             phone: "Teléfono: +1 (505) 621-8615"
         }
     },
-    // ... rest of the translations ...
+    index: {
+        en: {
+            welcomeTitle: "Welcome to",
+            heroDescription: "A global celebration of diversity, empowerment and beauty.",
+            pageantTitle: "The Pageant",
+            pageantDescription: "Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.",
+            learnMore: "Learn More",
+            contestantsTitle: "Contestants",
+            contestantsDescription: "Meet our amazing contestants who will represent their countries in this year's competition.",
+            meetQueens: "Meet the Queens",
+            eventsTitle: "Events",
+            eventsDescription: "Check out our calendar of events and activities throughout the pageant.",
+            viewCalendar: "View Calendar",
+            sponsorsTitle: "Sponsors",
+            sponsorsDescription: "Our official sponsors who make this event possible.",
+            ourPartners: "Our Partners",
+            applyNow: "Apply Now",
+            applyNowDescription: "Applications are now open for Miss Star International 2025.",
+            fullName: "FULL NAME",
+            email: "EMAIL",
+            country: "COUNTRY",
+            age: "AGE",
+            biography: "BIOGRAPHY (200 WORDS MAX)",
+            socialImpact: "SOCIAL IMPACT PLATFORM",
+            socialImpactPlaceholder: "What cause would you champion as Miss Star International?",
+            selectCountry: "Select your country",
+            submit: "Submit Application",
+            fearlessly: "Fearlessly Feminine.",
+            unapologetically: "Unapologetically Powerful"
+        },
+        es: {
+            welcomeTitle: "Bienvenido a",
+            heroDescription: "Una celebración global de diversidad, empoderamiento y belleza.",
+            pageantTitle: "El Concurso",
+            pageantDescription: "Experimenta el glamour y la elegancia de nuestro concurso de belleza internacional que celebra la diversidad y el empoderamiento.",
+            learnMore: "Más Información",
+            contestantsTitle: "Concursantes",
+            contestantsDescription: "Conoce a nuestras increíbles concursantes que representarán a sus países en la competencia de este año.",
+            meetQueens: "Conoce a las Reinas",
+            eventsTitle: "Eventos",
+            eventsDescription: "Consulta nuestro calendario de eventos y actividades durante todo el concurso.",
+            viewCalendar: "Ver Calendario",
+            sponsorsTitle: "Patrocinadores",
+            sponsorsDescription: "Nuestros patrocinadores oficiales que hacen posible este evento.",
+            ourPartners: "Nuestros Socios",
+            applyNow: "Aplica Ahora",
+            applyNowDescription: "Las solicitudes ya están abiertas para Miss Star International 2025.",
+            fullName: "NOMBRE COMPLETO",
+            email: "CORREO ELECTRÓNICO",
+            country: "PAÍS",
+            age: "EDAD",
+            biography: "BIOGRAFÍA (MÁXIMO 200 PALABRAS)",
+            socialImpact: "PLATAFORMA DE IMPACTO SOCIAL",
+            socialImpactPlaceholder: "¿Qué causa defenderías como Miss Star International?",
+            selectCountry: "Selecciona tu país",
+            submit: "Enviar Solicitud",
+            fearlessly: "Intrépidamente Femenina.",
+            unapologetically: "Decididamente Poderosa"
+        }
+    },
+    company: {
+        // existing translations...
+    },
+    // other pages...
 };
 
 // Ensure window.translations is available
