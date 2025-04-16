@@ -264,6 +264,106 @@ class VideoController {
     }
 }
 
+// Mobile Menu
+function initializeMobileMenu() {
+    const menuButton = document.querySelector('.mobile-menu-button');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    
+    if (!menuButton || !mobileMenu) {
+        console.info('Mobile menu elements not found, creating them automatically');
+        
+        // Create mobile menu button if it doesn't exist
+        if (!menuButton) {
+            const nav = document.querySelector('nav');
+            if (nav) {
+                const menuButtonEl = document.createElement('button');
+                menuButtonEl.className = 'mobile-menu-button lg:hidden';
+                menuButtonEl.setAttribute('aria-label', 'Toggle menu');
+                menuButtonEl.innerHTML = '<i class="fas fa-bars text-white text-2xl"></i>';
+                nav.appendChild(menuButtonEl);
+            }
+        }
+        
+        // Create mobile menu if it doesn't exist
+        if (!mobileMenu) {
+            const header = document.querySelector('header');
+            if (header) {
+                const mobileMenuEl = document.createElement('div');
+                mobileMenuEl.className = 'mobile-menu hidden lg:hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 transform transition-transform duration-300 translate-x-full';
+                
+                // Clone navigation links for mobile menu
+                const navLinks = document.querySelectorAll('nav ul li a');
+                if (navLinks.length > 0) {
+                    const mobileNav = document.createElement('ul');
+                    mobileNav.className = 'flex flex-col items-center justify-center h-full space-y-6 text-2xl';
+                    
+                    navLinks.forEach(link => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.href = link.href;
+                        a.textContent = link.textContent;
+                        a.className = 'text-white hover:text-star-gold transition-colors';
+                        li.appendChild(a);
+                        mobileNav.appendChild(li);
+                    });
+                    
+                    // Add close button
+                    const closeButton = document.createElement('button');
+                    closeButton.className = 'absolute top-4 right-4 text-white';
+                    closeButton.setAttribute('aria-label', 'Close menu');
+                    closeButton.innerHTML = '<i class="fas fa-times text-2xl"></i>';
+                    
+                    mobileMenuEl.appendChild(closeButton);
+                    mobileMenuEl.appendChild(mobileNav);
+                    document.body.appendChild(mobileMenuEl);
+                }
+            }
+        }
+    }
+    
+    // Re-query for elements in case they were just created
+    const menuButtonUpdated = document.querySelector('.mobile-menu-button');
+    const mobileMenuUpdated = document.querySelector('.mobile-menu');
+    const closeButton = mobileMenuUpdated ? mobileMenuUpdated.querySelector('button[aria-label="Close menu"]') : null;
+    
+    if (menuButtonUpdated && mobileMenuUpdated) {
+        menuButtonUpdated.addEventListener('click', () => {
+            mobileMenuUpdated.classList.toggle('hidden');
+            mobileMenuUpdated.classList.toggle('translate-x-full');
+            document.body.classList.toggle('overflow-hidden');
+        });
+        
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                mobileMenuUpdated.classList.add('hidden');
+                mobileMenuUpdated.classList.add('translate-x-full');
+                document.body.classList.remove('overflow-hidden');
+            });
+        }
+        
+        // Close menu when clicking on a link
+        const mobileLinks = mobileMenuUpdated.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenuUpdated.classList.add('hidden');
+                mobileMenuUpdated.classList.add('translate-x-full');
+                document.body.classList.remove('overflow-hidden');
+            });
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (mobileMenuUpdated.classList.contains('hidden')) return;
+            
+            if (!mobileMenuUpdated.contains(e.target) && e.target !== menuButtonUpdated) {
+                mobileMenuUpdated.classList.add('hidden');
+                mobileMenuUpdated.classList.add('translate-x-full');
+                document.body.classList.remove('overflow-hidden');
+            }
+        });
+    }
+}
+
 // Smooth Scroll
 function initializeSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -327,7 +427,7 @@ function initializeLanguageSwitcher() {
     let langButtons = document.querySelectorAll('.language-switcher button, [data-lang], button[data-lang]');
     
     if (!langButtons || langButtons.length === 0) {
-        langButtons = document.querySelectorAll('.lang-btn, button:contains("EN"), button:contains("ES")');
+        langButtons = document.querySelectorAll('.lang-btn');
         console.info(`Buscando botones de idioma con selectores alternativos... encontrados: ${langButtons.length}`);
     }
     
