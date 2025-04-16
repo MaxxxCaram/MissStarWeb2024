@@ -659,7 +659,7 @@ function initializeLanguageSwitcher() {
         
         // Attempt to load translations dynamically as a fallback
         const script = document.createElement('script');
-        script.src = '/js/translations.js';
+        script.src = './js/translations.js';
         script.onload = function() {
             console.log('Translations loaded dynamically');
             if (typeof translations !== 'undefined') {

@@ -385,57 +385,58 @@
 </head>
 <body>
     <header>
-        <nav>
+        <nav class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="logo">
-                <img src="assets/logo/logo-main.png" alt="Miss Star International 2025" width="50" height="50" loading="eager">
+                <a href="index.html">
+                    <img src="./assets/logo/logo-main.png" alt="Miss Star International Logo" class="h-12">
+                </a>
             </div>
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="company.html">The Company</a></li>
-                <li><a href="about.html">About Us</a></li>
-                <li><a href="consortium.html">Consortium</a></li>
-                <li><a href="empower.html">EmpowerTransNation</a></li>
-                <li><a href="dynasty.html">Dynasty Platform</a></li>
-                <li><a href="halloffame.html">Hall of Fame</a></li>
-                <li><a href="partners.html">Partners</a></li>
-                <li><a href="news.html">News</a></li>
-                <!-- Language Switcher -->
-                <li class="language-switcher ml-4 flex items-center space-x-2">
-                    <button class="lang-btn px-2 py-1 rounded-md text-sm hover:text-star-gold" data-lang="en">EN</button>
-                    <span class="text-gray-500">|</span>
-                    <button class="lang-btn px-2 py-1 rounded-md text-sm hover:text-star-gold" data-lang="es">ES</button>
+            <ul class="hidden lg:flex space-x-8 items-center">
+                <li><a href="index.html" class="hover:text-star-gold transition-colors">Home</a></li>
+                <li><a href="company.html" class="hover:text-star-gold transition-colors">The Company</a></li>
+                <li><a href="about.html" class="hover:text-star-gold transition-colors">About Us</a></li>
+                <li><a href="consortium.html" class="hover:text-star-gold transition-colors">Consortium</a></li>
+                <li><a href="empower.html" class="hover:text-star-gold transition-colors">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html" class="hover:text-star-gold transition-colors">Dynasty Platform</a></li>
+                <li><a href="halloffame.html" class="hover:text-star-gold transition-colors">Hall of Fame</a></li>
+                <li><a href="partners.html" class="hover:text-star-gold transition-colors">Partners</a></li>
+                <li><a href="news.html" class="hover:text-star-gold transition-colors">News</a></li>
+                <li class="language-switcher">
+                    <button data-lang="en" class="lang-btn px-2 py-1 mx-1 text-sm">EN</button>
+                    |
+                    <button data-lang="es" class="lang-btn px-2 py-1 mx-1 text-sm">ES</button>
                 </li>
             </ul>
-            <!-- Mobile menu toggle button -->
-            <div class="md:hidden">
-                <button type="button" id="mobile-menu-button" class="text-white hover:text-star-gold">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
-            </div>
+            <button id="mobile-menu-button" class="lg:hidden text-white focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+            </button>
         </nav>
         
-        <!-- Mobile menu container -->
-        <div id="mobile-menu" class="md:hidden hidden fixed top-[71px] left-0 right-0 bg-black/90 backdrop-blur-md z-50 border-t border-star-gold/20 border-b border-star-gold/20">
-            <div class="py-4 px-4">
-                <nav class="flex flex-col space-y-3">
-                    <a href="index.html" class="text-white py-2 hover:text-star-gold">Home</a>
-                    <a href="company.html" class="text-white py-2 hover:text-star-gold">The Company</a>
-                    <a href="about.html" class="text-white py-2 hover:text-star-gold">About Us</a>
-                    <a href="consortium.html" class="text-white py-2 hover:text-star-gold">Consortium</a>
-                    <a href="empower.html" class="text-white py-2 hover:text-star-gold">EmpowerTransNation</a>
-                    <a href="dynasty.html" class="text-white py-2 hover:text-star-gold">Dynasty Platform</a>
-                    <a href="halloffame.html" class="text-white py-2 hover:text-star-gold">Hall of Fame</a>
-                    <a href="partners.html" class="text-white py-2 hover:text-star-gold">Partners</a>
-                    <a href="news.html" class="text-white py-2 hover:text-star-gold">News</a>
-                    
-                    <!-- Mobile Language Switcher -->
-                    <div class="language-switcher-mobile flex items-center space-x-4 pt-3 border-t border-gray-700 mt-2">
-                        <span class="text-gray-400 text-sm">Language:</span>
-                        <button class="lang-btn px-3 py-1 rounded-md text-sm bg-gray-800 hover:bg-gray-700" data-lang="en">English</button>
-                        <button class="lang-btn px-3 py-1 rounded-md text-sm bg-gray-800 hover:bg-gray-700" data-lang="es">Español</button>
-                    </div>
-                </nav>
-            </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="lg:hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center hidden">
+            <button class="absolute top-4 right-4 text-white focus:outline-none" aria-label="Close menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <ul class="flex flex-col space-y-6 text-center">
+                <li><a href="index.html" class="text-2xl text-white hover:text-star-gold transition-colors">Home</a></li>
+                <li><a href="company.html" class="text-2xl text-white hover:text-star-gold transition-colors">The Company</a></li>
+                <li><a href="about.html" class="text-2xl text-white hover:text-star-gold transition-colors">About Us</a></li>
+                <li><a href="consortium.html" class="text-2xl text-white hover:text-star-gold transition-colors">Consortium</a></li>
+                <li><a href="empower.html" class="text-2xl text-white hover:text-star-gold transition-colors">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html" class="text-2xl text-white hover:text-star-gold transition-colors">Dynasty Platform</a></li>
+                <li><a href="halloffame.html" class="text-2xl text-white hover:text-star-gold transition-colors">Hall of Fame</a></li>
+                <li><a href="partners.html" class="text-2xl text-white hover:text-star-gold transition-colors">Partners</a></li>
+                <li><a href="news.html" class="text-2xl text-white hover:text-star-gold transition-colors">News</a></li>
+                <li class="mobile-language-switcher pt-4">
+                    <span class="text-white mb-2 block">Language:</span>
+                    <button data-lang="en" class="lang-btn px-4 py-2 mx-2 text-white border border-star-gold/30 rounded">EN</button>
+                    <button data-lang="es" class="lang-btn px-4 py-2 mx-2 text-white border border-star-gold/30 rounded">ES</button>
+                </li>
+            </ul>
         </div>
     </header>
 
