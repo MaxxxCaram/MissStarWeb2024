@@ -225,20 +225,18 @@ class ScrollController {
 // Video Controller
 class VideoController {
     constructor() {
-        this.video = document.querySelector('.hero-video');
+        this.videos = document.querySelectorAll('video, .hero-video, .background-video, .section-video');
         this.audioContext = null;
-        if (this.video) {
-            this.initializeVideo();
-            this.handleVideoErrors();
-        }
+        this.initializeAllVideos();
+        console.log(`VideoController initialized with ${this.videos.length} videos found`);
     }
 
-    initializeVideo() {
-        // Only create AudioContext after user interaction
+    initializeAllVideos() {
+        // Solo crea AudioContext después de interacción del usuario
         document.addEventListener('click', () => {
             if (!this.audioContext) {
                 try {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     this.audioContext.resume();
                 } catch (e) {
                     console.warn('AudioContext not supported:', e);
@@ -246,56 +244,165 @@ class VideoController {
             }
         }, { once: true });
 
-        // Handle video playback
-        if (this.video) {
-            // Check if video exists before playing
-            const videoSource = this.video.querySelector('source');
-            if (videoSource && videoSource.src) {
-        this.video.play().catch(() => {
-                    this.handleVideoError();
-                });
-            } else {
-                this.handleVideoError();
-            }
+        // Si no hay videos, búsqueda adicional
+        if (this.videos.length === 0) {
+            console.info('No videos found with initial selectors, trying deeper search');
+            this.videos = document.querySelectorAll('[data-video], [data-background-video], iframe[src*="youtube"], iframe[src*="vimeo"]');
         }
+
+        // Manejar cada video encontrado
+        this.videos.forEach((video, index) => {
+            console.info(`Initializing video ${index + 1}/${this.videos.length}`);
+            
+            // Si es un iframe, asegurarse de que tenga el atributo allow para autoplay
+            if (video.tagName === 'IFRAME') {
+                if (!video.allow || !video.allow.includes('autoplay')) {
+                    video.allow = (video.allow || '') + '; autoplay';
+                }
+                console.info(`Enhanced iframe permissions for video ${index + 1}`);
+                return; // Los iframes se manejan por su plataforma
+            }
+            
+            // Si no es un elemento video pero tiene un video de fondo
+            if (video.tagName !== 'VIDEO' && !video.querySelector('video')) {
+                const bgVideo = video.getAttribute('data-background-video') || 
+                                video.getAttribute('data-video');
+                
+                if (bgVideo) {
+                    // Crear un nuevo elemento video
+                    const videoEl = document.createElement('video');
+                    videoEl.className = 'background-video absolute inset-0 w-full h-full object-cover';
+                    videoEl.autoplay = true;
+                    videoEl.loop = true;
+                    videoEl.muted = true;
+                    videoEl.playsInline = true;
+                    
+                    // Agregar source
+                    const source = document.createElement('source');
+                    source.src = bgVideo;
+                    source.type = bgVideo.toLowerCase().endsWith('.mp4') ? 'video/mp4' : 'video/webm';
+                    videoEl.appendChild(source);
+                    
+                    // Agregar al DOM
+                    video.style.position = 'relative';
+                    video.style.overflow = 'hidden';
+                    video.insertBefore(videoEl, video.firstChild);
+                    
+                    // Actualizar referencia
+                    video = videoEl;
+                    console.info(`Created video element from data attribute for ${index + 1}`);
+                }
+            }
+            
+            // Ahora asegurarse de que el video tiene los atributos correctos
+            if (video.tagName === 'VIDEO') {
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                
+                // Asegurarse de que tenga source
+                if (!video.querySelector('source') && !video.src) {
+                    console.warn(`Video ${index + 1} does not have a source`);
+                    return;
+                }
+                
+                // Intentar reproducir con retries
+                this.playVideoWithRetry(video, index);
+                
+                // Manejar errores
+                this.handleVideoErrors(video, index);
+            }
+        });
     }
 
-    handleVideoErrors() {
-        if (!this.video) return;
-
-        // Check if video fails to load
-        const videoSource = this.video.querySelector('source');
-        if (videoSource) {
-            videoSource.addEventListener('error', () => {
-                this.handleVideoError();
+    playVideoWithRetry(video, index, attempts = 0) {
+        if (attempts >= 3) {
+            console.warn(`Failed to play video ${index + 1} after 3 attempts`);
+            this.handleVideoError(video);
+            return;
+        }
+        
+        console.info(`Attempting to play video ${index + 1}, attempt ${attempts + 1}`);
+        
+        const playPromise = video.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                console.info(`Video ${index + 1} playing successfully`);
+            }).catch(error => {
+                console.warn(`Error playing video ${index + 1}:`, error);
+                
+                // Retry con un pequeño retraso
+                setTimeout(() => {
+                    this.playVideoWithRetry(video, index, attempts + 1);
+                }, 1000);
             });
         }
     }
 
-    handleVideoError() {
-        // Hide video and show backup background
-        if (this.video) {
-            this.video.style.display = 'none';
-            const heroSection = document.querySelector('.hero-section');
-            if (heroSection) {
-                heroSection.style.background = 'linear-gradient(to bottom, #000000, #1a1a1a)';
-                heroSection.style.minHeight = '100vh';
-            }
+    handleVideoErrors(video, index) {
+        if (!video) return;
+
+        // Escuchar por errores de carga
+        video.addEventListener('error', () => {
+            console.warn(`Error event triggered for video ${index + 1}`);
+            this.handleVideoError(video);
+        });
+        
+        // Verificar si el video tiene source
+        const videoSource = video.querySelector('source');
+        if (videoSource) {
+            videoSource.addEventListener('error', () => {
+                console.warn(`Source error event for video ${index + 1}`);
+                this.handleVideoError(video);
+            });
         }
     }
 
-    createPlayButton() {
+    handleVideoError(video) {
+        if (!video) return;
+        
+        // Ocultar video y mostrar un fondo de respaldo
+        video.style.display = 'none';
+        
+        // Si es un video de héroe, ajustar la sección
+        const isHeroVideo = video.classList.contains('hero-video') || 
+                            video.closest('.hero-section');
+        
+        if (isHeroVideo) {
+            const heroSection = video.closest('.hero-section') || document.querySelector('.hero-section');
+            if (heroSection) {
+                heroSection.style.background = 'linear-gradient(to bottom, #000000, #1a1a1a)';
+                heroSection.style.minHeight = '100vh';
+                
+                // Crear botón "Play Video" como alternativa
+                const playButton = this.createPlayButton(video);
+                heroSection.appendChild(playButton);
+            }
+        }
+        
+        // Añadir clase para estilos CSS alternativos
+        const container = video.parentElement;
+        if (container) {
+            container.classList.add('video-error');
+        }
+    }
+
+    createPlayButton(video) {
         const button = document.createElement('button');
         button.className = 'absolute z-20 btn-primary';
         button.innerHTML = '<i class="fas fa-play mr-2"></i>Play Video';
+        button.style.top = '50%';
+        button.style.left = '50%';
+        button.style.transform = 'translate(-50%, -50%)';
+        
         button.addEventListener('click', () => {
-            if (this.video) {
-                this.video.play().catch(() => {
-                    this.handleVideoError();
-                });
-            }
+            video.style.display = 'block';
+            this.playVideoWithRetry(video, 0);
             button.remove();
         });
+        
         return button;
     }
 }
@@ -846,6 +953,9 @@ function translatePageContent(pageName, lang, translationsData) {
             case 'news':
                 translateNewsPage(pageTranslations);
                 break;
+            case 'empower':
+                translateEmpowerPage(pageTranslations);
+                break;
             default:
                 // For pages without specific translation functions, 
                 // try to use common translation patterns
@@ -1252,6 +1362,104 @@ function translateNewsPage(translations) {
     console.log('News page translation complete');
 }
 
+// Function to translate the EmpowerTransNation page
+function translateEmpowerPage(translations) {
+    if (!translations) {
+        console.warn('No translations provided for EmpowerTransNation page');
+        return;
+    }
+    
+    // Page title and introduction
+    const pageTitle = document.querySelector('.page-header h1, h1.title, .empower-title');
+    if (pageTitle) pageTitle.textContent = translations.pageTitle || "EmpowerTransNation";
+    
+    const introText = document.querySelector('.intro-text, .empower-intro, .introduction');
+    if (introText) introText.textContent = translations.introText || "";
+    
+    // Mission section
+    const missionTitle = document.querySelector('.mission-title, .section-mission h2');
+    if (missionTitle) missionTitle.textContent = translations.missionTitle || "Our Mission";
+    
+    const missionText = document.querySelector('.mission-text, .section-mission p');
+    if (missionText) missionText.textContent = translations.missionText || "";
+    
+    // Vision section
+    const visionTitle = document.querySelector('.vision-title, .section-vision h2');
+    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
+    
+    const visionText = document.querySelector('.vision-text, .section-vision p');
+    if (visionText) visionText.textContent = translations.visionText || "";
+    
+    // Programs section
+    const programsTitle = document.querySelector('.programs-title, .section-programs h2');
+    if (programsTitle) programsTitle.textContent = translations.programsTitle || "Our Programs";
+    
+    // Program 1
+    const program1Title = document.querySelector('.program-1-title, .program:nth-child(1) h3');
+    if (program1Title) program1Title.textContent = translations.program1Title || "Education & Skills Development";
+    
+    const program1Text = document.querySelector('.program-1-text, .program:nth-child(1) p');
+    if (program1Text) program1Text.textContent = translations.program1Text || "";
+    
+    // Program 2
+    const program2Title = document.querySelector('.program-2-title, .program:nth-child(2) h3');
+    if (program2Title) program2Title.textContent = translations.program2Title || "Advocacy & Policy Change";
+    
+    const program2Text = document.querySelector('.program-2-text, .program:nth-child(2) p');
+    if (program2Text) program2Text.textContent = translations.program2Text || "";
+    
+    // Program 3
+    const program3Title = document.querySelector('.program-3-title, .program:nth-child(3) h3');
+    if (program3Title) program3Title.textContent = translations.program3Title || "Economic Empowerment";
+    
+    const program3Text = document.querySelector('.program-3-text, .program:nth-child(3) p');
+    if (program3Text) program3Text.textContent = translations.program3Text || "";
+    
+    // Program 4
+    const program4Title = document.querySelector('.program-4-title, .program:nth-child(4) h3');
+    if (program4Title) program4Title.textContent = translations.program4Title || "Health & Wellbeing";
+    
+    const program4Text = document.querySelector('.program-4-text, .program:nth-child(4) p');
+    if (program4Text) program4Text.textContent = translations.program4Text || "";
+    
+    // Testimonials section
+    const testimonialsTitle = document.querySelector('.testimonials-title, .section-testimonials h2');
+    if (testimonialsTitle) testimonialsTitle.textContent = translations.testimonialsTitle || "Success Stories";
+    
+    // Testimonial 1
+    const testimonial1Text = document.querySelector('.testimonial-1-text, .testimonial:nth-child(1) blockquote');
+    if (testimonial1Text) testimonial1Text.textContent = translations.testimonial1Text || "";
+    
+    const testimonial1Author = document.querySelector('.testimonial-1-author, .testimonial:nth-child(1) cite');
+    if (testimonial1Author) testimonial1Author.textContent = translations.testimonial1Author || "";
+    
+    // Testimonial 2
+    const testimonial2Text = document.querySelector('.testimonial-2-text, .testimonial:nth-child(2) blockquote');
+    if (testimonial2Text) testimonial2Text.textContent = translations.testimonial2Text || "";
+    
+    const testimonial2Author = document.querySelector('.testimonial-2-author, .testimonial:nth-child(2) cite');
+    if (testimonial2Author) testimonial2Author.textContent = translations.testimonial2Author || "";
+    
+    // Join section
+    const joinTitle = document.querySelector('.join-title, .section-join h2');
+    if (joinTitle) joinTitle.textContent = translations.joinTitle || "Join Our Movement";
+    
+    const joinText = document.querySelector('.join-text, .section-join p');
+    if (joinText) joinText.textContent = translations.joinText || "";
+    
+    // Contact section
+    const contactTitle = document.querySelector('.contact-title, .section-contact h2');
+    if (contactTitle) contactTitle.textContent = translations.contactTitle || "Get in Touch";
+    
+    const contactText = document.querySelector('.contact-text, .section-contact p');
+    if (contactText) contactText.textContent = translations.contactText || "";
+    
+    const contactButton = document.querySelector('.contact-button, .btn-contact');
+    if (contactButton) contactButton.textContent = translations.contactButton || "Contact Us";
+    
+    console.log('EmpowerTransNation page translation complete');
+}
+
 // Basic translations as fallback
 window.translationsFallback = {
     common: {
@@ -1378,6 +1586,62 @@ window.translationsFallback = {
             noNewsText: "¡Vuelve pronto para ver actualizaciones!",
             mediaContactTitle: "Contacto para Medios",
             mediaContactText: "Para consultas de prensa, por favor contacta a nuestro equipo de relaciones con los medios."
+        }
+    },
+    empower: {
+        en: {
+            pageTitle: "EmpowerTransNation",
+            introText: "A global initiative dedicated to uplifting and empowering transgender individuals through education, advocacy, and economic opportunities.",
+            missionTitle: "Our Mission",
+            missionText: "To create a world where transgender individuals have equal access to resources, opportunities, and respect, allowing them to live authentically and reach their full potential.",
+            visionTitle: "Our Vision",
+            visionText: "A society that celebrates transgender diversity, where barriers to success are eliminated and where transgender individuals are empowered to become leaders in their communities.",
+            programsTitle: "Our Programs",
+            program1Title: "Education & Skills Development",
+            program1Text: "Providing scholarships, mentorship, and training programs to develop marketable skills and advance educational opportunities.",
+            program2Title: "Advocacy & Policy Change",
+            program2Text: "Working with governments and organizations to implement inclusive policies and eliminate discriminatory practices.",
+            program3Title: "Economic Empowerment",
+            program3Text: "Creating employment opportunities and supporting transgender-owned businesses through grants, microloans, and business development resources.",
+            program4Title: "Health & Wellbeing",
+            program4Text: "Promoting access to healthcare services and mental health resources tailored to meet the unique needs of the transgender community.",
+            testimonialsTitle: "Success Stories",
+            testimonial1Text: "Through EmpowerTransNation, I received a scholarship that allowed me to complete my education and secure employment in my desired field.",
+            testimonial1Author: "Maria S., Program Participant",
+            testimonial2Text: "The business development program gave me the tools and confidence to start my own company. Now I employ five people from my community.",
+            testimonial2Author: "Alex T., Entrepreneur",
+            joinTitle: "Join Our Movement",
+            joinText: "Whether you're interested in volunteering, donating, or partnering with us, there are many ways to support our mission and make a difference.",
+            contactTitle: "Get in Touch",
+            contactText: "Have questions or want to learn more about our programs? Reach out to our team.",
+            contactButton: "Contact Us"
+        },
+        es: {
+            pageTitle: "EmpowerTransNation",
+            introText: "Una iniciativa global dedicada a elevar y empoderar a las personas transgénero a través de la educación, la defensa y las oportunidades económicas.",
+            missionTitle: "Nuestra Misión",
+            missionText: "Crear un mundo donde las personas transgénero tengan igual acceso a recursos, oportunidades y respeto, permitiéndoles vivir auténticamente y alcanzar su máximo potencial.",
+            visionTitle: "Nuestra Visión",
+            visionText: "Una sociedad que celebra la diversidad transgénero, donde se eliminan las barreras para el éxito y donde las personas transgénero están empoderadas para convertirse en líderes en sus comunidades.",
+            programsTitle: "Nuestros Programas",
+            program1Title: "Educación y Desarrollo de Habilidades",
+            program1Text: "Proporcionar becas, mentoría y programas de capacitación para desarrollar habilidades comercializables y avanzar en oportunidades educativas.",
+            program2Title: "Defensa y Cambio de Políticas",
+            program2Text: "Trabajar con gobiernos y organizaciones para implementar políticas inclusivas y eliminar prácticas discriminatorias.",
+            program3Title: "Empoderamiento Económico",
+            program3Text: "Crear oportunidades de empleo y apoyar a negocios propiedad de personas transgénero a través de subvenciones, microcréditos y recursos para el desarrollo empresarial.",
+            program4Title: "Salud y Bienestar",
+            program4Text: "Promover el acceso a servicios de salud y recursos de salud mental adaptados para satisfacer las necesidades únicas de la comunidad transgénero.",
+            testimonialsTitle: "Historias de Éxito",
+            testimonial1Text: "A través de EmpowerTransNation, recibí una beca que me permitió completar mi educación y asegurar empleo en mi campo deseado.",
+            testimonial1Author: "María S., Participante del Programa",
+            testimonial2Text: "El programa de desarrollo empresarial me dio las herramientas y la confianza para iniciar mi propia empresa. Ahora empleo a cinco personas de mi comunidad.",
+            testimonial2Author: "Alex T., Emprendedor",
+            joinTitle: "Únete a Nuestro Movimiento",
+            joinText: "Ya sea que estés interesado en ser voluntario, donar o asociarte con nosotros, hay muchas formas de apoyar nuestra misión y marcar la diferencia.",
+            contactTitle: "Ponte en Contacto",
+            contactText: "¿Tienes preguntas o quieres aprender más sobre nuestros programas? Comunícate con nuestro equipo.",
+            contactButton: "Contáctanos"
         }
     }
 };

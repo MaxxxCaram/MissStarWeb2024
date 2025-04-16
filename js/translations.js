@@ -300,6 +300,64 @@ const translations = {
             mediaContactTitle: "Contacto para Medios",
             mediaContactText: "Para consultas de prensa, por favor contacta a nuestro equipo de relaciones con los medios."
         }
+    },
+
+    // EmpowerTransNation page translations
+    empower: {
+        en: {
+            pageTitle: "EmpowerTransNation",
+            introText: "A global initiative dedicated to uplifting and empowering transgender individuals through education, advocacy, and economic opportunities.",
+            missionTitle: "Our Mission",
+            missionText: "To create a world where transgender individuals have equal access to resources, opportunities, and respect, allowing them to live authentically and reach their full potential.",
+            visionTitle: "Our Vision",
+            visionText: "A society that celebrates transgender diversity, where barriers to success are eliminated and where transgender individuals are empowered to become leaders in their communities.",
+            programsTitle: "Our Programs",
+            program1Title: "Education & Skills Development",
+            program1Text: "Providing scholarships, mentorship, and training programs to develop marketable skills and advance educational opportunities.",
+            program2Title: "Advocacy & Policy Change",
+            program2Text: "Working with governments and organizations to implement inclusive policies and eliminate discriminatory practices.",
+            program3Title: "Economic Empowerment",
+            program3Text: "Creating employment opportunities and supporting transgender-owned businesses through grants, microloans, and business development resources.",
+            program4Title: "Health & Wellbeing",
+            program4Text: "Promoting access to healthcare services and mental health resources tailored to meet the unique needs of the transgender community.",
+            testimonialsTitle: "Success Stories",
+            testimonial1Text: "Through EmpowerTransNation, I received a scholarship that allowed me to complete my education and secure employment in my desired field.",
+            testimonial1Author: "Maria S., Program Participant",
+            testimonial2Text: "The business development program gave me the tools and confidence to start my own company. Now I employ five people from my community.",
+            testimonial2Author: "Alex T., Entrepreneur",
+            joinTitle: "Join Our Movement",
+            joinText: "Whether you're interested in volunteering, donating, or partnering with us, there are many ways to support our mission and make a difference.",
+            contactTitle: "Get in Touch",
+            contactText: "Have questions or want to learn more about our programs? Reach out to our team.",
+            contactButton: "Contact Us"
+        },
+        es: {
+            pageTitle: "EmpowerTransNation",
+            introText: "Una iniciativa global dedicada a elevar y empoderar a las personas transgénero a través de la educación, la defensa y las oportunidades económicas.",
+            missionTitle: "Nuestra Misión",
+            missionText: "Crear un mundo donde las personas transgénero tengan igual acceso a recursos, oportunidades y respeto, permitiéndoles vivir auténticamente y alcanzar su máximo potencial.",
+            visionTitle: "Nuestra Visión",
+            visionText: "Una sociedad que celebra la diversidad transgénero, donde se eliminan las barreras para el éxito y donde las personas transgénero están empoderadas para convertirse en líderes en sus comunidades.",
+            programsTitle: "Nuestros Programas",
+            program1Title: "Educación y Desarrollo de Habilidades",
+            program1Text: "Proporcionar becas, mentoría y programas de capacitación para desarrollar habilidades comercializables y avanzar en oportunidades educativas.",
+            program2Title: "Defensa y Cambio de Políticas",
+            program2Text: "Trabajar con gobiernos y organizaciones para implementar políticas inclusivas y eliminar prácticas discriminatorias.",
+            program3Title: "Empoderamiento Económico",
+            program3Text: "Crear oportunidades de empleo y apoyar a negocios propiedad de personas transgénero a través de subvenciones, microcréditos y recursos para el desarrollo empresarial.",
+            program4Title: "Salud y Bienestar",
+            program4Text: "Promover el acceso a servicios de salud y recursos de salud mental adaptados para satisfacer las necesidades únicas de la comunidad transgénero.",
+            testimonialsTitle: "Historias de Éxito",
+            testimonial1Text: "A través de EmpowerTransNation, recibí una beca que me permitió completar mi educación y asegurar empleo en mi campo deseado.",
+            testimonial1Author: "María S., Participante del Programa",
+            testimonial2Text: "El programa de desarrollo empresarial me dio las herramientas y la confianza para iniciar mi propia empresa. Ahora empleo a cinco personas de mi comunidad.",
+            testimonial2Author: "Alex T., Emprendedor",
+            joinTitle: "Únete a Nuestro Movimiento",
+            joinText: "Ya sea que estés interesado en ser voluntario, donar o asociarte con nosotros, hay muchas formas de apoyar nuestra misión y marcar la diferencia.",
+            contactTitle: "Ponte en Contacto",
+            contactText: "¿Tienes preguntas o quieres aprender más sobre nuestros programas? Comunícate con nuestro equipo.",
+            contactButton: "Contáctanos"
+        }
     }
 };
 
