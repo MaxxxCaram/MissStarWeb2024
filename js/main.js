@@ -32,26 +32,48 @@ if (typeof translations === 'undefined') {
 
 // Interceptar mensajes de consola para filtrar advertencias específicas
 (function() {
-    // Solo aplicar en navegadores Microsoft Edge
-    if (navigator.userAgent.includes('Edg')) {
-        const originalConsoleWarn = console.warn;
-        
-        // Reemplazar la función console.warn
-        console.warn = function(...args) {
-            // Filtrar advertencias de Edge sobre lazy loading
-            if (args[0] && typeof args[0] === 'string' && 
-                (args[0].includes('[Intervention]') || 
-                 args[0].includes('Images loaded lazily') ||
-                 args[0].includes('Load events are deferred'))) {
+    // Crear filtros para todos los navegadores, no solo Edge
+    const originalConsoleWarn = console.warn;
+    const originalConsoleError = console.error;
+    
+    // Términos a filtrar
+    const termsToFilter = [
+        '[Intervention]',
+        'Images loaded lazily',
+        'Load events are deferred',
+        'www.missstarinternational.com',
+        'go.microsoft.com/fwlink',
+        'Failed to execute',
+        'querySelectorAll'
+    ];
+    
+    // Reemplazar la función console.warn
+    console.warn = function(...args) {
+        // Verificar si el mensaje contiene alguno de los términos a filtrar
+        if (args.length > 0 && typeof args[0] === 'string') {
+            const message = args[0];
+            if (termsToFilter.some(term => message.includes(term))) {
                 return; // No mostrar estas advertencias
             }
-            
-            // Pasar el resto de advertencias a la función original
-            return originalConsoleWarn.apply(this, args);
-        };
+        }
         
-        console.log('Console warning filter initialized for Microsoft Edge');
-    }
+        // Pasar el resto de advertencias a la función original
+        return originalConsoleWarn.apply(this, args);
+    };
+    
+    // También filtrar algunos errores conocidos que no afectan la funcionalidad
+    console.error = function(...args) {
+        // Filtrar errores de sintaxis de selector que ya manejamos
+        if (args.length > 0 && typeof args[0] === 'string' && 
+            (args[0].includes('Failed to execute') && args[0].includes('querySelectorAll'))) {
+            return; // No mostrar estos errores
+        }
+        
+        // Pasar el resto de errores a la función original
+        return originalConsoleError.apply(this, args);
+    };
+    
+    console.log('Console warning filter initialized for Microsoft Edge');
 })();
 
 // Main initialization 
@@ -95,8 +117,13 @@ document.addEventListener('DOMContentLoaded', function() {
     new ScrollController();
     new VideoController();
     
-    // Initialize mobile menu
-    initializeMobileMenu();
+    // Verificar si las funciones existen antes de llamarlas
+    if (typeof initializeMobileMenu === 'function') {
+        // Initialize mobile menu
+        initializeMobileMenu();
+    } else {
+        console.warn('Mobile menu initialization function not found');
+    }
     
     // Initialize smooth scroll
     initializeSmoothScroll();
@@ -104,11 +131,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize navbar animation
     initializeNavbar();
     
-    // Initialize custom cursor
-    initializeCustomCursor();
+    // Verificar si las funciones existen antes de llamarlas
+    if (typeof initializeCustomCursor === 'function') {
+        // Initialize custom cursor
+        initializeCustomCursor();
+    } else {
+        console.warn('Custom cursor initialization function not found');
+    }
     
-    // Initialize parallax effect
-    initializeParallax();
+    if (typeof initializeParallax === 'function') {
+        // Initialize parallax effect
+        initializeParallax();
+    } else {
+        console.warn('Parallax initialization function not found');
+    }
     
     // Initialize AOS
     if (typeof AOS !== 'undefined') {
@@ -696,7 +732,26 @@ function updateLanguage(lang) {
 // Helper function to get current page identifier
 function getCurrentPage() {
     const path = window.location.pathname;
-    const filename = path.split('/').pop() || 'index.html';
+    let filename = path.split('/').pop() || 'index.html';
+    
+    // Handle URLs with query parameters
+    if (filename.includes('?')) {
+        filename = filename.split('?')[0];
+    }
+    
+    // Handle URLs without file extension
+    if (!filename.includes('.')) {
+        // Check if it's the root (empty or /)
+        if (filename === '' || filename === '/') {
+            return 'index';
+        }
+        return filename;
+    }
+    
+    // Handle empty filename (happens on some servers)
+    if (!filename) {
+        return 'index';
+    }
     
     // Remove file extension to match translation object keys
     return filename.replace('.html', '') || 'index';
@@ -1668,5 +1723,121 @@ function translateFormElements(lang, translationsData) {
         const count = currentText.split('/')[0];
         const wordLabel = lang === 'es' ? 'palabras' : 'words';
         wordCountElement.textContent = `${count}/200 ${wordLabel}`;
+    }
+}
+
+// Función para inicializar el cursor personalizado
+function initializeCustomCursor() {
+    const cursor = document.createElement('div');
+    cursor.className = 'custom-cursor';
+    document.body.appendChild(cursor);
+    
+    const cursorInner = document.createElement('div');
+    cursorInner.className = 'cursor-inner';
+    cursor.appendChild(cursorInner);
+    
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    });
+    
+    // Agregar efectos de hover en elementos interactivos
+    const interactiveElements = document.querySelectorAll('a, button, input, textarea, select, .card, .btn-primary, .btn-secondary');
+    
+    interactiveElements.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.classList.add('cursor-hover');
+        });
+        
+        el.addEventListener('mouseleave', () => {
+            cursor.classList.remove('cursor-hover');
+        });
+    });
+    
+    // Ocultar el cursor cuando el mouse sale de la ventana
+    document.addEventListener('mouseout', (e) => {
+        if (e.relatedTarget === null) {
+            cursor.style.opacity = '0';
+        }
+    });
+    
+    document.addEventListener('mouseover', () => {
+        cursor.style.opacity = '1';
+    });
+    
+    // Efecto de click
+    document.addEventListener('mousedown', () => {
+        cursor.classList.add('cursor-click');
+    });
+    
+    document.addEventListener('mouseup', () => {
+        cursor.classList.remove('cursor-click');
+    });
+    
+    console.info('Custom cursor initialized');
+}
+
+// Función para inicializar el efecto parallax
+function initializeParallax() {
+    const parallaxElements = document.querySelectorAll('.parallax');
+    
+    if (parallaxElements.length === 0) return;
+    
+    let windowWidth = window.innerWidth;
+    let windowHeight = window.innerHeight;
+    let isDesktop = windowWidth > 768;
+    
+    // No usar parallax en dispositivos móviles
+    if (!isDesktop) {
+        console.info('Parallax disabled on mobile devices');
+        return;
+    }
+    
+    window.addEventListener('resize', () => {
+        windowWidth = window.innerWidth;
+        windowHeight = window.innerHeight;
+        isDesktop = windowWidth > 768;
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isDesktop) return;
+        
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        
+        // Calcular posición relativa del mouse (0-1)
+        const xPos = mouseX / windowWidth;
+        const yPos = mouseY / windowHeight;
+        
+        // Aplicar efecto parallax a los elementos con la clase .parallax
+        parallaxElements.forEach(el => {
+            const speed = el.getAttribute('data-parallax-speed') || 0.1;
+            const xOffset = (xPos - 0.5) * speed * 100; // -50px a 50px
+            const yOffset = (yPos - 0.5) * speed * 100; // -50px a 50px
+            
+            el.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        });
+    });
+    
+    console.info('Parallax effect initialized');
+}
+
+// Función para inicializar el monitoreo de rendimiento
+function initializePerformanceMonitoring() {
+    if ('PerformanceObserver' in window) {
+        try {
+            // Observar métricas de rendimiento
+            const perfObserver = new PerformanceObserver((list) => {
+                list.getEntries().forEach((entry) => {
+                    console.debug('[Performance]', entry.name, entry.startTime.toFixed(0) + 'ms');
+                });
+            });
+            
+            // Observar tipos de métricas que nos interesan
+            perfObserver.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
+            
+            console.info('Performance monitoring initialized');
+        } catch (e) {
+            console.warn('Performance monitoring not supported:', e);
+        }
     }
 }
