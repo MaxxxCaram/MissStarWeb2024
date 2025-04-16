@@ -639,411 +639,287 @@ function initializeNavbar() {
 
 // Updated Language Switcher Function
 function initializeLanguageSwitcher() {
-    // Buscar botones de idioma utilizando selectores más amplios primero
-    let langButtons = document.querySelectorAll('.language-switcher button, [data-lang], button[data-lang]');
+    console.log('Initializing language switcher...');
     
-    if (!langButtons || langButtons.length === 0) {
-        langButtons = document.querySelectorAll('.lang-btn');
-        console.info(`Buscando botones de idioma con selectores alternativos... encontrados: ${langButtons.length}`);
+    // Elements
+    const enBtn = document.querySelector('[data-lang="en"]');
+    const esBtn = document.querySelector('[data-lang="es"]');
+    
+    // Check if language buttons exist
+    if (!enBtn || !esBtn) {
+        console.warn('Language buttons not found, skipping language switcher initialization');
+        return;
     }
     
-    // Búsqueda extendida para encontrar botones de idioma por texto
-    if (!langButtons || langButtons.length === 0) {
-        const allButtons = document.querySelectorAll('button, a');
-        const langButtonsArray = [];
-        
-        allButtons.forEach(button => {
-            const text = button.textContent.trim().toLowerCase();
-            if (text === 'en' || text === 'es' || text === 'english' || text === 'español') {
-                langButtonsArray.push(button);
-            }
-        });
-        
-        if (langButtonsArray.length > 0) {
-            langButtons = langButtonsArray;
-            console.info(`Encontrados ${langButtons.length} botones de idioma por texto`);
-        } else {
-            console.info('No se encontraron botones de idioma por texto');
-        }
-    }
+    console.log('Language buttons found, continuing initialization');
     
-    // Si aún no hay botones, crearlos automáticamente
-    if (!langButtons || langButtons.length === 0) {
-        console.info('No language buttons found, creating them automatically');
+    // Check if we have translations loaded
+    if (typeof translations === 'undefined') {
+        console.error('Translations object not found. Make sure translations.js is loaded before main.js');
         
-        // Encontrar un buen lugar para insertar los botones (preferiblemente en el nav)
-        const navElement = document.querySelector('nav ul, nav, header');
-        
-        if (navElement) {
-            // Crear contenedor para los botones
-            const langSwitcher = document.createElement('div');
-            langSwitcher.className = 'language-switcher flex items-center space-x-2 ml-4';
-            
-            // Crear botón para inglés
-            const enBtn = document.createElement('button');
-            enBtn.className = 'lang-btn px-2 py-1 rounded-md text-sm';
-            enBtn.setAttribute('data-lang', 'en');
-            enBtn.textContent = 'EN';
-            
-            // Crear botón para español
-            const esBtn = document.createElement('button');
-            esBtn.className = 'lang-btn px-2 py-1 rounded-md text-sm';
-            esBtn.setAttribute('data-lang', 'es');
-            esBtn.textContent = 'ES';
-            
-            // Añadir botones al contenedor
-            langSwitcher.appendChild(enBtn);
-            langSwitcher.appendChild(esBtn);
-            
-            // Añadir contenedor a la navegación
-            if (navElement.tagName === 'UL') {
-                // Si es una lista, crear un elemento de lista
-                const li = document.createElement('li');
-                li.className = 'language-switcher-container';
-                li.appendChild(langSwitcher);
-                navElement.appendChild(li);
+        // Attempt to load translations dynamically as a fallback
+        const script = document.createElement('script');
+        script.src = '/js/translations.js';
+        script.onload = function() {
+            console.log('Translations loaded dynamically');
+            if (typeof translations !== 'undefined') {
+                continueLanguageSwitcherSetup();
             } else {
-                // Si no, añadirlo directamente
-                navElement.appendChild(langSwitcher);
-            }
-            
-            // Actualizar la lista de botones
-            langButtons = document.querySelectorAll('.lang-btn');
-            console.info(`Created language buttons automatically, total: ${langButtons.length}`);
-        } else {
-            console.warn('No suitable container found for language buttons, skipping language switcher initialization');
-            return;
-        }
-    }
-    
-    console.info(`Found ${langButtons.length} language buttons, initializing...`);
-    
-    // Ensure translations are available globally
-    if (typeof translations !== 'undefined' && !window.translations) {
-        window.translations = translations;
-        console.info('Made translations available globally');
-    }
-    
-    // Check if translations are available from any source
-    if (typeof translations === 'undefined' && !window.translations) {
-        console.warn('Translations object not found. Make sure translations.js is loaded before main.js');
-        // Initialize with fallback translations if main translations are missing
-        window.translations = window.translationsFallback || {
-            common: {
-                en: { home: "Home" },
-                es: { home: "Inicio" }
+                console.error('Failed to load translations even after dynamic loading');
             }
         };
-        console.info('Using fallback translations since main translations not found');
+        script.onerror = function() {
+            console.error('Failed to load translations.js dynamically');
+        };
+        document.head.appendChild(script);
+        return;
     }
     
-    // Detect browser language if no language is saved
-    const savedLanguage = localStorage.getItem('language') || localStorage.getItem('selectedLanguage');
-    let currentLang = savedLanguage;
+    continueLanguageSwitcherSetup();
     
-    if (!currentLang) {
-        currentLang = detectBrowserLanguage();
-        console.info(`No saved language found, detected browser language: ${currentLang}`);
-        localStorage.setItem('language', currentLang);
-        localStorage.setItem('selectedLanguage', currentLang);
-    } else {
-        console.info(`Using saved language preference: ${currentLang}`);
-    }
-    
-    // Initialize with saved/detected language
-    updateLanguage(currentLang);
-
-    // Set active state on the current language button
-    setActiveLanguageButton(currentLang);
-    
-    // Add click event listeners to language buttons
-    langButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Intentar obtener el idioma del atributo data-lang, o del texto del botón
-            const lang = this.getAttribute('data-lang') || 
-                         (this.textContent.trim().toLowerCase() === 'español' || this.textContent.trim().toLowerCase() === 'es' ? 'es' : 'en');
+    function continueLanguageSwitcherSetup() {
+        // Get saved language preference from localStorage or use browser default
+        const savedLang = localStorage.getItem('language') || detectBrowserLanguage();
+        console.log('Saved language or browser default:', savedLang);
+        
+        // Set active class based on saved language
+        if (savedLang === 'es') {
+            esBtn.classList.add('active');
+            enBtn.classList.remove('active');
+        } else {
+            enBtn.classList.add('active');
+            esBtn.classList.remove('active');
+        }
+        
+        // Apply initial translations
+        updateContent(savedLang);
+        
+        // Event listeners for language buttons
+        enBtn.addEventListener('click', function() {
+            console.log('English button clicked');
+            setActiveLanguage('en');
+        });
+        
+        esBtn.addEventListener('click', function() {
+            console.log('Spanish button clicked');
+            setActiveLanguage('es');
+        });
+        
+        // Function to handle language button clicks
+        function setActiveLanguage(lang) {
+            console.log('Setting active language to:', lang);
             
-            if (!lang) {
-                console.error('Language button missing data-lang attribute and could not determine language from text');
-                return;
-            }
-            
-            if (lang === currentLang) {
-                console.info(`Language ${lang} already selected`);
-                return;
-            }
-            
-            // Save language preference to localStorage
+            // Save preference to localStorage
             localStorage.setItem('language', lang);
-            localStorage.setItem('selectedLanguage', lang);
-            currentLang = lang;
-            
-            // Update language field in application form if exists
-            const languageField = document.querySelector('form input[name="language"]');
-            if (languageField) {
-                languageField.value = lang;
-            }
             
             // Update active button state
-            setActiveLanguageButton(lang);
-            
-            // Update content based on language
-            updateLanguage(lang);
-        });
-    });
-    
-    // Function to set active state on language button
-    function setActiveLanguageButton(lang) {
-        langButtons.forEach(btn => {
-            const btnLang = btn.getAttribute('data-lang') || 
-                           (btn.textContent.trim().toLowerCase() === 'español' || btn.textContent.trim().toLowerCase() === 'es' ? 'es' : 'en');
-            
-            if (btnLang === lang) {
-                btn.classList.add('lang-active', 'active');
-                btn.setAttribute('aria-pressed', 'true');
-                
-                // Añadir estilos de apariencia activa si no hay CSS para eso
-                btn.style.fontWeight = 'bold';
-                btn.style.color = '#ffffff';
-                btn.style.borderBottom = '2px solid currentColor';
+            if (lang === 'es') {
+                esBtn.classList.add('active');
+                enBtn.classList.remove('active');
             } else {
-                btn.classList.remove('lang-active', 'active');
-                btn.setAttribute('aria-pressed', 'false');
-                
-                // Reiniciar estilos
-                btn.style.fontWeight = 'normal';
-                btn.style.color = '#cccccc';
-                btn.style.borderBottom = 'none';
+                enBtn.classList.add('active');
+                esBtn.classList.remove('active');
             }
-        });
+            
+            // Update content based on selected language
+            updateContent(lang);
+        }
+        
+        // Dispatch an event when language switcher is ready
+        document.dispatchEvent(new CustomEvent('languageSwitcherReady'));
+        console.log('Language switcher initialized successfully');
     }
-    
-    console.info(`Language switcher initialized with language: ${currentLang}`);
-    console.info(`Language buttons found: ${langButtons.length}`);
-
-    // Dispatch event to notify the system that language switcher is ready
-    document.dispatchEvent(new CustomEvent('languageSwitcherReady', { 
-        detail: { language: currentLang }
-    }));
 }
 
-// Helper function to detect browser language
-function detectBrowserLanguage() {
-    // Get browser language preference 
-    let browserLang = navigator.language || navigator.userLanguage;
+// Function to update content based on selected language
+function updateContent(lang) {
+    console.log('Updating content to language:', lang);
     
-    // Extract main language code (e.g., 'en-US' -> 'en')
-    if (browserLang) {
-        browserLang = browserLang.split('-')[0].toLowerCase();
+    // Verify translations object exists
+    if (!translations) {
+        console.error('Translations object not available');
+        return;
     }
     
-    // Only support 'en' and 'es' for now
-    if (browserLang === 'es') {
+    // Apply common translations first
+    if (translations.common && translations.common[lang]) {
+        applyCommonTranslations(translations.common[lang]);
+    } else {
+        console.warn('Common translations not found for language:', lang);
+    }
+    
+    // Apply page-specific translations
+    const pageName = getCurrentPageName();
+    console.log('Current page name:', pageName);
+    
+    if (translations[pageName] && translations[pageName][lang]) {
+        applyPageTranslations(pageName, translations[pageName][lang]);
+    } else {
+        console.warn(`Specific translations for page '${pageName}' not found`);
+    }
+    
+    // Translate elements with data-translate attribute
+    translateDataAttributes(lang);
+    
+    console.log('Content updated to language:', lang);
+}
+
+function getCurrentPageName() {
+    // Get current page filename without extension
+    const path = window.location.pathname;
+    let pageName = path.split("/").pop().split(".")[0];
+    
+    // If empty (root path), it's the index/home page
+    if (!pageName) pageName = 'index';
+    
+    // Special case for Dynasty section
+    if (path.includes('/Dynasty/')) {
+        return 'dynasty';
+    }
+    
+    return pageName;
+}
+
+function detectBrowserLanguage() {
+    const lang = navigator.language || navigator.userLanguage;
+    console.log('Detected browser language:', lang);
+    
+    // Check if the language starts with 'es' (Spanish)
+    if (lang.startsWith('es')) {
         return 'es';
     }
     
-    // Default to English for any other language
+    // Default to English
     return 'en';
 }
 
-// Function to update content based on language
-function updateLanguage(lang) {
-    if (!lang || (lang !== 'en' && lang !== 'es')) {
-        console.error(`Invalid language code: ${lang}, defaulting to English`);
-        lang = 'en';
-    }
+function translateDataAttributes(lang) {
+    const elementsToTranslate = document.querySelectorAll('[data-translate]');
+    console.log(`Found ${elementsToTranslate.length} elements with data-translate attributes`);
     
-    console.log(`Updating content to language: ${lang}`);
-    
-    try {
-        // Determine current page for targeted translations
-        const currentPage = getCurrentPage();
-        console.log(`Current page identified as: ${currentPage}`);
+    elementsToTranslate.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        let translationFound = false;
         
-        // Ensure translations are available in the global space
-        const translationsData = window.translations || window.translationsFallback;
+        // Check if this is a common translation
+        if (translations.common && translations.common[lang] && translations.common[lang][key]) {
+            element.textContent = translations.common[lang][key];
+            translationFound = true;
+        }
         
-        // Set the document language
-        document.documentElement.lang = lang;
-        
-        // Update all text elements with data-lang attributes
-        const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
-        elements.forEach(el => {
-            if (lang === 'es' && el.hasAttribute('data-lang-es')) {
-                el.textContent = el.getAttribute('data-lang-es');
-            } else if (lang === 'en' && el.hasAttribute('data-lang-en')) {
-                el.textContent = el.getAttribute('data-lang-en');
+        // If not found in common, check page-specific
+        if (!translationFound) {
+            const pageName = getCurrentPageName();
+            if (translations[pageName] && translations[pageName][lang] && translations[pageName][lang][key]) {
+                element.textContent = translations[pageName][lang][key];
+                translationFound = true;
             }
-        });
+        }
         
-        // Handle content sections with data-lang attribute
-        const contentSections = document.querySelectorAll('[data-lang]');
-        contentSections.forEach(section => {
-            if (section.tagName !== 'BUTTON') { // Skip language switcher buttons
-                if (section.getAttribute('data-lang') === lang) {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
+        // If still not found, check all other pages as fallback
+        if (!translationFound) {
+            for (const page in translations) {
+                if (page !== 'common' && translations[page] && translations[page][lang] && translations[page][lang][key]) {
+                    element.textContent = translations[page][lang][key];
+                    translationFound = true;
+                    break;
                 }
             }
-        });
-
-        // Translate common elements across all pages first
-        if (translationsData && typeof translateCommonElements === 'function') {
-            translateCommonElements(lang, translationsData);
         }
         
-        // Handle form labels and placeholders
-        if (typeof translateFormElements === 'function') {
-            translateFormElements(lang, translationsData);
+        if (!translationFound) {
+            console.warn(`Translation not found for key '${key}' in language '${lang}'`);
         }
-        
-        // Debug and log available translation keys
-        console.log(`Available translation keys: ${translationsData ? Object.keys(translationsData).join(', ') : 'none'}`);
-        console.log(`Current page '${currentPage}' has translations: ${translationsData && translationsData[currentPage] ? 'yes' : 'no'}`);
-        
-        // Call page-specific translation function with correct order of parameters
-        // If current page is not in translations, try to use generic translations
-        if (currentPage && translationsData[currentPage]) {
-            translatePageContent(currentPage, lang, translationsData);
-        } else if (currentPage === 'index' || !currentPage) {
-            // Use index translations for home page or unknown pages
-            translatePageContent('index', lang, translationsData);
-        } else {
-            console.warn(`No translations found for page: ${currentPage}, using common translations only`);
-        }
-        
-        // Dispatch custom event for other components that might need to react to language change
-        document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
-        
-    } catch (error) {
-        console.error('Error updating language:', error);
-    }
+    });
 }
 
-// Helper function to get current page identifier
-function getCurrentPage() {
-    const path = window.location.pathname;
-    let filename = path.split('/').pop() || 'index.html';
-    
-    // Handle URLs with query parameters
-    if (filename.includes('?')) {
-        filename = filename.split('?')[0];
+function applyCommonTranslations(translations) {
+    if (!translations) {
+        console.warn('No common translations provided');
+        return;
     }
     
-    // Handle URLs without file extension
-    if (!filename.includes('.')) {
-        // Check if it's the root (empty or /)
-        if (filename === '' || filename === '/') {
-            return 'index';
-        }
-        return filename;
-    }
-    
-    // Handle empty filename (happens on some servers)
-    if (!filename) {
-        return 'index';
-    }
-    
-    // Remove file extension to match translation object keys
-    return filename.replace('.html', '') || 'index';
-}
-
-// Update the page-specific translation function to use external translations
-function translatePageContent(pageName, lang, translationsData) {
-    console.log(`Translating ${pageName} page to ${lang}`);
-    
-    // Intentar obtener traducciones de diferentes fuentes
-    let pageTranslations = null;
-    
-    // Primero, intentar desde el parámetro translationsData
-    if (translationsData && translationsData[pageName] && translationsData[pageName][lang]) {
-        pageTranslations = translationsData[pageName][lang];
-        console.log("Using translationsData from parameter");
-    } 
-    // Segundo, intentar desde window.translations
-    else if (window.translations && window.translations[pageName] && window.translations[pageName][lang]) {
-        pageTranslations = window.translations[pageName][lang];
-        console.log("Using window.translations");
-    }
-    // Tercero, intentar desde objeto global translations
-    else if (typeof translations !== 'undefined' && translations[pageName] && translations[pageName][lang]) {
-        pageTranslations = translations[pageName][lang];
-        console.log("Using global translations variable");
-    }
-    // Cuarto, usar fallback
-    else if (window.translationsFallback && window.translationsFallback[pageName] && window.translationsFallback[pageName][lang]) {
-        pageTranslations = window.translationsFallback[pageName][lang];
-        console.log("Using fallback translations");
-    }
-    
-    // Si aún no tenemos traducciones, verificar si tenemos traducciones para el idioma en general
-    if (!pageTranslations && window.translationsFallback && window.translationsFallback[lang]) {
-        pageTranslations = window.translationsFallback[lang];
-        console.log("Using generic language fallback");
-    }
-    
-    // Si aún no tenemos traducciones, usar el fallback en inglés como último recurso
-    if (!pageTranslations && window.translationsFallback && window.translationsFallback.en) {
-        pageTranslations = window.translationsFallback.en;
-        console.log("Using English fallback as last resort");
-    }
-    
-    // Si aún no tenemos traducciones, intentar usar las de la página principal
-    if (!pageTranslations) {
-        if (translationsData && translationsData['index'] && translationsData['index'][lang]) {
-            pageTranslations = translationsData['index'][lang];
-            console.log("Using index page translations as fallback");
-        } else {
-            console.warn(`Translations not found for page ${pageName} in ${lang}`);
-            return;
-        }
-    }
-    
-    // Translate all elements with data-i18n attributes
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (pageTranslations[key]) {
-            element.innerHTML = pageTranslations[key];
+    // Menu items
+    document.querySelectorAll('nav a, .mobile-menu a').forEach(link => {
+        const href = link.getAttribute('href');
+        
+        if (href.includes('index.html') || href === '/' || href === '') {
+            if (translations.home) link.textContent = translations.home;
+        } else if (href.includes('company.html')) {
+            if (translations.company) link.textContent = translations.company;
+        } else if (href.includes('about.html')) {
+            if (translations.aboutUs) link.textContent = translations.aboutUs;
+        } else if (href.includes('consortium.html')) {
+            if (translations.consortium) link.textContent = translations.consortium;
+        } else if (href.includes('empower.html')) {
+            if (translations.empowerTransNation) link.textContent = translations.empowerTransNation;
+        } else if (href.includes('dynasty') || href.includes('Dynasty')) {
+            if (translations.dynastyPlatform) link.textContent = translations.dynastyPlatform;
+        } else if (href.includes('hall-of-fame.html')) {
+            if (translations.hallOfFame) link.textContent = translations.hallOfFame;
+        } else if (href.includes('partners.html')) {
+            if (translations.partners) link.textContent = translations.partners;
+        } else if (href.includes('news.html')) {
+            if (translations.news) link.textContent = translations.news;
         }
     });
     
-    // Handle page-specific translations based on page name
-    try {
-        switch(pageName) {
-            case 'index':
-                translateIndexPage(pageTranslations);
-                break;
-            case 'company':
-                translateCompanyPage(pageTranslations);
-                break;
-            case 'about':
-                translateAboutPage(pageTranslations);
-                break;
-            case 'consortium':
-                translateConsortiumPage(pageTranslations);
-                break;
-            case 'dynasty':
-                translateDynastyPage(pageTranslations);
-                break;
-            case 'news':
-                translateNewsPage(pageTranslations);
-                break;
-            case 'empower':
-                translateEmpowerPage(pageTranslations);
-                break;
-            default:
-                // For pages without specific translation functions, 
-                // try to use common translation patterns
-                translateGenericPage(pageTranslations);
-                break;
+    // Footer content
+    const copyright = document.querySelector('.copyright');
+    if (copyright && translations.copyright) copyright.innerHTML = translations.copyright;
+    
+    const companyInfo = document.querySelector('.company-info');
+    if (companyInfo && translations.companyInfo) companyInfo.innerHTML = translations.companyInfo;
+    
+    const address = document.querySelector('.address');
+    if (address && translations.address) address.innerHTML = translations.address;
+    
+    const phone = document.querySelector('.phone');
+    if (phone && translations.phone) phone.innerHTML = translations.phone;
+    
+    // Button text
+    document.querySelectorAll('.btn-primary, .btn-secondary').forEach(button => {
+        if (button.textContent.includes('Read More') && translations.readMore) {
+            button.textContent = translations.readMore;
+        } else if (button.textContent.includes('Learn More') && translations.learnMore) {
+            button.textContent = translations.learnMore;
+        } else if (button.textContent.includes('Contact Us') && translations.contactUs) {
+            button.textContent = translations.contactUs;
         }
-    } catch (error) {
-        console.error(`Error translating page ${pageName}:`, error);
+    });
+    
+    console.log('Applied common translations');
+}
+
+function applyPageTranslations(pageName, translations) {
+    console.log(`Applying translations for page: ${pageName}`);
+    
+    // Call the appropriate page-specific translation function
+    switch (pageName) {
+        case 'index':
+            translateIndexPage(translations);
+            break;
+        case 'company':
+            translateCompanyPage(translations);
+            break;
+        case 'about':
+            translateAboutPage(translations);
+            break;
+        case 'consortium':
+            translateConsortiumPage(translations);
+            break;
+        case 'empower':
+            translateEmpowerPage(translations);
+            break;
+        case 'dynasty':
+            translateDynastyPage(translations);
+            break;
+        default:
+            translateGenericPage(translations);
+            break;
     }
 }
 
-// Function to translate generic pages without specific functions
 function translateGenericPage(translations) {
     if (!translations) {
         console.warn('No translations provided for generic page');
