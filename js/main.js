@@ -843,6 +843,9 @@ function translatePageContent(pageName, lang, translationsData) {
             case 'consortium':
                 translateConsortiumPage(pageTranslations);
                 break;
+            case 'news':
+                translateNewsPage(pageTranslations);
+                break;
             default:
                 // For pages without specific translation functions, 
                 // try to use common translation patterns
@@ -1190,6 +1193,65 @@ function translateConsortiumPage(translations) {
     if (contactInfoTitle) contactInfoTitle.textContent = translations.contactInfoTitle || "Contact Information";
 }
 
+// Function to translate the News page
+function translateNewsPage(translations) {
+    if (!translations) {
+        console.warn('No translations provided for news page');
+        return;
+    }
+    
+    // Page title and introduction
+    const pageTitle = document.querySelector('.page-header h1, .news-title, h1.title');
+    if (pageTitle) pageTitle.textContent = translations.pageTitle || "News & Updates";
+    
+    const introText = document.querySelector('.news-intro, .intro-text, .news-description');
+    if (introText) introText.textContent = translations.introText || "";
+    
+    // Latest news section
+    const latestNewsTitle = document.querySelector('.latest-news-title, .news-section h2:first-of-type');
+    if (latestNewsTitle) latestNewsTitle.textContent = translations.latestNewsTitle || "Latest News";
+    
+    // Upcoming events section
+    const upcomingEventsTitle = document.querySelector('.upcoming-events-title, .events-section h2');
+    if (upcomingEventsTitle) upcomingEventsTitle.textContent = translations.upcomingEventsTitle || "Upcoming Events";
+    
+    // Press releases section
+    const pressReleasesTitle = document.querySelector('.press-releases-title, .press-section h2');
+    if (pressReleasesTitle) pressReleasesTitle.textContent = translations.pressReleasesTitle || "Press Releases";
+    
+    // Media gallery section
+    const mediaGalleryTitle = document.querySelector('.media-gallery-title, .gallery-section h2');
+    if (mediaGalleryTitle) mediaGalleryTitle.textContent = translations.mediaGalleryTitle || "Media Gallery";
+    
+    // Subscribe section
+    const subscribeTitle = document.querySelector('.subscribe-title, .subscribe-section h2');
+    if (subscribeTitle) subscribeTitle.textContent = translations.subscribeTitle || "Subscribe to Updates";
+    
+    const subscribeText = document.querySelector('.subscribe-text, .subscribe-section p');
+    if (subscribeText) subscribeText.textContent = translations.subscribeText || "";
+    
+    // Email input placeholder
+    const emailInput = document.querySelector('.subscribe-section input[type="email"], input[name="email"]');
+    if (emailInput) emailInput.placeholder = translations.emailPlaceholder || "Your email address";
+    
+    // Subscribe button
+    const subscribeButton = document.querySelector('.subscribe-section button, .subscribe-button');
+    if (subscribeButton) subscribeButton.textContent = translations.subscribeButton || "Subscribe";
+    
+    // No news message (if applicable)
+    const noNewsText = document.querySelector('.no-news-text, .empty-state');
+    if (noNewsText) noNewsText.textContent = translations.noNewsText || "Check back soon for updates!";
+    
+    // Media contact section
+    const mediaContactTitle = document.querySelector('.media-contact-title, .contact-section h3');
+    if (mediaContactTitle) mediaContactTitle.textContent = translations.mediaContactTitle || "Media Contact";
+    
+    const mediaContactText = document.querySelector('.media-contact-text, .contact-section p');
+    if (mediaContactText) mediaContactText.textContent = translations.mediaContactText || "";
+    
+    console.log('News page translation complete');
+}
+
 // Basic translations as fallback
 window.translationsFallback = {
     common: {
@@ -1286,6 +1348,38 @@ window.translationsFallback = {
         // existing translations...
     },
     // other pages...
+    news: {
+        en: {
+            pageTitle: "News & Updates",
+            introText: "Stay informed with the latest news, updates, and announcements from Miss Star International.",
+            latestNewsTitle: "Latest News",
+            upcomingEventsTitle: "Upcoming Events",
+            pressReleasesTitle: "Press Releases",
+            mediaGalleryTitle: "Media Gallery",
+            subscribeTitle: "Subscribe to Updates",
+            subscribeText: "Join our mailing list to receive the latest news and updates directly in your inbox.",
+            emailPlaceholder: "Your email address",
+            subscribeButton: "Subscribe",
+            noNewsText: "Check back soon for updates!",
+            mediaContactTitle: "Media Contact",
+            mediaContactText: "For press inquiries, please contact our media relations team."
+        },
+        es: {
+            pageTitle: "Noticias y Actualizaciones",
+            introText: "Mantente informado con las últimas noticias, actualizaciones y anuncios de Miss Star International.",
+            latestNewsTitle: "Últimas Noticias",
+            upcomingEventsTitle: "Próximos Eventos",
+            pressReleasesTitle: "Comunicados de Prensa",
+            mediaGalleryTitle: "Galería de Medios",
+            subscribeTitle: "Suscríbete a las Actualizaciones",
+            subscribeText: "Únete a nuestra lista de correo para recibir las últimas noticias y actualizaciones directamente en tu bandeja de entrada.",
+            emailPlaceholder: "Tu dirección de correo electrónico",
+            subscribeButton: "Suscribirse",
+            noNewsText: "¡Vuelve pronto para ver actualizaciones!",
+            mediaContactTitle: "Contacto para Medios",
+            mediaContactText: "Para consultas de prensa, por favor contacta a nuestro equipo de relaciones con los medios."
+        }
+    }
 };
 
 // Ensure window.translations is available

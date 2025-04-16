@@ -266,6 +266,40 @@ const translations = {
             legalText: "Miss Star International opera bajo la marca registrada núm. 4.238.776.",
             joinButton: "Únete al Consorcio"
         }
+    },
+
+    // News page translations
+    news: {
+        en: {
+            pageTitle: "News & Updates",
+            introText: "Stay informed with the latest news, updates, and announcements from Miss Star International.",
+            latestNewsTitle: "Latest News",
+            upcomingEventsTitle: "Upcoming Events",
+            pressReleasesTitle: "Press Releases",
+            mediaGalleryTitle: "Media Gallery",
+            subscribeTitle: "Subscribe to Updates",
+            subscribeText: "Join our mailing list to receive the latest news and updates directly in your inbox.",
+            emailPlaceholder: "Your email address",
+            subscribeButton: "Subscribe",
+            noNewsText: "Check back soon for updates!",
+            mediaContactTitle: "Media Contact",
+            mediaContactText: "For press inquiries, please contact our media relations team."
+        },
+        es: {
+            pageTitle: "Noticias y Actualizaciones",
+            introText: "Mantente informado con las últimas noticias, actualizaciones y anuncios de Miss Star International.",
+            latestNewsTitle: "Últimas Noticias",
+            upcomingEventsTitle: "Próximos Eventos",
+            pressReleasesTitle: "Comunicados de Prensa",
+            mediaGalleryTitle: "Galería de Medios",
+            subscribeTitle: "Suscríbete a las Actualizaciones",
+            subscribeText: "Únete a nuestra lista de correo para recibir las últimas noticias y actualizaciones directamente en tu bandeja de entrada.",
+            emailPlaceholder: "Tu dirección de correo electrónico",
+            subscribeButton: "Suscribirse",
+            noNewsText: "¡Vuelve pronto para ver actualizaciones!",
+            mediaContactTitle: "Contacto para Medios",
+            mediaContactText: "Para consultas de prensa, por favor contacta a nuestro equipo de relaciones con los medios."
+        }
     }
 };
 
