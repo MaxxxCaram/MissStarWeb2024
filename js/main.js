@@ -1,10 +1,75 @@
-// Handle responsive menu
-document.addEventListener('DOMContentLoaded', () => {
-    // Add JavaScript functionality as needed
-    // Console filtering is now handled by an inline script in the HTML <head>
-});
+// Importing translations file if not available globally
+if (typeof translations === 'undefined') {
+    console.info("Loading translations...");
+    // Dynamic import of translations.js
+    const script = document.createElement('script');
+    script.src = './js/translations.js';
+    script.async = true;
+    script.onload = function() {
+        console.info("Translations loaded successfully");
+        if (typeof translations !== 'undefined') {
+            console.info("Translations object available:", Object.keys(translations));
+            // Intentar inicializar el selector de idioma nuevamente después de cargar las traducciones
+            if (typeof initializeLanguageSwitcher === 'function') {
+                initializeLanguageSwitcher();
+            }
+        } else {
+            console.warn("Translations object not available after script load");
+        }
+    };
+    script.onerror = function(error) {
+        console.error("Failed to load translations.js:", error);
+        // Crear traducciones básicas si no se pudo cargar el archivo
+        window.translations = window.translationsFallback || {
+            common: {
+                en: { home: "Home" },
+                es: { home: "Inicio" }
+            }
+        };
+    };
+    document.head.appendChild(script);
+}
 
+// Interceptar mensajes de consola para filtrar advertencias específicas
+(function() {
+    // Solo aplicar en navegadores Microsoft Edge
+    if (navigator.userAgent.includes('Edg')) {
+        const originalConsoleWarn = console.warn;
+        
+        // Reemplazar la función console.warn
+        console.warn = function(...args) {
+            // Filtrar advertencias de Edge sobre lazy loading
+            if (args[0] && typeof args[0] === 'string' && 
+                (args[0].includes('[Intervention]') || 
+                 args[0].includes('Images loaded lazily') ||
+                 args[0].includes('Load events are deferred'))) {
+                return; // No mostrar estas advertencias
+            }
+            
+            // Pasar el resto de advertencias a la función original
+            return originalConsoleWarn.apply(this, args);
+        };
+        
+        console.log('Console warning filter initialized for Microsoft Edge');
+    }
+})();
+
+// Main initialization 
 document.addEventListener('DOMContentLoaded', function() {
+    console.info('Inicializando componentes de la página...');
+    
+    // Asegurarse de que las traducciones estén disponibles antes de inicializar el selector de idioma
+    if (typeof translations === 'undefined') {
+        console.info('Traducciones no disponibles, cargando dinámicamente...');
+        // Código de carga ya existe en la parte superior del archivo, solo esperamos a que termine
+    } else {
+        console.info('Traducciones disponibles, inicializando selector de idioma...');
+        // Initialize language switcher first to ensure translations load before other components
+        setTimeout(function() {
+            initializeLanguageSwitcher();
+        }, 100); // Pequeño retraso para asegurar que los elementos DOM estén listos
+    }
+    
     // Find all elements with 'expandable-title' class
     const expandableTitles = document.querySelectorAll('.expandable-title');
     
@@ -61,8 +126,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize performance monitoring
     initializePerformanceMonitoring();
     
-    // Initialize language switcher
-    initializeLanguageSwitcher();
+    // Si después de 2 segundos no hay traducciones, intentar forzar la inicialización
+    setTimeout(function() {
+        if (typeof window.translations === 'undefined') {
+            console.warn('Traducciones no disponibles después de 2 segundos, inicializando con valores predeterminados');
+            window.translations = window.translationsFallback || {
+                common: {
+                    en: { home: "Home" },
+                    es: { home: "Inicio" }
+                }
+            };
+            initializeLanguageSwitcher();
+        }
+    }, 2000);
 });
 
 // Scroll and Animation Controller
@@ -247,26 +323,118 @@ function initializeNavbar() {
 
 // Updated Language Switcher Function
 function initializeLanguageSwitcher() {
-    const langButtons = document.querySelectorAll('.lang-btn');
+    // Buscar botones de idioma utilizando selectores más amplios primero
+    let langButtons = document.querySelectorAll('.language-switcher button, [data-lang], button[data-lang]');
     
     if (!langButtons || langButtons.length === 0) {
-        console.warn('Language buttons not found, skipping language switcher initialization');
-        return;
+        langButtons = document.querySelectorAll('.lang-btn, button:contains("EN"), button:contains("ES")');
+        console.info(`Buscando botones de idioma con selectores alternativos... encontrados: ${langButtons.length}`);
     }
     
-    console.log(`Found ${langButtons.length} language buttons, initializing...`);
-    
-    // Check if translations are available
-    if (typeof translations === 'undefined') {
-        console.error('Translations object not found. Make sure translations.js is loaded before main.js');
-        return;
+    // Búsqueda extendida para encontrar botones de idioma por texto
+    if (!langButtons || langButtons.length === 0) {
+        const allButtons = document.querySelectorAll('button, a');
+        const langButtonsArray = [];
+        
+        allButtons.forEach(button => {
+            const text = button.textContent.trim().toLowerCase();
+            if (text === 'en' || text === 'es' || text === 'english' || text === 'español') {
+                langButtonsArray.push(button);
+            }
+        });
+        
+        if (langButtonsArray.length > 0) {
+            langButtons = langButtonsArray;
+            console.info(`Encontrados ${langButtons.length} botones de idioma por texto`);
+        } else {
+            console.info('No se encontraron botones de idioma por texto');
+        }
     }
     
-    // Get saved language or default to English
-    let currentLang = localStorage.getItem('language') || 'en';
-    console.log(`Currently set language: ${currentLang}`);
+    // Si aún no hay botones, crearlos automáticamente
+    if (!langButtons || langButtons.length === 0) {
+        console.info('No language buttons found, creating them automatically');
+        
+        // Encontrar un buen lugar para insertar los botones (preferiblemente en el nav)
+        const navElement = document.querySelector('nav ul, nav, header');
+        
+        if (navElement) {
+            // Crear contenedor para los botones
+            const langSwitcher = document.createElement('div');
+            langSwitcher.className = 'language-switcher flex items-center space-x-2 ml-4';
+            
+            // Crear botón para inglés
+            const enBtn = document.createElement('button');
+            enBtn.className = 'lang-btn px-2 py-1 rounded-md text-sm';
+            enBtn.setAttribute('data-lang', 'en');
+            enBtn.textContent = 'EN';
+            
+            // Crear botón para español
+            const esBtn = document.createElement('button');
+            esBtn.className = 'lang-btn px-2 py-1 rounded-md text-sm';
+            esBtn.setAttribute('data-lang', 'es');
+            esBtn.textContent = 'ES';
+            
+            // Añadir botones al contenedor
+            langSwitcher.appendChild(enBtn);
+            langSwitcher.appendChild(esBtn);
+            
+            // Añadir contenedor a la navegación
+            if (navElement.tagName === 'UL') {
+                // Si es una lista, crear un elemento de lista
+                const li = document.createElement('li');
+                li.className = 'language-switcher-container';
+                li.appendChild(langSwitcher);
+                navElement.appendChild(li);
+            } else {
+                // Si no, añadirlo directamente
+                navElement.appendChild(langSwitcher);
+            }
+            
+            // Actualizar la lista de botones
+            langButtons = document.querySelectorAll('.lang-btn');
+            console.info(`Created language buttons automatically, total: ${langButtons.length}`);
+        } else {
+            console.warn('No suitable container found for language buttons, skipping language switcher initialization');
+            return;
+        }
+    }
     
-    // Initialize with saved language or default
+    console.info(`Found ${langButtons.length} language buttons, initializing...`);
+    
+    // Ensure translations are available globally
+    if (typeof translations !== 'undefined' && !window.translations) {
+        window.translations = translations;
+        console.info('Made translations available globally');
+    }
+    
+    // Check if translations are available from any source
+    if (typeof translations === 'undefined' && !window.translations) {
+        console.warn('Translations object not found. Make sure translations.js is loaded before main.js');
+        // Initialize with fallback translations if main translations are missing
+        window.translations = window.translationsFallback || {
+            common: {
+                en: { home: "Home" },
+                es: { home: "Inicio" }
+            }
+        };
+        console.info('Using fallback translations since main translations not found');
+    }
+    
+    // Detect browser language if no language is saved
+    const savedLanguage = localStorage.getItem('language') || localStorage.getItem('selectedLanguage');
+    let currentLang = savedLanguage;
+    
+    if (!currentLang) {
+        currentLang = detectBrowserLanguage();
+        console.info(`No saved language found, detected browser language: ${currentLang}`);
+        localStorage.setItem('language', currentLang);
+        localStorage.setItem('selectedLanguage', currentLang);
+    } else {
+        console.info(`Using saved language preference: ${currentLang}`);
+    }
+    
+    // Initialize with saved/detected language
     updateLanguage(currentLang);
 
     // Set active state on the current language button
@@ -275,21 +443,30 @@ function initializeLanguageSwitcher() {
     // Add click event listeners to language buttons
     langButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            const lang = this.getAttribute('data-lang');
+            // Intentar obtener el idioma del atributo data-lang, o del texto del botón
+            const lang = this.getAttribute('data-lang') || 
+                         (this.textContent.trim().toLowerCase() === 'español' || this.textContent.trim().toLowerCase() === 'es' ? 'es' : 'en');
             
             if (!lang) {
-                console.error('Language button missing data-lang attribute');
+                console.error('Language button missing data-lang attribute and could not determine language from text');
                 return;
             }
             
             if (lang === currentLang) {
-                console.log(`Language ${lang} already selected`);
+                console.info(`Language ${lang} already selected`);
                 return;
             }
             
             // Save language preference to localStorage
             localStorage.setItem('language', lang);
+            localStorage.setItem('selectedLanguage', lang);
             currentLang = lang;
+            
+            // Update language field in application form if exists
+            const languageField = document.querySelector('form input[name="language"]');
+            if (languageField) {
+                languageField.value = lang;
+            }
             
             // Update active button state
             setActiveLanguageButton(lang);
@@ -302,16 +479,55 @@ function initializeLanguageSwitcher() {
     // Function to set active state on language button
     function setActiveLanguageButton(lang) {
         langButtons.forEach(btn => {
-            const btnLang = btn.getAttribute('data-lang');
+            const btnLang = btn.getAttribute('data-lang') || 
+                           (btn.textContent.trim().toLowerCase() === 'español' || btn.textContent.trim().toLowerCase() === 'es' ? 'es' : 'en');
+            
             if (btnLang === lang) {
-                btn.classList.add('lang-active');
+                btn.classList.add('lang-active', 'active');
                 btn.setAttribute('aria-pressed', 'true');
+                
+                // Añadir estilos de apariencia activa si no hay CSS para eso
+                btn.style.fontWeight = 'bold';
+                btn.style.color = '#ffffff';
+                btn.style.borderBottom = '2px solid currentColor';
             } else {
-                btn.classList.remove('lang-active');
+                btn.classList.remove('lang-active', 'active');
                 btn.setAttribute('aria-pressed', 'false');
+                
+                // Reiniciar estilos
+                btn.style.fontWeight = 'normal';
+                btn.style.color = '#cccccc';
+                btn.style.borderBottom = 'none';
             }
         });
     }
+    
+    console.info(`Language switcher initialized with language: ${currentLang}`);
+    console.info(`Language buttons found: ${langButtons.length}`);
+
+    // Dispatch event to notify the system that language switcher is ready
+    document.dispatchEvent(new CustomEvent('languageSwitcherReady', { 
+        detail: { language: currentLang }
+    }));
+}
+
+// Helper function to detect browser language
+function detectBrowserLanguage() {
+    // Get browser language preference 
+    let browserLang = navigator.language || navigator.userLanguage;
+    
+    // Extract main language code (e.g., 'en-US' -> 'en')
+    if (browserLang) {
+        browserLang = browserLang.split('-')[0].toLowerCase();
+    }
+    
+    // Only support 'en' and 'es' for now
+    if (browserLang === 'es') {
+        return 'es';
+    }
+    
+    // Default to English for any other language
+    return 'en';
 }
 
 // Function to update content based on language
@@ -328,23 +544,46 @@ function updateLanguage(lang) {
         const currentPage = getCurrentPage();
         console.log(`Current page identified as: ${currentPage}`);
         
-        // Load translations
-        if (typeof translations !== 'undefined') {
-            // First translate common elements that appear on all pages
-            translateCommonElements(lang, translations);
-            
-            // Then translate page-specific content if available
-            if (translations[currentPage] && translations[currentPage][lang]) {
-                translatePageContent(lang, currentPage, translations);
-            } else {
-                console.warn(`No translations found for page: ${currentPage} in language: ${lang}`);
+        // Ensure translations are available in the global space
+        const translationsData = window.translations || window.translationsFallback;
+        
+        // Set the document language
+        document.documentElement.lang = lang;
+        
+        // Update all text elements with data-lang attributes
+        const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
+        elements.forEach(el => {
+            if (lang === 'es' && el.hasAttribute('data-lang-es')) {
+                el.textContent = el.getAttribute('data-lang-es');
+            } else if (lang === 'en' && el.hasAttribute('data-lang-en')) {
+                el.textContent = el.getAttribute('data-lang-en');
             }
-        } else {
-            console.error('Translations not loaded. Make sure translations.js is included before main.js');
+        });
+        
+        // Handle content sections with data-lang attribute
+        const contentSections = document.querySelectorAll('[data-lang]');
+        contentSections.forEach(section => {
+            if (section.tagName !== 'BUTTON') { // Skip language switcher buttons
+                if (section.getAttribute('data-lang') === lang) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            }
+        });
+
+        // Translate common elements across all pages
+        if (translationsData && typeof translateCommonElements === 'function') {
+            translateCommonElements(lang, translationsData);
         }
         
-        // Update application form labels if they exist on the page
-        updateApplicationFormLabels(lang);
+        // Handle form labels and placeholders
+        if (typeof translateFormElements === 'function') {
+            translateFormElements(lang, translationsData);
+        }
+        
+        // Call page-specific translation function with correct order of parameters
+        translatePageContent(currentPage, lang, translationsData);
         
         // Dispatch custom event for other components that might need to react to language change
         document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
@@ -363,742 +602,6 @@ function getCurrentPage() {
     return filename.replace('.html', '') || 'index';
 }
 
-// Function to translate page-specific content
-function translatePageContent(lang, page, translationsData) {
-    const pageTranslations = translationsData[page][lang];
-    
-    if (!pageTranslations) {
-        console.warn(`No translations found for page ${page} in language ${lang}`);
-        return;
-    }
-    
-    // Find all elements with data-translate attribute
-    document.querySelectorAll('[data-translate]').forEach(element => {
-        const key = element.getAttribute('data-translate');
-        if (pageTranslations[key]) {
-            // Handle elements that should keep their inner HTML (like links or spans)
-            if (element.getAttribute('data-translate-html') === 'true') {
-                element.innerHTML = pageTranslations[key];
-            } else {
-                element.textContent = pageTranslations[key];
-            }
-        }
-    });
-    
-    // Additional page-specific translation elements
-    // Hero section
-    if (page === 'index') {
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle) heroTitle.textContent = pageTranslations.welcomeTitle || '';
-        
-        const heroSubtitle = document.querySelector('.hero-subtitle');
-        if (heroSubtitle) heroSubtitle.textContent = pageTranslations.welcomeSubtitle || '';
-        
-        const heroDescription = document.querySelector('.hero-description');
-        if (heroDescription) heroDescription.textContent = pageTranslations.heroDescription || '';
-        
-        const scrollDownText = document.querySelector('.scroll-indicator-text');
-        if (scrollDownText) scrollDownText.textContent = pageTranslations.scrollDown || '';
-    }
-}
-
-// Form Validation and Submission
-function initializeForms() {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                showMessage(form, 'success', 'Thank you! We will contact you soon.');
-                form.reset();
-            } catch (error) {
-                console.error('Form submission error:', error);
-                showMessage(form, 'error', 'An error occurred. Please try again later.');
-            }
-        });
-    });
-}
-
-function showMessage(form, type, text) {
-    const message = document.createElement('div');
-    message.className = `${type}-message`;
-    message.textContent = text;
-    
-    // Remove any existing messages
-    form.querySelectorAll('.success-message, .error-message').forEach(msg => msg.remove());
-    
-    form.appendChild(message);
-    setTimeout(() => message.remove(), 5000);
-}
-
-// Mobile Menu Toggle
-function initializeMobileMenu() {
-    const menuToggle = document.querySelector('.menu-toggle');
-    const mobileMenu = document.querySelector('.mobile-menu');
-    const header = document.querySelector('header');
-
-    if (menuToggle && mobileMenu) {
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuToggle.classList.toggle('active');
-            mobileMenu.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!menuToggle.contains(e.target) && !mobileMenu.contains(e.target)) {
-                menuToggle.classList.remove('active');
-                mobileMenu.classList.remove('active');
-                document.body.classList.remove('menu-open');
-            }
-        });
-
-        // Prevent menu from closing when clicking inside
-        mobileMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-}
-
-// Parallax Effect
-function initializeParallax() {
-    if (!window.matchMedia('(max-width: 768px)').matches) {
-        document.addEventListener('mousemove', (e) => {
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.parallax').forEach(element => {
-                    const speed = element.getAttribute('data-speed') || 0.1;
-                    const x = (window.innerWidth - e.pageX * speed) / 100;
-                    const y = (window.innerHeight - e.pageY * speed) / 100;
-                    
-                    element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-                });
-            });
-        });
-    }
-}
-
-// Custom Cursor
-function initializeCustomCursor() {
-    if (window.matchMedia('(pointer: fine)').matches) {
-        const cursor = document.createElement('div');
-        cursor.className = 'custom-cursor';
-        document.body.appendChild(cursor);
-
-        let cursorVisible = false;
-        let cursorEnlarged = false;
-
-        document.addEventListener('mousemove', (e) => {
-            if (!cursorVisible) {
-                cursor.style.opacity = 1;
-                cursorVisible = true;
-            }
-            cursor.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-        });
-
-        document.addEventListener('mousedown', () => {
-            cursor.classList.add('click');
-            cursorEnlarged = true;
-        });
-
-        document.addEventListener('mouseup', () => {
-            cursor.classList.remove('click');
-            cursorEnlarged = false;
-        });
-
-        document.querySelectorAll('a, button, .interactive').forEach(element => {
-            element.addEventListener('mouseenter', () => {
-                cursor.classList.add('hover');
-                cursorEnlarged = true;
-            });
-            
-            element.addEventListener('mouseleave', () => {
-                cursor.classList.remove('hover');
-                cursorEnlarged = false;
-            });
-        });
-
-        document.addEventListener('mouseleave', () => {
-            cursor.style.opacity = 0;
-            cursorVisible = false;
-        });
-
-        document.addEventListener('mouseenter', () => {
-            cursor.style.opacity = 1;
-            cursorVisible = true;
-        });
-    }
-}
-
-function initializePerformanceMonitoring() {
-    if ('PerformanceObserver' in window) {
-        try {
-            // Completely disable favicon.ico performance warnings
-            const originalConsoleWarn = console.warn;
-            console.warn = function(...args) {
-                if (args.length >= 1 && 
-                    typeof args[0] === 'string' && 
-                    args[0] === 'Performance issue detected:' &&
-                    args.length >= 2 && 
-                    args[1] && 
-                    args[1].name && 
-                    args[1].name.includes('favicon.ico')) {
-                    return; // Silently ignore favicon warnings
-                }
-                return originalConsoleWarn.apply(this, args);
-            };
-            
-            // Track resources loading time
-            const observer = new PerformanceObserver((list) => {
-                list.getEntries().forEach(entry => {
-                    // Completely ignore favicon performance checks
-                    if (entry.name.includes('favicon')) {
-                        return;
-                    }
-                    
-                    // Increase threshold for image resources since they're now optimized
-                    const threshold = entry.initiatorType === 'img' ? 200 : 100;
-                    
-                    if (entry.duration > threshold && entry.initiatorType !== 'video') {
-                        console.warn('Performance issue detected:', {
-                            name: entry.name,
-                            duration: entry.duration,
-                            type: entry.initiatorType
-                        });
-                        
-                        // For images that are still slow, try to preload them next time
-                        if (entry.initiatorType === 'img' && !entry.name.includes('placehold.co')) {
-                            const link = document.createElement('link');
-                            link.rel = 'preload';
-                            link.href = entry.name;
-                            link.as = 'image';
-                            document.head.appendChild(link);
-                        }
-                    }
-                });
-            });
-            
-            // Only observe 100% supported entry types - explicitly exclude 'longtask'
-            // to avoid console warnings
-            const supportedEntryTypes = ['resource', 'paint'];
-            
-            // Safely check if the browser supports largest-contentful-paint
-            if (PerformanceObserver.supportedEntryTypes && 
-                Array.isArray(PerformanceObserver.supportedEntryTypes) &&
-                PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
-                supportedEntryTypes.push('largest-contentful-paint');
-            }
-            
-            // Only register the observer if there are supported entry types
-            if (supportedEntryTypes.length > 0) {
-                observer.observe({ entryTypes: supportedEntryTypes });
-            }
-            
-            // Add image optimization logic when page loads
-            document.addEventListener('DOMContentLoaded', () => {
-                // Apply lazy loading to images that are below the fold
-                const images = document.querySelectorAll('img:not([loading])');
-                images.forEach((img, index) => {
-                    if (index >= 2) { // First two images load eagerly, rest lazily
-                        img.setAttribute('loading', 'lazy');
-                    } else {
-                        img.setAttribute('loading', 'eager');
-                    }
-                    
-                    // Set width and height if not already set
-                    if (!img.hasAttribute('width') && !img.hasAttribute('height')) {
-                        // Default placeholder size
-                        img.setAttribute('width', '600');
-                        img.setAttribute('height', '400');
-                    }
-                });
-                
-                // Add IntersectionObserver to handle delayed animations on images
-                const imageObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            
-                            // Add animation transition
-                            img.style.transition = 'opacity 0.3s ease-in-out';
-                            img.style.opacity = '1';
-                            
-                            // Stop observing after animation
-                            imageObserver.unobserve(img);
-                        }
-                    });
-                }, { threshold: 0.1 });
-                
-                // Observe all images except logo
-                document.querySelectorAll('img:not(.logo img)').forEach(img => {
-                    // Set initial state
-                    img.style.opacity = '0';
-                    imageObserver.observe(img);
-                });
-            });
-            
-        } catch (e) {
-            console.warn('PerformanceObserver error:', e);
-        }
-    }
-}
-
-// Main language functionality
-function setLanguage(lang) {
-    console.log('Setting language to:', lang);
-    document.documentElement.lang = lang;
-    
-    // Load translations from external file if available
-    let translationsData = window.translations || window.translationsFallback;
-    
-    // Update all text elements with data-lang attributes
-    const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
-    elements.forEach(el => {
-        if (lang === 'es' && el.hasAttribute('data-lang-es')) {
-            el.textContent = el.getAttribute('data-lang-es');
-        } else if (lang === 'en' && el.hasAttribute('data-lang-en')) {
-            el.textContent = el.getAttribute('data-lang-en');
-        }
-    });
-    
-    // Handle content sections with data-lang attribute
-    const contentSections = document.querySelectorAll('[data-lang]');
-    contentSections.forEach(section => {
-        if (section.tagName !== 'BUTTON') { // Skip language switcher buttons
-            if (section.getAttribute('data-lang') === lang) {
-                section.style.display = 'block';
-            } else {
-                section.style.display = 'none';
-            }
-        }
-    });
-
-    // Update the language buttons active state
-    const languageButtons = document.querySelectorAll('.language-switcher button');
-    languageButtons.forEach(button => {
-        button.classList.toggle('active', button.getAttribute('data-lang') === lang);
-    });
-    
-    // Translate common elements across all pages
-    translateCommonElements(lang, translationsData);
-    
-    // Handle form labels and placeholders
-    translateFormElements(lang, translationsData);
-    
-    // Handle page-specific translations
-    const pageName = getCurrentPage();
-    translatePageContent(pageName, lang, translationsData);
-    
-    // Debug: output to console what page we're on and what translations we're using
-    console.log(`Current page: ${pageName}`, translationsData[pageName]?.[lang] ? 'Translations found' : 'No translations found');
-    
-    // Force translations for specific elements
-    if (document.querySelector('.welcome-text')) {
-        const welcomeToText = document.querySelector('.welcome-text .hologram-text:nth-child(1)');
-        if (welcomeToText) {
-            welcomeToText.textContent = lang === 'es' ? 'Bienvenido a' : 'Welcome to';
-        }
-        
-        const fearlessText = document.querySelector('.text-5xl .glow-text:nth-child(1)');
-        if (fearlessText) {
-            fearlessText.textContent = lang === 'es' ? 'Intrépidamente Femenina.' : 'Fearlessly Feminine.';
-        }
-        
-        const unapologeticallyText = document.querySelector('.text-5xl .glow-text:nth-child(2)');
-        if (unapologeticallyText) {
-            unapologeticallyText.textContent = lang === 'es' ? 'Decididamente Poderosa' : 'Unapologetically Powerful';
-        }
-    }
-
-    // Translate section titles directly
-    const sectionTitles = {
-        'pageant': { en: 'The Pageant', es: 'El Concurso' },
-        'contestants': { en: 'Contestants', es: 'Concursantes' },
-        'events': { en: 'Events', es: 'Eventos' },
-        'sponsors': { en: 'Sponsors', es: 'Patrocinadores' }
-    };
-
-    // Update section titles
-    Object.keys(sectionTitles).forEach(sectionId => {
-        const sectionTitle = document.querySelector(`#${sectionId} .section-title`);
-        if (sectionTitle) {
-            sectionTitle.textContent = sectionTitles[sectionId][lang];
-        }
-    });
-    
-    // Update specific buttons text
-    const buttonTexts = {
-        'pageant': { en: 'Learn More', es: 'Más Información' },
-        'contestants': { en: 'Meet the Queens', es: 'Conoce a las Reinas' },
-        'events': { en: 'View Calendar', es: 'Ver Calendario' },
-        'sponsors': { en: 'Our Partners', es: 'Nuestros Socios' }
-    };
-
-    // Update buttons
-    Object.keys(buttonTexts).forEach(sectionId => {
-        const button = document.querySelector(`#${sectionId} .btn-primary`);
-        if (button) {
-            const iconHTML = button.innerHTML.match(/<i[^>]*><\/i>/) || '';
-            button.innerHTML = buttonTexts[sectionId][lang] + ' ' + iconHTML;
-        }
-    });
-
-    // Update specific paragraph descriptions
-    if (document.querySelector('#pageant .section-content p')) {
-        document.querySelector('#pageant .section-content p').textContent = lang === 'es' 
-            ? 'Experimenta el glamour y la elegancia de nuestro concurso de belleza internacional que celebra la diversidad y el empoderamiento.'
-            : 'Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.';
-    }
-
-    if (document.querySelector('#contestants .section-content p')) {
-        document.querySelector('#contestants .section-content p').textContent = lang === 'es'
-            ? 'Conoce a nuestras increíbles concursantes que representarán a sus países en la competencia de este año.'
-            : 'Meet our amazing contestants who will represent their countries in this year\'s competition.';
-    }
-
-    if (document.querySelector('#events .section-content p')) {
-        document.querySelector('#events .section-content p').textContent = lang === 'es'
-            ? 'Consulta nuestro calendario de eventos y actividades durante todo el concurso.'
-            : 'Check out our calendar of events and activities throughout the pageant.';
-    }
-
-    if (document.querySelector('#sponsors .section-content p')) {
-        document.querySelector('#sponsors .section-content p').textContent = lang === 'es'
-            ? 'Nuestros patrocinadores oficiales que hacen posible este evento.'
-            : 'Our official sponsors who make this event possible.';
-    }
-
-    // Update the Apply Now section
-    const applyNowTitle = document.querySelector('.apply-now-container h2 .hologram-text');
-    if (applyNowTitle) {
-        applyNowTitle.textContent = lang === 'es' ? 'Aplica Ahora' : 'Apply Now';
-    }
-
-    const applyNowDescription = document.querySelector('.apply-now-container > p');
-    if (applyNowDescription) {
-        applyNowDescription.textContent = lang === 'es'
-            ? 'Las solicitudes ya están abiertas para Miss Star International 2025.'
-            : 'Applications are now open for Miss Star International 2025.';
-    }
-
-    // Update form labels
-    const formLabels = {
-        'fullName': { en: 'FULL NAME', es: 'NOMBRE COMPLETO' },
-        'email': { en: 'EMAIL', es: 'CORREO ELECTRÓNICO' },
-        'country': { en: 'COUNTRY', es: 'PAÍS' },
-        'age': { en: 'AGE', es: 'EDAD' },
-        'biography': { en: 'BIOGRAPHY (200 WORDS MAX)', es: 'BIOGRAFÍA (MÁXIMO 200 PALABRAS)' },
-        'socialImpact': { en: 'SOCIAL IMPACT PLATFORM', es: 'PLATAFORMA DE IMPACTO SOCIAL' }
-    };
-
-    // Update each label
-    Object.keys(formLabels).forEach(labelFor => {
-        const label = document.querySelector(`label[for="${labelFor}"]`);
-        if (label) {
-            label.textContent = formLabels[labelFor][lang];
-        }
-    });
-
-    // Update submit button
-    const submitButton = document.querySelector('.application-form .submit-button');
-    if (submitButton) {
-        const iconHTML = submitButton.innerHTML.match(/<i[^>]*><\/i>/) || '';
-        submitButton.innerHTML = (lang === 'es' ? 'Enviar Solicitud ' : 'Submit Application ') + iconHTML;
-    }
-
-    // Update country select placeholder
-    const countrySelect = document.querySelector('#country');
-    if (countrySelect && countrySelect.options[0]) {
-        countrySelect.options[0].text = lang === 'es' ? 'Selecciona tu país' : 'Select your country';
-    }
-
-    // Update social impact placeholder
-    const socialImpactTextarea = document.querySelector('#socialImpact');
-    if (socialImpactTextarea) {
-        socialImpactTextarea.placeholder = lang === 'es'
-            ? '¿Qué causa defenderías como Miss Star International?'
-            : 'What cause would you champion as Miss Star International?';
-    }
-
-    // Update word count label
-    const wordCountElement = document.querySelector('.word-count');
-    if (wordCountElement) {
-        const currentWords = wordCountElement.textContent.split('/')[0];
-        wordCountElement.textContent = `${currentWords}/${lang === 'es' ? 'palabras' : 'words'}`;
-    }
-
-    // Update form processing message translations
-    document.querySelectorAll('.form-processing-messages').forEach(el => {
-        if (el.getAttribute('data-message-type') === 'processing') {
-            el.innerHTML = lang === 'es' 
-                ? '<i class="fas fa-circle-notch fa-spin mr-2"></i> Procesando...'
-                : '<i class="fas fa-circle-notch fa-spin mr-2"></i> Processing...';
-        }
-    });
-
-    // Translate form success/error messages
-    const successMessage = {
-        en: 'Thank you for your application! We will review it and contact you soon.',
-        es: '¡Gracias por tu solicitud! La revisaremos y te contactaremos pronto.'
-    };
-
-    const errorMessage = {
-        en: 'An error occurred. Please try again later.',
-        es: 'Ocurrió un error. Por favor, inténtalo de nuevo más tarde.'
-    };
-
-    // Update footer content
-    const copyright = document.querySelector('footer .text-gray-500');
-    if (copyright) {
-        copyright.textContent = lang === 'es'
-            ? '© 2025 Miss Star International. Todos los derechos reservados.'
-            : '© 2025 Miss Star International. All rights reserved.';
-    }
-
-    const footerLinks = document.querySelectorAll('.footer-link');
-    const footerTranslations = {
-        'index.html': { en: 'Home', es: 'Inicio' },
-        'company.html': { en: 'The Company', es: 'La Compañía' },
-        'about.html': { en: 'About Us', es: 'Sobre Nosotros' },
-        'consortium.html': { en: 'Consortium', es: 'Consorcio' },
-        'empower.html': { en: 'EmpowerTransNation', es: 'EmpowerTransNation' },
-        'dynasty.html': { en: 'Dynasty Platform', es: 'Plataforma Dynasty' },
-        'halloffame.html': { en: 'Hall of Fame', es: 'Salón de la Fama' },
-        'partners.html': { en: 'Partners', es: 'Colaboradores' },
-        'news.html': { en: 'News', es: 'Noticias' }
-    };
-
-    footerLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (footerTranslations[href]) {
-            link.textContent = footerTranslations[href][lang];
-        }
-    });
-
-    const phoneText = document.querySelector('footer p:nth-of-type(2)');
-    if (phoneText) {
-        const phone = phoneText.querySelector('a');
-        if (phone) {
-            phoneText.innerHTML = (lang === 'es' ? 'Teléfono: ' : 'Phone: ') + 
-                '<a href="tel:+15056218615" class="text-star-gold hover:text-opacity-80">+1 (505) 621-8615</a>';
-        }
-    }
-    
-    // Force update on all navigation links
-    const navigationLinks = document.querySelectorAll('nav a');
-    navigationLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (href === 'index.html' || href === './index.html' || href === '/' || href === './') {
-            link.textContent = lang === 'es' ? 'Inicio' : 'Home';
-        } else if (href === 'company.html' || href === './company.html') {
-            link.textContent = lang === 'es' ? 'La Compañía' : 'The Company';
-        } else if (href === 'about.html' || href === './about.html') {
-            link.textContent = lang === 'es' ? 'Sobre Nosotros' : 'About Us';
-        } else if (href === 'consortium.html' || href === './consortium.html') {
-            link.textContent = lang === 'es' ? 'Consorcio' : 'Consortium';
-        } else if (href === 'empower.html' || href === './empower.html') {
-            link.textContent = lang === 'es' ? 'EmpowerTransNation' : 'EmpowerTransNation';
-        } else if (href === 'dynasty.html' || href === './dynasty.html') {
-            link.textContent = lang === 'es' ? 'Plataforma Dynasty' : 'Dynasty Platform';
-        } else if (href === 'halloffame.html' || href === './halloffame.html') {
-            link.textContent = lang === 'es' ? 'Salón de la Fama' : 'Hall of Fame';
-        } else if (href === 'partners.html' || href === './partners.html') {
-            link.textContent = lang === 'es' ? 'Colaboradores' : 'Partners';
-        } else if (href === 'news.html' || href === './news.html') {
-            link.textContent = lang === 'es' ? 'Noticias' : 'News';
-        }
-    });
-}
-
-// Add function to translate common elements
-function translateCommonElements(lang, translationsData) {
-    if (!translationsData || !translationsData.common || !translationsData.common[lang]) {
-        console.warn(`Common translations not found for ${lang}`);
-        return;
-    }
-    
-    const commonTranslations = translationsData.common[lang];
-    
-    // Translate navigation menu
-    if (document.querySelector('nav')) {
-        // Home
-        const homeLink = document.querySelector('nav a[href="index.html"], nav a[href="./index.html"], nav a[href="/"], nav a[href="./"]');
-        if (homeLink) homeLink.textContent = commonTranslations.home;
-        
-        // Company
-        const companyLink = document.querySelector('nav a[href="company.html"], nav a[href="./company.html"]');
-        if (companyLink) companyLink.textContent = commonTranslations.company;
-        
-        // About Us
-        const aboutLink = document.querySelector('nav a[href="about.html"], nav a[href="./about.html"]');
-        if (aboutLink) aboutLink.textContent = commonTranslations.aboutUs;
-        
-        // Consortium
-        const consortiumLink = document.querySelector('nav a[href="consortium.html"], nav a[href="./consortium.html"]');
-        if (consortiumLink) consortiumLink.textContent = commonTranslations.consortium;
-        
-        // EmpowerTransNation
-        const empowerLink = document.querySelector('nav a[href="empower.html"], nav a[href="./empower.html"]');
-        if (empowerLink) empowerLink.textContent = commonTranslations.empowerTransNation;
-        
-        // Dynasty Platform
-        const dynastyLink = document.querySelector('nav a[href="dynasty.html"], nav a[href="./dynasty.html"]');
-        if (dynastyLink) dynastyLink.textContent = commonTranslations.dynastyPlatform;
-        
-        // Hall of Fame
-        const hallOfFameLink = document.querySelector('nav a[href="halloffame.html"], nav a[href="./halloffame.html"]');
-        if (hallOfFameLink) hallOfFameLink.textContent = commonTranslations.hallOfFame;
-        
-        // Partners
-        const partnersLink = document.querySelector('nav a[href="partners.html"], nav a[href="./partners.html"]');
-        if (partnersLink) partnersLink.textContent = commonTranslations.partners;
-        
-        // News
-        const newsLink = document.querySelector('nav a[href="news.html"], nav a[href="./news.html"]');
-        if (newsLink) newsLink.textContent = commonTranslations.news;
-    }
-    
-    // Translate footer elements
-    const footerCopyright = document.querySelector('footer .text-gray-500');
-    if (footerCopyright) footerCopyright.innerHTML = commonTranslations.copyright.replace('2024', '2025');
-    
-    const footerCompanyInfo = document.querySelector('footer h4');
-    if (footerCompanyInfo) footerCompanyInfo.innerHTML = commonTranslations.companyInfo;
-    
-    const footerPhone = document.querySelector('footer p:nth-of-type(2)');
-    if (footerPhone) {
-        const phoneLink = footerPhone.querySelector('a');
-        if (phoneLink) {
-            const phoneText = commonTranslations.phone;
-            footerPhone.innerHTML = phoneText.replace('+1 (505) 621-8615', `<a href="tel:+15056218615" class="text-star-gold hover:text-opacity-80">+1 (505) 621-8615</a>`);
-        }
-    }
-    
-    // Translate footer links
-    const footerLinks = document.querySelectorAll('.footer-link');
-    footerLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (href === 'index.html') link.textContent = commonTranslations.home;
-        if (href === 'company.html') link.textContent = commonTranslations.company;
-        if (href === 'about.html') link.textContent = commonTranslations.aboutUs;
-        if (href === 'consortium.html') link.textContent = commonTranslations.consortium;
-        if (href === 'empower.html') link.textContent = commonTranslations.empowerTransNation;
-        if (href === 'dynasty.html') link.textContent = commonTranslations.dynastyPlatform;
-        if (href === 'halloffame.html') link.textContent = commonTranslations.hallOfFame;
-        if (href === 'partners.html') link.textContent = commonTranslations.partners;
-        if (href === 'news.html') link.textContent = commonTranslations.news;
-    });
-}
-
-function translateFormElements(lang, translationsData) {
-    // Get page-specific translations if available
-    const pageName = getCurrentPage();
-    let pageTranslations = null;
-    
-    if (translationsData && translationsData[pageName] && translationsData[pageName][lang]) {
-        pageTranslations = translationsData[pageName][lang];
-    }
-    
-    // Fall back to basic translations if page-specific not available
-    const basicTranslations = window.translationsFallback[lang] || null;
-    
-    // Translate form elements
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        // Application form specific translations
-        if (form.classList.contains('application-form')) {
-            // Full Name
-            const fullNameLabel = form.querySelector('label[for="fullName"]');
-            if (fullNameLabel) {
-                fullNameLabel.textContent = pageTranslations ? 
-                    (pageTranslations.fullName || basicTranslations?.full_name || "FULL NAME") : 
-                    (basicTranslations?.full_name || "FULL NAME");
-            }
-            
-            // Email
-            const emailLabel = form.querySelector('label[for="email"]');
-            if (emailLabel) {
-                emailLabel.textContent = pageTranslations ? 
-                    (pageTranslations.email || basicTranslations?.email || "EMAIL") : 
-                    (basicTranslations?.email || "EMAIL");
-            }
-            
-            // Country
-            const countryLabel = form.querySelector('label[for="country"]');
-            if (countryLabel) {
-                countryLabel.textContent = pageTranslations ? 
-                    (pageTranslations.country || basicTranslations?.country || "COUNTRY") : 
-                    (basicTranslations?.country || "COUNTRY");
-            }
-            
-            // Age
-            const ageLabel = form.querySelector('label[for="age"]');
-            if (ageLabel) {
-                ageLabel.textContent = pageTranslations ? 
-                    (pageTranslations.age || basicTranslations?.age || "AGE") : 
-                    (basicTranslations?.age || "AGE");
-            }
-            
-            // Biography
-            const biographyLabel = form.querySelector('label[for="biography"]');
-            if (biographyLabel) {
-                biographyLabel.textContent = pageTranslations ? 
-                    (pageTranslations.biography || basicTranslations?.biography || "BIOGRAPHY (200 WORDS MAX)") : 
-                    (basicTranslations?.biography || "BIOGRAPHY (200 WORDS MAX)");
-            }
-            
-            // Social Impact
-            const socialImpactLabel = form.querySelector('label[for="socialImpact"]');
-            if (socialImpactLabel) {
-                socialImpactLabel.textContent = pageTranslations ? 
-                    (pageTranslations.socialImpact || basicTranslations?.social_impact || "SOCIAL IMPACT PLATFORM") : 
-                    (basicTranslations?.social_impact || "SOCIAL IMPACT PLATFORM");
-            }
-            
-            // Submit button
-            const submitButton = form.querySelector('button[type="submit"]');
-            if (submitButton) {
-                const iconHTML = submitButton.innerHTML.match(/<i[^>]*><\/i>/) || '';
-                submitButton.innerHTML = (pageTranslations ? 
-                    (pageTranslations.submit || basicTranslations?.submit || "Submit Application") : 
-                    (basicTranslations?.submit || "Submit Application")) + ' ' + iconHTML;
-            }
-        }
-        
-        // Other forms - using data attributes
-        const labels = form.querySelectorAll('label[data-i18n]');
-        labels.forEach(label => {
-            const key = label.getAttribute('data-i18n');
-            if (pageTranslations && pageTranslations[key]) {
-                label.textContent = pageTranslations[key];
-            }
-        });
-        
-        const inputs = form.querySelectorAll('input[data-i18n-placeholder], textarea[data-i18n-placeholder]');
-        inputs.forEach(input => {
-            const key = input.getAttribute('data-i18n-placeholder');
-            if (pageTranslations && pageTranslations[key]) {
-                input.placeholder = pageTranslations[key];
-            }
-        });
-    });
-    
-    // Translate Apply Now title if exists
-    const applyNowTitle = document.querySelector('.apply-now-container h2 .hologram-text');
-    if (applyNowTitle) {
-        applyNowTitle.textContent = pageTranslations ? 
-            (pageTranslations.applyNow || basicTranslations?.apply_now || "Apply Now") : 
-            (basicTranslations?.apply_now || "Apply Now");
-    }
-}
-
 // Update the page-specific translation function to use external translations
 function translatePageContent(pageName, lang, translationsData) {
     console.log(`Translating ${pageName} page to ${lang}`);
@@ -1106,23 +609,40 @@ function translatePageContent(pageName, lang, translationsData) {
     // Intentar obtener traducciones de diferentes fuentes
     let pageTranslations = null;
     
-    // Primero, intentar obtenerlas directamente del objeto translations global
-    if (typeof translations !== 'undefined' && translations[pageName] && translations[pageName][lang]) {
-        pageTranslations = translations[pageName][lang];
-        console.log("Using global translations variable");
-    } 
-    // Segundo, intentar desde window.translations
-    else if (translationsData && translationsData[pageName] && translationsData[pageName][lang]) {
+    // Primero, intentar desde el parámetro translationsData
+    if (translationsData && translationsData[pageName] && translationsData[pageName][lang]) {
         pageTranslations = translationsData[pageName][lang];
         console.log("Using translationsData from parameter");
+    } 
+    // Segundo, intentar desde window.translations
+    else if (window.translations && window.translations[pageName] && window.translations[pageName][lang]) {
+        pageTranslations = window.translations[pageName][lang];
+        console.log("Using window.translations");
     }
-    // Tercero, intentar desde window.translationsFallback
+    // Tercero, intentar desde objeto global translations
+    else if (typeof translations !== 'undefined' && translations[pageName] && translations[pageName][lang]) {
+        pageTranslations = translations[pageName][lang];
+        console.log("Using global translations variable");
+    }
+    // Cuarto, usar fallback
     else if (window.translationsFallback && window.translationsFallback[pageName] && window.translationsFallback[pageName][lang]) {
         pageTranslations = window.translationsFallback[pageName][lang];
         console.log("Using fallback translations");
     }
     
-    // Si aún no tenemos traducciones, intentar buscarlas en otro lugar
+    // Si aún no tenemos traducciones, verificar si tenemos traducciones para el idioma en general
+    if (!pageTranslations && window.translationsFallback && window.translationsFallback[lang]) {
+        pageTranslations = window.translationsFallback[lang];
+        console.log("Using generic language fallback");
+    }
+    
+    // Si aún no tenemos traducciones, usar el fallback en inglés como último recurso
+    if (!pageTranslations && window.translationsFallback && window.translationsFallback.en) {
+        pageTranslations = window.translationsFallback.en;
+        console.log("Using English fallback as last resort");
+    }
+    
+    // Si aún no tenemos traducciones, no hay nada que hacer
     if (!pageTranslations) {
         console.warn(`Translations not found for page ${pageName} in ${lang}`);
         return;
@@ -1156,7 +676,10 @@ function translatePageContent(pageName, lang, translationsData) {
 
 // Page-specific translation functions
 function translateIndexPage(translations) {
-    if (!translations) return;
+    if (!translations) {
+        console.warn('No translations provided for index page');
+        return;
+    }
     
     // Hero section
     const welcomeToText = document.querySelector('.welcome-text .hologram-text:nth-child(1)');
@@ -1172,6 +695,9 @@ function translateIndexPage(translations) {
     if (heroDescription) heroDescription.textContent = translations.heroDescription || "";
     
     // Pageant section
+    const pageantTitle = document.querySelector('#pageant .section-title');
+    if (pageantTitle) pageantTitle.textContent = translations.pageantTitle || "The Pageant";
+    
     const pageantDescription = document.querySelector('#pageant .section-content p');
     if (pageantDescription) pageantDescription.textContent = translations.pageantDescription || "Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.";
     
@@ -1182,6 +708,9 @@ function translateIndexPage(translations) {
     }
     
     // Contestants section
+    const contestantsTitle = document.querySelector('#contestants .section-title');
+    if (contestantsTitle) contestantsTitle.textContent = translations.contestantsTitle || "Contestants";
+    
     const contestantsDescription = document.querySelector('#contestants .section-content p');
     if (contestantsDescription) contestantsDescription.textContent = translations.contestantsDescription || "Meet our amazing contestants who will represent their countries in this year's competition.";
     
@@ -1192,6 +721,9 @@ function translateIndexPage(translations) {
     }
     
     // Events section
+    const eventsTitle = document.querySelector('#events .section-title');
+    if (eventsTitle) eventsTitle.textContent = translations.eventsTitle || "Events";
+    
     const eventsDescription = document.querySelector('#events .section-content p');
     if (eventsDescription) eventsDescription.textContent = translations.eventsDescription || "Check out our calendar of events and activities throughout the pageant.";
     
@@ -1202,6 +734,9 @@ function translateIndexPage(translations) {
     }
     
     // Sponsors section
+    const sponsorsTitle = document.querySelector('#sponsors .section-title');
+    if (sponsorsTitle) sponsorsTitle.textContent = translations.sponsorsTitle || "Sponsors";
+    
     const sponsorsDescription = document.querySelector('#sponsors .section-content p');
     if (sponsorsDescription) sponsorsDescription.textContent = translations.sponsorsDescription || "Our official sponsors who make this event possible.";
     
@@ -1211,13 +746,23 @@ function translateIndexPage(translations) {
         sponsorsButton.innerHTML = (translations.ourPartners || "Our Partners") + ' ' + iconHTML;
     }
     
-    // Apply Now section
-    const applyNowDescription = document.querySelector('.apply-now-container > p');
-    if (applyNowDescription) applyNowDescription.textContent = translations.applyNowDescription || "Applications are now open for Miss Star International 2025.";
+    // Special text elements
+    const fearlessText = document.querySelector('.text-5xl .glow-text:nth-child(1)');
+    if (fearlessText) {
+        fearlessText.textContent = translations.fearlessly || "Fearlessly Feminine.";
+    }
+    
+    const unapologeticallyText = document.querySelector('.text-5xl .glow-text:nth-child(2)');
+    if (unapologeticallyText) {
+        unapologeticallyText.textContent = translations.unapologetically || "Unapologetically Powerful";
+    }
 }
 
 function translateCompanyPage(translations) {
-    if (!translations) return;
+    if (!translations) {
+        console.warn('No translations provided for company page');
+        return;
+    }
     
     // Page title and introduction
     const pageTitle = document.querySelector('.page-header h1');
@@ -1230,11 +775,50 @@ function translateCompanyPage(translations) {
     const valuesTitle = document.querySelector('.values-section h2');
     if (valuesTitle) valuesTitle.textContent = translations.valuesTitle || "Our Values";
     
-    // And additional translations specific to the company page...
+    // Values cards
+    const inclusivityTitle = document.querySelector('.values-card:nth-child(1) h3');
+    if (inclusivityTitle) inclusivityTitle.textContent = translations.inclusivityTitle || "Inclusivity";
+    
+    const inclusivityText = document.querySelector('.values-card:nth-child(1) p');
+    if (inclusivityText) inclusivityText.textContent = translations.inclusivityText || "";
+    
+    const empowermentTitle = document.querySelector('.values-card:nth-child(2) h3');
+    if (empowermentTitle) empowermentTitle.textContent = translations.empowermentTitle || "Empowerment";
+    
+    const empowermentText = document.querySelector('.values-card:nth-child(2) p');
+    if (empowermentText) empowermentText.textContent = translations.empowermentText || "";
+    
+    const excellenceTitle = document.querySelector('.values-card:nth-child(3) h3');
+    if (excellenceTitle) excellenceTitle.textContent = translations.excellenceTitle || "Excellence";
+    
+    const excellenceText = document.querySelector('.values-card:nth-child(3) p');
+    if (excellenceText) excellenceText.textContent = translations.excellenceText || "";
+    
+    const innovationTitle = document.querySelector('.values-card:nth-child(4) h3');
+    if (innovationTitle) innovationTitle.textContent = translations.innovationTitle || "Innovation";
+    
+    const innovationText = document.querySelector('.values-card:nth-child(4) p');
+    if (innovationText) innovationText.textContent = translations.innovationText || "";
+    
+    // Mission and vision
+    const missionTitle = document.querySelector('.mission-section h2');
+    if (missionTitle) missionTitle.textContent = translations.missionTitle || "Our Mission";
+    
+    const missionText = document.querySelector('.mission-section p');
+    if (missionText) missionText.textContent = translations.missionText || "";
+    
+    const visionTitle = document.querySelector('.vision-section h2');
+    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
+    
+    const visionText = document.querySelector('.vision-section p');
+    if (visionText) visionText.textContent = translations.visionText || "";
 }
 
 function translateAboutPage(translations) {
-    if (!translations) return;
+    if (!translations) {
+        console.warn('No translations provided for about page');
+        return;
+    }
     
     // Page title and introduction
     const pageTitle = document.querySelector('.page-header h1');
@@ -1247,42 +831,137 @@ function translateAboutPage(translations) {
     const founderTitle = document.querySelector('.founder-section h2');
     if (founderTitle) founderTitle.textContent = translations.founderTitle || "";
     
-    // And additional translations specific to the about page...
+    const founderPosition = document.querySelector('.founder-position');
+    if (founderPosition) founderPosition.textContent = translations.founderPosition || "";
+    
+    const founderBio = document.querySelector('.founder-bio');
+    if (founderBio) founderBio.textContent = translations.founderBio || "";
+    
+    // Achievements section
+    const achievementsTitle = document.querySelector('.achievements-section h2');
+    if (achievementsTitle) achievementsTitle.textContent = translations.achievementsTitle || "Key Achievements";
+    
+    const achievementsText = document.querySelector('.achievements-section p');
+    if (achievementsText) achievementsText.textContent = translations.achievementsText || "";
+    
+    // Impact section
+    const impactTitle = document.querySelector('.impact-section h2');
+    if (impactTitle) impactTitle.textContent = translations.impactTitle || "Global Impact";
+    
+    const impactText = document.querySelector('.impact-section p');
+    if (impactText) impactText.textContent = translations.impactText || "";
+    
+    // Vision & Values section
+    const visionValuesTitle = document.querySelector('.vision-values-section h2');
+    if (visionValuesTitle) visionValuesTitle.textContent = translations.visionValuesTitle || "Vision & Values";
+    
+    const visionValuesText = document.querySelector('.vision-values-section p');
+    if (visionValuesText) visionValuesText.textContent = translations.visionValuesText || "";
+    
+    // Mayor recommendation section
+    const mayorRecommendationTitle = document.querySelector('.mayor-recommendation h2');
+    if (mayorRecommendationTitle) mayorRecommendationTitle.textContent = translations.mayorRecommendationTitle || "Official Recommendation from the Mayor of Santa Susanna";
+    
+    // Translate mayor recommendation paragraphs if they exist
+    const mayorRecommendationTexts = document.querySelectorAll('.mayor-recommendation p');
+    if (mayorRecommendationTexts && mayorRecommendationTexts.length >= 4) {
+        if (translations.mayorRecommendationText1) 
+            mayorRecommendationTexts[0].textContent = translations.mayorRecommendationText1;
+        if (translations.mayorRecommendationText2) 
+            mayorRecommendationTexts[1].textContent = translations.mayorRecommendationText2;
+        if (translations.mayorRecommendationText3) 
+            mayorRecommendationTexts[2].textContent = translations.mayorRecommendationText3;
+        if (translations.mayorRecommendationText4) 
+            mayorRecommendationTexts[3].textContent = translations.mayorRecommendationText4;
+    }
+    
+    const mayorName = document.querySelector('.mayor-name');
+    if (mayorName) mayorName.textContent = translations.mayorName || "Joan Campolier i Montsant";
+    
+    const mayorPosition = document.querySelector('.mayor-position');
+    if (mayorPosition) mayorPosition.textContent = translations.mayorPosition || "Mayor of Santa Susanna City Council";
 }
 
 function translateConsortiumPage(translations) {
-    if (!translations) return;
-    
-    // No try to access translations.consortium directly
-    // Instead, check if the translations has the necessary data
-    let pageData = null;
-    
-    // Try to get the data from the right path
-    if (translations.consortium && translations.consortium[getCurrentLanguage()]) {
-        pageData = translations.consortium[getCurrentLanguage()];
-    } else if (translations[getCurrentLanguage()]) {
-        // Maybe the translations are directly organized by language
-        pageData = translations[getCurrentLanguage()];
-    } else {
-        // Fallback to using the translations object directly
-        pageData = translations;
+    if (!translations) {
+        console.warn('No translations provided for consortium page');
+        return;
     }
     
-    if (!pageData) return;
-    
     // Page title
-    const pageTitle = document.querySelector('.consortium-section h1');
-    if (pageTitle) pageTitle.textContent = pageData.pageTitle || "Miss Star Consortium";
+    const pageTitle = document.querySelector('.consortium-section h1, .page-header h1');
+    if (pageTitle) pageTitle.textContent = translations.pageTitle || "Miss Star Consortium";
     
     // Intro text
-    const introText = document.querySelector('.consortium-intro p');
-    if (introText) introText.textContent = pageData.introText || "";
+    const introText = document.querySelector('.consortium-intro p, .intro-section p');
+    if (introText) introText.textContent = translations.introText || "";
     
     // Vision section
     const visionTitle = document.querySelector('.vision-section h2');
-    if (visionTitle) visionTitle.textContent = pageData.visionTitle || "Our Vision";
+    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
     
-    // And additional translations specific to the consortium page...
+    const visionText = document.querySelector('.vision-section p');
+    if (visionText) visionText.textContent = translations.visionText || "";
+    
+    // Vision points
+    const visionPoints = document.querySelectorAll('.vision-points li');
+    if (visionPoints && visionPoints.length >= 5) {
+        if (translations.visionPoint1) visionPoints[0].textContent = translations.visionPoint1;
+        if (translations.visionPoint2) visionPoints[1].textContent = translations.visionPoint2;
+        if (translations.visionPoint3) visionPoints[2].textContent = translations.visionPoint3;
+        if (translations.visionPoint4) visionPoints[3].textContent = translations.visionPoint4;
+        if (translations.visionPoint5) visionPoints[4].textContent = translations.visionPoint5;
+    }
+    
+    // Legal section
+    const legalTitle = document.querySelector('.legal-section h2');
+    if (legalTitle) legalTitle.textContent = translations.legalTitle || "Legal Authority";
+    
+    const legalText = document.querySelector('.legal-section p');
+    if (legalText) legalText.textContent = translations.legalText || "";
+    
+    // Join button
+    const joinButton = document.querySelector('.join-button');
+    if (joinButton) joinButton.textContent = translations.joinButton || "Join the Consortium";
+    
+    // Equity structure section
+    const equityTitle = document.querySelector('.equity-section h2');
+    if (equityTitle) equityTitle.textContent = translations.equityTitle || "Equity Structure";
+    
+    const initialTitle = document.querySelector('.initial-participation h3');
+    if (initialTitle) initialTitle.textContent = translations.initialTitle || "Initial Participation";
+    
+    const initialText = document.querySelector('.initial-participation p');
+    if (initialText) initialText.textContent = translations.initialText || "";
+    
+    // Incentives section
+    const incentivesTitle = document.querySelector('.incentives h3');
+    if (incentivesTitle) incentivesTitle.textContent = translations.incentivesTitle || "Performance Incentives";
+    
+    const incentivesList = document.querySelectorAll('.incentives-list li');
+    if (incentivesList && incentivesList.length >= 4) {
+        if (translations.incentive1) incentivesList[0].textContent = translations.incentive1;
+        if (translations.incentive2) incentivesList[1].textContent = translations.incentive2;
+        if (translations.incentive3) incentivesList[2].textContent = translations.incentive3;
+        if (translations.incentive4) incentivesList[3].textContent = translations.incentive4;
+    }
+    
+    // Vesting section
+    const vestingTitle = document.querySelector('.vesting h3');
+    if (vestingTitle) vestingTitle.textContent = translations.vestingTitle || "Vesting Period";
+    
+    const vestingText = document.querySelector('.vesting p');
+    if (vestingText) vestingText.textContent = translations.vestingText || "";
+    
+    // Contact section
+    const contactTitle = document.querySelector('.contact-section h2');
+    if (contactTitle) contactTitle.textContent = translations.contactTitle || "Join the Consortium";
+    
+    const contactText = document.querySelector('.contact-section > p');
+    if (contactText) contactText.textContent = translations.contactText || "";
+    
+    const contactInfoTitle = document.querySelector('.contact-info h3');
+    if (contactInfoTitle) contactInfoTitle.textContent = translations.contactInfoTitle || "Contact Information";
 }
 
 // Basic translations as fallback
@@ -1387,9 +1066,528 @@ window.translationsFallback = {
 window.translations = window.translations || window.translationsFallback;
 
 // Application Form Handler
-// ... existing code ...
+function initializeForms() {
+    // Find all forms on the page
+    const forms = document.querySelectorAll('form');
+    
+    // Get current language for form initialization
+    const currentLanguage = getCurrentLanguage();
+    
+    forms.forEach(form => {
+        // Set language field value if it exists
+        const languageField = form.querySelector('input[name="language"]');
+        if (languageField) {
+            languageField.value = currentLanguage;
+        }
+        
+        // Add event listener for form submission
+        form.addEventListener('submit', function(e) {
+            // For forms with class 'application-form'
+            if (form.classList.contains('application-form')) {
+                e.preventDefault(); // Prevent default form submission
+                
+                // Validate form fields
+                const isValid = validateForm(form);
+                
+                if (isValid) {
+                    // Show processing message
+                    showFormMessage(form, 'processing', 'Processing your application...');
+                    
+                    // Get the current language for error messages
+                    const currentLanguage = getCurrentLanguage();
+                    
+                    // Check if form has a valid action URL
+                    const actionUrl = form.getAttribute('action');
+                    const hasValidEndpoint = actionUrl && actionUrl.includes('php/submit-application.php');
+                    
+                    if (hasValidEndpoint) {
+                        // Create FormData object
+                        const formData = new FormData(form);
+                        
+                        // Add current language to help with localized response messages
+                        formData.append('language', currentLanguage);
+                        
+                        // Use fetch API to submit the form
+                        fetch('php/submit-application.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Show success message
+                                showFormMessage(form, 'success', data.message);
+                                
+                                // Clear form fields after successful submission
+                                form.reset();
+                                
+                                // Update word count if present
+                                const wordCountElement = form.querySelector('.word-count');
+                                if (wordCountElement) {
+                                    const wordLabel = currentLanguage === 'es' ? 'palabras' : 'words';
+                                    wordCountElement.textContent = `0/${wordLabel}`;
+                                }
+                            } else {
+                                // Show error message
+                                let errorMsg = data.message;
+                                
+                                // Add specific error messages if available
+                                if (data.errors && data.errors.length > 0) {
+                                    errorMsg += '<ul class="mt-2 text-left">';
+                                    data.errors.forEach(err => {
+                                        errorMsg += `<li>• ${err}</li>`;
+                                    });
+                                    errorMsg += '</ul>';
+                                }
+                                
+                                showFormMessage(form, 'error', errorMsg);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error submitting form:', error);
+                            const errorMsg = currentLanguage === 'es' 
+                                ? 'Error al enviar el formulario. Por favor, inténtalo de nuevo más tarde.'
+                                : 'Error submitting form. Please try again later.';
+                            showFormMessage(form, 'error', errorMsg);
+                        });
+                    } else {
+                        // Simulate backend processing for development purposes
+                        setTimeout(() => {
+                            // No real backend or using placeholder URL
+                            showFormMessage(form, 'success', 'Your application has been received! We\'ll be in touch soon.');
+                            console.info('Form submission would normally be sent to a server, but no endpoint is currently available.');
+                            
+                            // Clear form fields after successful submission
+                            form.reset();
+                            
+                            // Update word count if present
+                            const wordCountElement = form.querySelector('.word-count');
+                            if (wordCountElement) {
+                                const wordLabel = currentLanguage === 'es' ? 'palabras' : 'words';
+                                wordCountElement.textContent = `0/${wordLabel}`;
+                            }
+                        }, 1500);
+                    }
+                }
+            }
+        });
+        
+        // Add word count functionality to textareas with word limits
+        const biographyField = form.querySelector('#biography');
+        if (biographyField) {
+            const wordCountElement = form.querySelector('.word-count');
+            
+            biographyField.addEventListener('input', function() {
+                if (wordCountElement) {
+                    const words = this.value.trim().split(/\s+/).filter(Boolean).length;
+                    const currentLanguage = getCurrentLanguage();
+                    const wordLabel = currentLanguage === 'es' ? 'palabras' : 'words';
+                    wordCountElement.textContent = `${words}/200 ${wordLabel}`;
+                    
+                    // Change color if approaching or exceeding limit
+                    if (words > 200) {
+                        wordCountElement.classList.add('text-red-500');
+                        wordCountElement.classList.remove('text-star-gold/70');
+                    } else if (words > 180) {
+                        wordCountElement.classList.add('text-amber-500');
+                        wordCountElement.classList.remove('text-star-gold/70', 'text-red-500');
+                    } else {
+                        wordCountElement.classList.add('text-star-gold/70');
+                        wordCountElement.classList.remove('text-amber-500', 'text-red-500');
+                    }
+                }
+            });
+        }
+    });
+    
+    // Fill country select with options if it exists
+    const countrySelect = document.querySelector('#country');
+    if (countrySelect && countrySelect.options.length <= 1) {
+        fillCountryOptions(countrySelect);
+    }
+}
+
+// Function to validate form fields
+function validateForm(form) {
+    let isValid = true;
+    const requiredFields = form.querySelectorAll('[required]');
+    
+    // Remove any existing error messages
+    form.querySelectorAll('.error-message').forEach(el => el.remove());
+    
+    requiredFields.forEach(field => {
+        // Reset field styles
+        field.classList.remove('border-red-500');
+        
+        // Check if field is empty
+        if (field.value.trim() === '') {
+            isValid = false;
+            field.classList.add('border-red-500');
+            
+            // Add error message
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message text-xs text-red-500 mt-1';
+            errorMessage.textContent = 'This field is required';
+            field.parentNode.appendChild(errorMessage);
+        } 
+        // Validate email format if it's an email field
+        else if (field.type === 'email' && !validateEmail(field.value)) {
+            isValid = false;
+            field.classList.add('border-red-500');
+            
+            // Add error message
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error-message text-xs text-red-500 mt-1';
+            errorMessage.textContent = 'Please enter a valid email address';
+            field.parentNode.appendChild(errorMessage);
+        }
+        // Validate age if it's an age field
+        else if (field.id === 'age') {
+            const age = parseInt(field.value);
+            if (isNaN(age) || age < 18 || age > 120) {
+                isValid = false;
+                field.classList.add('border-red-500');
+                
+                // Add error message
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message text-xs text-red-500 mt-1';
+                errorMessage.textContent = 'Please enter a valid age (18-120)';
+                field.parentNode.appendChild(errorMessage);
+            }
+        }
+        // Check biography word count
+        else if (field.id === 'biography') {
+            const words = field.value.trim().split(/\s+/).filter(Boolean).length;
+            if (words > 200) {
+                isValid = false;
+                field.classList.add('border-red-500');
+                
+                // Add error message
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message text-xs text-red-500 mt-1';
+                errorMessage.textContent = 'Biography exceeds 200 words limit';
+                field.parentNode.appendChild(errorMessage);
+            }
+        }
+    });
+    
+    return isValid;
+}
+
+// Email validation function
+function validateEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+// Function to show form messages
+function showFormMessage(form, type, message) {
+    // Remove any existing messages
+    form.querySelectorAll('.form-message').forEach(el => el.remove());
+    
+    // Create message element
+    const messageElement = document.createElement('div');
+    messageElement.className = 'form-message text-center py-4 my-4 rounded-md';
+    
+    if (type === 'processing') {
+        messageElement.className += ' bg-blue-500/20 text-blue-300';
+        messageElement.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> ${message}`;
+    } else if (type === 'success') {
+        messageElement.className += ' bg-green-500/20 text-green-300';
+        messageElement.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${message}`;
+    } else if (type === 'error') {
+        messageElement.className += ' bg-red-500/20 text-red-300';
+        messageElement.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> ${message}`;
+    }
+    
+    // Insert message before the submit button
+    const submitButton = form.querySelector('button[type="submit"]');
+    form.insertBefore(messageElement, submitButton);
+}
+
+// Function to fill country select with options
+function fillCountryOptions(selectElement) {
+    const countries = [
+        { code: 'US', name: 'United States' },
+        { code: 'AF', name: 'Afghanistan' },
+        { code: 'AL', name: 'Albania' },
+        { code: 'DZ', name: 'Algeria' },
+        { code: 'AR', name: 'Argentina' },
+        { code: 'AU', name: 'Australia' },
+        { code: 'AT', name: 'Austria' },
+        { code: 'BD', name: 'Bangladesh' },
+        { code: 'BE', name: 'Belgium' },
+        { code: 'BR', name: 'Brazil' },
+        { code: 'CA', name: 'Canada' },
+        { code: 'CL', name: 'Chile' },
+        { code: 'CN', name: 'China' },
+        { code: 'CO', name: 'Colombia' },
+        { code: 'CR', name: 'Costa Rica' },
+        { code: 'HR', name: 'Croatia' },
+        { code: 'CU', name: 'Cuba' },
+        { code: 'CZ', name: 'Czech Republic' },
+        { code: 'DK', name: 'Denmark' },
+        { code: 'DO', name: 'Dominican Republic' },
+        { code: 'EC', name: 'Ecuador' },
+        { code: 'EG', name: 'Egypt' },
+        { code: 'FI', name: 'Finland' },
+        { code: 'FR', name: 'France' },
+        { code: 'DE', name: 'Germany' },
+        { code: 'GR', name: 'Greece' },
+        { code: 'GT', name: 'Guatemala' },
+        { code: 'HN', name: 'Honduras' },
+        { code: 'HK', name: 'Hong Kong' },
+        { code: 'HU', name: 'Hungary' },
+        { code: 'IS', name: 'Iceland' },
+        { code: 'IN', name: 'India' },
+        { code: 'ID', name: 'Indonesia' },
+        { code: 'IE', name: 'Ireland' },
+        { code: 'IL', name: 'Israel' },
+        { code: 'IT', name: 'Italy' },
+        { code: 'JM', name: 'Jamaica' },
+        { code: 'JP', name: 'Japan' },
+        { code: 'KR', name: 'Korea, South' },
+        { code: 'LB', name: 'Lebanon' },
+        { code: 'MY', name: 'Malaysia' },
+        { code: 'MX', name: 'Mexico' },
+        { code: 'NL', name: 'Netherlands' },
+        { code: 'NZ', name: 'New Zealand' },
+        { code: 'NG', name: 'Nigeria' },
+        { code: 'NO', name: 'Norway' },
+        { code: 'PK', name: 'Pakistan' },
+        { code: 'PA', name: 'Panama' },
+        { code: 'PE', name: 'Peru' },
+        { code: 'PH', name: 'Philippines' },
+        { code: 'PL', name: 'Poland' },
+        { code: 'PT', name: 'Portugal' },
+        { code: 'PR', name: 'Puerto Rico' },
+        { code: 'RO', name: 'Romania' },
+        { code: 'RU', name: 'Russia' },
+        { code: 'SA', name: 'Saudi Arabia' },
+        { code: 'SG', name: 'Singapore' },
+        { code: 'ZA', name: 'South Africa' },
+        { code: 'ES', name: 'Spain' },
+        { code: 'SE', name: 'Sweden' },
+        { code: 'CH', name: 'Switzerland' },
+        { code: 'TW', name: 'Taiwan' },
+        { code: 'TH', name: 'Thailand' },
+        { code: 'TR', name: 'Turkey' },
+        { code: 'UA', name: 'Ukraine' },
+        { code: 'AE', name: 'United Arab Emirates' },
+        { code: 'GB', name: 'United Kingdom' },
+        { code: 'UY', name: 'Uruguay' },
+        { code: 'VE', name: 'Venezuela' },
+        { code: 'VN', name: 'Vietnam' }
+    ];
+    
+    // Sort countries alphabetically
+    countries.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Add options to select element
+    countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country.code;
+        option.textContent = country.name;
+        selectElement.appendChild(option);
+    });
+}
 
 // Helper function to get current language
 function getCurrentLanguage() {
-    return document.documentElement.lang || localStorage.getItem('missstar-language') || 'en';
+    return document.documentElement.lang || localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'en';
+}
+
+// Función de diagnóstico para el selector de idioma
+function diagnoseLangSwitcher() {
+    console.info('========== DIAGNÓSTICO DEL SELECTOR DE IDIOMA ==========');
+    console.info(`Estado del DOM: ${document.readyState}`);
+    console.info(`Traducciones globales disponibles: ${typeof window.translations !== 'undefined'}`);
+    
+    const langButtons = document.querySelectorAll('.lang-btn, .language-switcher button, [data-lang]');
+    console.info(`Botones de idioma encontrados: ${langButtons.length}`);
+    
+    if (langButtons.length > 0) {
+        langButtons.forEach((btn, index) => {
+            console.info(`Botón ${index + 1}:`, {
+                texto: btn.textContent.trim(),
+                clases: btn.className,
+                dataLang: btn.getAttribute('data-lang'),
+                esActivo: btn.classList.contains('active'),
+                esVisible: btn.offsetParent !== null
+            });
+        });
+    }
+    
+    const currentLang = getCurrentLanguage();
+    console.info(`Idioma actual: ${currentLang}`);
+    
+    console.info(`localStorage 'language': ${localStorage.getItem('language')}`);
+    console.info(`localStorage 'selectedLanguage': ${localStorage.getItem('selectedLanguage')}`);
+    console.info(`document.documentElement.lang: ${document.documentElement.lang}`);
+    
+    if (typeof window.translations !== 'undefined') {
+        console.info(`Idiomas disponibles en translations: ${Object.keys(window.translations.common).join(', ')}`);
+    }
+    
+    if (typeof window.translationsFallback !== 'undefined') {
+        console.info(`Idiomas disponibles en translationsFallback: ${Object.keys(window.translationsFallback.common).join(', ')}`);
+    }
+    
+    console.info('=======================================================');
+}
+
+// Añadir la función de diagnóstico como una utilidad global
+window.diagnoseLangSwitcher = diagnoseLangSwitcher;
+
+// Add function to translate common elements
+function translateCommonElements(lang, translationsData) {
+    // Verify we have translations available
+    if (!translationsData || !translationsData.common || !translationsData.common[lang]) {
+        console.warn(`Common translations not found for ${lang}, using fallbacks`);
+        
+        // Try to use fallback translations if main ones are not available
+        if (window.translationsFallback && window.translationsFallback.common && window.translationsFallback.common[lang]) {
+            translationsData = window.translationsFallback;
+        } else {
+            return; // No translations available
+        }
+    }
+    
+    const commonTranslations = translationsData.common[lang];
+    
+    // Translate navigation menu
+    if (document.querySelector('nav')) {
+        // Home
+        const homeLink = document.querySelector('nav a[href="index.html"], nav a[href="./index.html"], nav a[href="/"], nav a[href="./"]');
+        if (homeLink) homeLink.textContent = commonTranslations.home;
+        
+        // Company
+        const companyLink = document.querySelector('nav a[href="company.html"], nav a[href="./company.html"]');
+        if (companyLink) companyLink.textContent = commonTranslations.company;
+        
+        // About Us
+        const aboutLink = document.querySelector('nav a[href="about.html"], nav a[href="./about.html"]');
+        if (aboutLink) aboutLink.textContent = commonTranslations.aboutUs;
+        
+        // Consortium
+        const consortiumLink = document.querySelector('nav a[href="consortium.html"], nav a[href="./consortium.html"]');
+        if (consortiumLink) consortiumLink.textContent = commonTranslations.consortium;
+        
+        // EmpowerTransNation
+        const empowerLink = document.querySelector('nav a[href="empower.html"], nav a[href="./empower.html"]');
+        if (empowerLink) empowerLink.textContent = commonTranslations.empowerTransNation;
+        
+        // Dynasty Platform
+        const dynastyLink = document.querySelector('nav a[href="dynasty.html"], nav a[href="./dynasty.html"]');
+        if (dynastyLink) dynastyLink.textContent = commonTranslations.dynastyPlatform;
+        
+        // Hall of Fame
+        const hallOfFameLink = document.querySelector('nav a[href="halloffame.html"], nav a[href="./halloffame.html"]');
+        if (hallOfFameLink) hallOfFameLink.textContent = commonTranslations.hallOfFame;
+        
+        // Partners
+        const partnersLink = document.querySelector('nav a[href="partners.html"], nav a[href="./partners.html"]');
+        if (partnersLink) partnersLink.textContent = commonTranslations.partners;
+        
+        // News
+        const newsLink = document.querySelector('nav a[href="news.html"], nav a[href="./news.html"]');
+        if (newsLink) newsLink.textContent = commonTranslations.news;
+    }
+    
+    // Translate footer elements
+    const footerCopyright = document.querySelector('footer .text-gray-500');
+    if (footerCopyright) footerCopyright.innerHTML = commonTranslations.copyright || `© ${new Date().getFullYear()} Miss Star International. ${lang === 'es' ? 'Todos los derechos reservados.' : 'All rights reserved.'}`;
+    
+    const footerCompanyInfo = document.querySelector('footer h4');
+    if (footerCompanyInfo) footerCompanyInfo.innerHTML = commonTranslations.companyInfo || 'Miss Star International';
+    
+    const footerPhone = document.querySelector('footer p:nth-of-type(2)');
+    if (footerPhone) {
+        const phoneText = commonTranslations.phone || (lang === 'es' ? 'Teléfono: +1 (505) 621-8615' : 'Phone: +1 (505) 621-8615');
+        footerPhone.innerHTML = phoneText.replace('+1 (505) 621-8615', '<a href="tel:+15056218615" class="text-star-gold hover:text-opacity-80">+1 (505) 621-8615</a>');
+    }
+    
+    // Translate footer links
+    const footerLinks = document.querySelectorAll('.footer-link');
+    footerLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === 'index.html') link.textContent = commonTranslations.home;
+        if (href === 'company.html') link.textContent = commonTranslations.company;
+        if (href === 'about.html') link.textContent = commonTranslations.aboutUs;
+        if (href === 'consortium.html') link.textContent = commonTranslations.consortium;
+        if (href === 'empower.html') link.textContent = commonTranslations.empowerTransNation;
+        if (href === 'dynasty.html') link.textContent = commonTranslations.dynastyPlatform;
+        if (href === 'halloffame.html') link.textContent = commonTranslations.hallOfFame;
+        if (href === 'partners.html') link.textContent = commonTranslations.partners;
+        if (href === 'news.html') link.textContent = commonTranslations.news;
+    });
+}
+
+// Translate form elements like labels, placeholders, etc.
+function translateFormElements(lang, translationsData) {
+    // Check if we have translations
+    if (!translationsData || !translationsData.index || !translationsData.index[lang] || !translationsData.index[lang].formLabels) {
+        console.warn(`Form translations not found for ${lang}`);
+        return;
+    }
+    
+    const formLabels = translationsData.index[lang].formLabels;
+    
+    // Translation map for form elements
+    const translationMap = {
+        "full_name": formLabels.fullName,
+        "email": formLabels.email,
+        "country": formLabels.country,
+        "age": formLabels.age,
+        "city": formLabels.city,
+        "biography": formLabels.biography,
+        "social_media": formLabels.socialMediaProfiles,
+        "photo": formLabels.photo
+    };
+    
+    // Update form labels
+    for (const [id, translation] of Object.entries(translationMap)) {
+        const labelElement = document.querySelector(`label[for="${id}"]`);
+        if (labelElement) {
+            labelElement.textContent = translation;
+        }
+    }
+    
+    // Update select placeholders
+    const countrySelect = document.getElementById('country');
+    if (countrySelect) {
+        const firstOption = countrySelect.querySelector('option[value=""]');
+        if (firstOption) {
+            firstOption.textContent = formLabels.selectCountry;
+        }
+    }
+    
+    // Update textarea placeholders
+    const socialMediaField = document.getElementById('social_media');
+    if (socialMediaField) {
+        socialMediaField.placeholder = formLabels.socialMediaPlaceholder;
+    }
+    
+    // Update submit button
+    const submitButton = document.querySelector('button[type="submit"]');
+    if (submitButton) {
+        // Keep the crown icon if present
+        const iconHTML = submitButton.querySelector('i') ? submitButton.querySelector('i').outerHTML : '';
+        submitButton.innerHTML = `${formLabels.submit} ${iconHTML}`;
+    }
+    
+    // Update help text
+    const photoHelp = document.querySelector('#photo + span + div');
+    if (photoHelp) {
+        photoHelp.textContent = formLabels.photoHelp;
+    }
+    
+    // Update word count text if present
+    const wordCountElement = document.querySelector('.word-count');
+    if (wordCountElement) {
+        const currentText = wordCountElement.textContent;
+        const count = currentText.split('/')[0];
+        const wordLabel = lang === 'es' ? 'palabras' : 'words';
+        wordCountElement.textContent = `${count}/200 ${wordLabel}`;
+    }
 }
