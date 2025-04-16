@@ -708,7 +708,7 @@ function updateLanguage(lang) {
             }
         });
 
-        // Translate common elements across all pages
+        // Translate common elements across all pages first
         if (translationsData && typeof translateCommonElements === 'function') {
             translateCommonElements(lang, translationsData);
         }
@@ -718,8 +718,20 @@ function updateLanguage(lang) {
             translateFormElements(lang, translationsData);
         }
         
+        // Debug and log available translation keys
+        console.log(`Available translation keys: ${translationsData ? Object.keys(translationsData).join(', ') : 'none'}`);
+        console.log(`Current page '${currentPage}' has translations: ${translationsData && translationsData[currentPage] ? 'yes' : 'no'}`);
+        
         // Call page-specific translation function with correct order of parameters
-        translatePageContent(currentPage, lang, translationsData);
+        // If current page is not in translations, try to use generic translations
+        if (currentPage && translationsData[currentPage]) {
+            translatePageContent(currentPage, lang, translationsData);
+        } else if (currentPage === 'index' || !currentPage) {
+            // Use index translations for home page or unknown pages
+            translatePageContent('index', lang, translationsData);
+        } else {
+            console.warn(`No translations found for page: ${currentPage}, using common translations only`);
+        }
         
         // Dispatch custom event for other components that might need to react to language change
         document.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: lang } }));
@@ -797,10 +809,15 @@ function translatePageContent(pageName, lang, translationsData) {
         console.log("Using English fallback as last resort");
     }
     
-    // Si aún no tenemos traducciones, no hay nada que hacer
+    // Si aún no tenemos traducciones, intentar usar las de la página principal
     if (!pageTranslations) {
-        console.warn(`Translations not found for page ${pageName} in ${lang}`);
-        return;
+        if (translationsData && translationsData['index'] && translationsData['index'][lang]) {
+            pageTranslations = translationsData['index'][lang];
+            console.log("Using index page translations as fallback");
+        } else {
+            console.warn(`Translations not found for page ${pageName} in ${lang}`);
+            return;
+        }
     }
     
     // Translate all elements with data-i18n attributes
@@ -812,21 +829,75 @@ function translatePageContent(pageName, lang, translationsData) {
     });
     
     // Handle page-specific translations based on page name
-    switch(pageName) {
-        case 'index':
-            translateIndexPage(pageTranslations);
-            break;
-        case 'company':
-            translateCompanyPage(pageTranslations);
-            break;
-        case 'about':
-            translateAboutPage(pageTranslations);
-            break;
-        case 'consortium':
-            translateConsortiumPage(pageTranslations);
-            break;
-        // Add other pages as needed
+    try {
+        switch(pageName) {
+            case 'index':
+                translateIndexPage(pageTranslations);
+                break;
+            case 'company':
+                translateCompanyPage(pageTranslations);
+                break;
+            case 'about':
+                translateAboutPage(pageTranslations);
+                break;
+            case 'consortium':
+                translateConsortiumPage(pageTranslations);
+                break;
+            default:
+                // For pages without specific translation functions, 
+                // try to use common translation patterns
+                translateGenericPage(pageTranslations);
+                break;
+        }
+    } catch (error) {
+        console.error(`Error translating page ${pageName}:`, error);
     }
+}
+
+// Function to translate generic pages without specific functions
+function translateGenericPage(translations) {
+    if (!translations) {
+        console.warn('No translations provided for generic page');
+        return;
+    }
+    
+    // Try to translate common page elements by convention
+    
+    // Page title
+    const pageTitle = document.querySelector('.page-header h1, .page-title, h1.title');
+    if (pageTitle && translations.pageTitle) pageTitle.textContent = translations.pageTitle;
+    
+    // Introduction text
+    const introText = document.querySelector('.intro-text, .intro p, .introduction');
+    if (introText && translations.introText) introText.textContent = translations.introText;
+    
+    // Section titles (try to find by convention)
+    document.querySelectorAll('h2, .section-title').forEach((title, index) => {
+        const key = `section${index + 1}Title`;
+        if (translations[key]) {
+            title.textContent = translations[key];
+        }
+    });
+    
+    // Section content (paragraphs)
+    document.querySelectorAll('section p, .section-content p').forEach((paragraph, index) => {
+        const key = `section${index + 1}Content`;
+        if (translations[key]) {
+            paragraph.textContent = translations[key];
+        }
+    });
+    
+    // Try to translate buttons
+    document.querySelectorAll('button, .btn, .btn-primary, .btn-secondary').forEach((button, index) => {
+        const key = `button${index + 1}`;
+        if (translations[key]) {
+            // Keep any icons if present
+            const iconHTML = button.innerHTML.match(/<i[^>]*><\/i>/) || '';
+            button.innerHTML = translations[key] + ' ' + iconHTML;
+        }
+    });
+    
+    console.log('Applied generic translations to page elements');
 }
 
 // Page-specific translation functions
@@ -1841,3 +1912,43 @@ function initializePerformanceMonitoring() {
         }
     }
 }
+
+// Helper function to get current language
+function getCurrentLanguage() {
+    return localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'en';
+}
+
+// Function to immediately apply stored language on page load - 
+// this is crucial for pages other than index.html
+document.addEventListener('DOMContentLoaded', function() {
+    const storedLang = getCurrentLanguage();
+    
+    // Only initialize language if translations are available
+    if (typeof window.translations !== 'undefined' || typeof window.translationsFallback !== 'undefined') {
+        console.info(`Applying stored language preference: ${storedLang} on page load`);
+        updateLanguage(storedLang);
+    } else {
+        console.info('Waiting for translations to load before applying language...');
+    }
+    
+    // Listen for history change events (navigation between pages)
+    window.addEventListener('popstate', function() {
+        console.info('Navigation detected, re-applying language preference');
+        const currentLang = getCurrentLanguage();
+        setTimeout(() => {
+            updateLanguage(currentLang);
+        }, 100); // Small delay to ensure the new page content is loaded
+    });
+});
+
+// Additionally, implement a manual language application when document is ready (safer approach)
+function ensureLanguageApplied() {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        const currentLang = getCurrentLanguage();
+        console.info(`Ensuring language ${currentLang} is applied`);
+        updateLanguage(currentLang);
+    }
+}
+
+// Call this 300ms after page load to make sure everything is ready
+setTimeout(ensureLanguageApplied, 300);
