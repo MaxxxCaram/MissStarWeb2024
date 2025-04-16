@@ -950,6 +950,9 @@ function translatePageContent(pageName, lang, translationsData) {
             case 'consortium':
                 translateConsortiumPage(pageTranslations);
                 break;
+            case 'dynasty':
+                translateDynastyPage(pageTranslations);
+                break;
             case 'news':
                 translateNewsPage(pageTranslations);
                 break;
@@ -1458,6 +1461,151 @@ function translateEmpowerPage(translations) {
     if (contactButton) contactButton.textContent = translations.contactButton || "Contact Us";
     
     console.log('EmpowerTransNation page translation complete');
+}
+
+// Function to translate the Dynasty page
+function translateDynastyPage(translations) {
+    if (!translations) {
+        console.warn('No translations provided for Dynasty page');
+        return;
+    }
+    
+    // Hero section
+    const heroTitle = document.querySelector('.font-orbitron, .text-2xl.font-bold.text-transparent');
+    if (heroTitle) heroTitle.textContent = translations.heroTitle || "DYNASTY";
+    
+    const heroDescription = document.querySelector('.hero-section p, .max-w-7xl p');
+    if (heroDescription) heroDescription.textContent = translations.heroDescription || "";
+    
+    // Community section
+    const communityTitle = document.querySelector('#community h2, .text-4xl.font-bold.mb-4 span.text-white');
+    if (communityTitle) communityTitle.textContent = translations.communityTitle || "Community Hub";
+    
+    const communityDescription = document.querySelector('#community p.text-xl, .text-xl.text-gray-300.max-w-3xl');
+    if (communityDescription) communityDescription.textContent = translations.communityDescription || "";
+    
+    // Community features
+    const communityFeatures = document.querySelectorAll('#community .feature h3, .grid-cols-3 .bg-black.bg-opacity-60 h3');
+    if (communityFeatures && communityFeatures.length >= 3) {
+        if (communityFeatures[0]) communityFeatures[0].textContent = translations.communityFeature1 || "Private & Safe Spaces";
+        if (communityFeatures[1]) communityFeatures[1].textContent = translations.communityFeature2 || "Mentorship Networks";
+        if (communityFeatures[2]) communityFeatures[2].textContent = translations.communityFeature3 || "Support Groups";
+    }
+    
+    // Live streaming section
+    const liveTitle = document.querySelector('#live h2, .text-4xl.font-bold.mb-4 span.text-white:nth-child(2)');
+    if (liveTitle) liveTitle.textContent = translations.liveTitle || "Live Streaming";
+    
+    const liveDescription = document.querySelector('#live p.text-xl, .text-xl.text-gray-300.max-w-3xl:nth-child(2)');
+    if (liveDescription) liveDescription.textContent = translations.liveDescription || "";
+    
+    // Live features
+    const liveFeatures = document.querySelectorAll('#live .feature h3, .live-features h3');
+    if (liveFeatures && liveFeatures.length >= 3) {
+        if (liveFeatures[0]) liveFeatures[0].textContent = translations.liveFeature1 || "Interactive Live Shows";
+        if (liveFeatures[1]) liveFeatures[1].textContent = translations.liveFeature2 || "Virtual Meet & Greets";
+        if (liveFeatures[2]) liveFeatures[2].textContent = translations.liveFeature3 || "Behind-the-scenes Access";
+    }
+    
+    // Competitions section
+    const competitionsTitle = document.querySelector('#competitions h2, .competitions-section h2');
+    if (competitionsTitle) competitionsTitle.textContent = translations.competitionsTitle || "Competitions";
+    
+    const competitionsDescription = document.querySelector('#competitions p.text-xl, .competitions-section p.text-xl');
+    if (competitionsDescription) competitionsDescription.textContent = translations.competitionsDescription || "";
+    
+    // Competition features
+    const competitionFeatures = document.querySelectorAll('#competitions .feature h3, .competitions-features h3');
+    if (competitionFeatures && competitionFeatures.length >= 3) {
+        if (competitionFeatures[0]) competitionFeatures[0].textContent = translations.competitionsFeature1 || "Multiple Categories";
+        if (competitionFeatures[1]) competitionFeatures[1].textContent = translations.competitionsFeature2 || "Global Participation";
+        if (competitionFeatures[2]) competitionFeatures[2].textContent = translations.competitionsFeature3 || "Recognition & Prizes";
+    }
+    
+    // Learning center section
+    const learningTitle = document.querySelector('#learning h2, .learning-section h2');
+    if (learningTitle) learningTitle.textContent = translations.learningTitle || "Learning Center";
+    
+    const learningDescription = document.querySelector('#learning p.text-xl, .learning-section p.text-xl');
+    if (learningDescription) learningDescription.textContent = translations.learningDescription || "";
+    
+    // Featured courses
+    const featuredCoursesTitle = document.querySelector('.holographic-card h3:first-of-type');
+    if (featuredCoursesTitle) featuredCoursesTitle.textContent = translations.featuredCoursesTitle || "Featured Courses";
+    
+    // Course titles and descriptions
+    const courseTitles = document.querySelectorAll('.holographic-card h4');
+    const courseDescriptions = document.querySelectorAll('.holographic-card .text-gray-300.text-sm.mb-2');
+    
+    if (courseTitles && courseTitles.length >= 3) {
+        if (courseTitles[0]) courseTitles[0].textContent = translations.course1Title || "Gender-Affirming Style";
+        if (courseTitles[1]) courseTitles[1].textContent = translations.course2Title || "Voice Training";
+        if (courseTitles[2]) courseTitles[2].textContent = translations.course3Title || "Legal Name & Gender Change";
+    }
+    
+    if (courseDescriptions && courseDescriptions.length >= 3) {
+        if (courseDescriptions[0]) courseDescriptions[0].textContent = translations.course1Description || "";
+        if (courseDescriptions[1]) courseDescriptions[1].textContent = translations.course2Description || "";
+        if (courseDescriptions[2]) courseDescriptions[2].textContent = translations.course3Description || "";
+    }
+    
+    // Mentorship program
+    const mentorshipTitle = document.querySelector('.holographic-card h3:nth-of-type(2)');
+    if (mentorshipTitle) mentorshipTitle.textContent = translations.mentorshipTitle || "Mentorship Program";
+    
+    const mentorshipDescription = document.querySelector('.holographic-card > p.text-gray-300.mb-6');
+    if (mentorshipDescription) mentorshipDescription.textContent = translations.mentorshipDescription || "";
+    
+    // Resource library
+    const resourcesTitle = document.querySelector('.text-center.mb-12 h3');
+    if (resourcesTitle) resourcesTitle.textContent = translations.resourcesTitle || "Resource Library";
+    
+    const resourcesDescription = document.querySelector('.text-center.mb-12 p');
+    if (resourcesDescription) resourcesDescription.textContent = translations.resourcesDescription || "";
+    
+    // Resource cards
+    const resourceCardTitles = document.querySelectorAll('.grid-cols-3 .holographic-card h4');
+    const resourceCardTexts = document.querySelectorAll('.grid-cols-3 .holographic-card p');
+    
+    if (resourceCardTitles && resourceCardTitles.length >= 3) {
+        if (resourceCardTitles[0]) resourceCardTitles[0].textContent = translations.resource1Title || "Transition Guides";
+        if (resourceCardTitles[1]) resourceCardTitles[1].textContent = translations.resource2Title || "Mental Health";
+        if (resourceCardTitles[2]) resourceCardTitles[2].textContent = translations.resource3Title || "Career Development";
+    }
+    
+    if (resourceCardTexts && resourceCardTexts.length >= 3) {
+        if (resourceCardTexts[0]) resourceCardTexts[0].textContent = translations.resource1Text || "";
+        if (resourceCardTexts[1]) resourceCardTexts[1].textContent = translations.resource2Text || "";
+        if (resourceCardTexts[2]) resourceCardTexts[2].textContent = translations.resource3Text || "";
+    }
+    
+    // Explore resources links
+    const exploreLinks = document.querySelectorAll('.group-hover\\:text-purple-200 span, .group-hover\\:text-cyan-200 span, .group-hover\\:text-pink-200 span');
+    exploreLinks.forEach(link => {
+        link.textContent = translations.exploreResources || "Explore Resources";
+    });
+    
+    // Join community section
+    const joinCommunityTitle = document.querySelector('.max-w-4xl.mx-auto.text-center h2 span');
+    if (joinCommunityTitle) joinCommunityTitle.textContent = translations.joinCommunityTitle || "Join Our Community";
+    
+    const joinCommunityText = document.querySelector('.max-w-4xl.mx-auto.text-center p');
+    if (joinCommunityText) joinCommunityText.textContent = translations.joinCommunityText || "";
+    
+    // Buttons
+    const signUpButton = document.querySelector('.holographic-btn.px-8.py-4.text-lg');
+    if (signUpButton) signUpButton.textContent = translations.signUpFree || "Sign Up Free";
+    
+    const tourButton = document.querySelector('.px-8.py-4.text-lg.border.border-purple-500');
+    if (tourButton) tourButton.textContent = translations.takeTour || "Take a Tour";
+    
+    const browseCoursesButton = document.querySelector('.holographic-btn.w-full.mt-6');
+    if (browseCoursesButton) browseCoursesButton.textContent = translations.browseAllCourses || "Browse All Courses";
+    
+    const applyMentorshipButton = document.querySelector('.holographic-btn.w-full');
+    if (applyMentorshipButton) applyMentorshipButton.textContent = translations.applyMentorship || "Apply for Mentorship";
+    
+    console.log('Dynasty page translation complete');
 }
 
 // Basic translations as fallback
