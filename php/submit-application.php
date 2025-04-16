@@ -56,7 +56,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $city = isset($_POST['city']) ? sanitize_input($_POST['city']) : '';
     $biography = isset($_POST['biography']) ? sanitize_input($_POST['biography']) : '';
     $social_media = isset($_POST['social_media']) ? sanitize_input($_POST['social_media']) : '';
-    $language = isset($_POST['language']) ? sanitize_input($_POST['language']) : 'en';
+    
+    // Now always using English for messages since we removed the language selector
+    $language = 'en';
     
     // Validate required fields
     if (empty($full_name)) {
@@ -149,21 +151,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if ($mail_sent) {
             $response['success'] = true;
-            $response['message'] = $language === 'es' ? 
-                'Tu solicitud ha sido recibida. ¡Nos pondremos en contacto contigo pronto!' : 
-                'Your application has been received! We\'ll be in touch soon.';
+            $response['message'] = 'Your application has been received! We\'ll be in touch soon.';
         } else {
-            $response['message'] = $language === 'es' ? 
-                'Hubo un problema al enviar tu solicitud. Por favor, inténtalo de nuevo más tarde.' : 
-                'There was a problem submitting your application. Please try again later.';
+            $response['message'] = 'There was a problem submitting your application. Please try again later.';
             
             // Log error for server-side debugging
             error_log("Failed to send application email for " . $full_name . " (" . $email . ")");
         }
     } else {
-        $response['message'] = $language === 'es' ? 
-            'Por favor, corrige los errores en el formulario.' : 
-            'Please correct the errors in the form.';
+        $response['message'] = 'Please correct the errors in the form.';
     }
 } else {
     $response['message'] = 'Invalid request method';

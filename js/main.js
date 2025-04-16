@@ -1070,16 +1070,7 @@ function initializeForms() {
     // Find all forms on the page
     const forms = document.querySelectorAll('form');
     
-    // Get current language for form initialization
-    const currentLanguage = getCurrentLanguage();
-    
     forms.forEach(form => {
-        // Set language field value if it exists
-        const languageField = form.querySelector('input[name="language"]');
-        if (languageField) {
-            languageField.value = currentLanguage;
-        }
-        
         // Add event listener for form submission
         form.addEventListener('submit', function(e) {
             // For forms with class 'application-form'
@@ -1094,7 +1085,7 @@ function initializeForms() {
                     showFormMessage(form, 'processing', 'Processing your application...');
                     
                     // Get the current language for error messages
-                    const currentLanguage = getCurrentLanguage();
+                    const currentLanguage = 'en'; // Always English now
                     
                     // Check if form has a valid action URL
                     const actionUrl = form.getAttribute('action');
@@ -1103,9 +1094,6 @@ function initializeForms() {
                     if (hasValidEndpoint) {
                         // Create FormData object
                         const formData = new FormData(form);
-                        
-                        // Add current language to help with localized response messages
-                        formData.append('language', currentLanguage);
                         
                         // Use fetch API to submit the form
                         fetch('php/submit-application.php', {
@@ -1124,8 +1112,7 @@ function initializeForms() {
                                 // Update word count if present
                                 const wordCountElement = form.querySelector('.word-count');
                                 if (wordCountElement) {
-                                    const wordLabel = currentLanguage === 'es' ? 'palabras' : 'words';
-                                    wordCountElement.textContent = `0/${wordLabel}`;
+                                    wordCountElement.textContent = `0/200 words`;
                                 }
                             } else {
                                 // Show error message
@@ -1145,9 +1132,7 @@ function initializeForms() {
                         })
                         .catch(error => {
                             console.error('Error submitting form:', error);
-                            const errorMsg = currentLanguage === 'es' 
-                                ? 'Error al enviar el formulario. Por favor, inténtalo de nuevo más tarde.'
-                                : 'Error submitting form. Please try again later.';
+                            const errorMsg = 'Error submitting form. Please try again later.';
                             showFormMessage(form, 'error', errorMsg);
                         });
                     } else {
@@ -1163,8 +1148,7 @@ function initializeForms() {
                             // Update word count if present
                             const wordCountElement = form.querySelector('.word-count');
                             if (wordCountElement) {
-                                const wordLabel = currentLanguage === 'es' ? 'palabras' : 'words';
-                                wordCountElement.textContent = `0/${wordLabel}`;
+                                wordCountElement.textContent = `0/200 words`;
                             }
                         }, 1500);
                     }
@@ -1180,7 +1164,7 @@ function initializeForms() {
             biographyField.addEventListener('input', function() {
                 if (wordCountElement) {
                     const words = this.value.trim().split(/\s+/).filter(Boolean).length;
-                    const currentLanguage = getCurrentLanguage();
+                    const currentLanguage = 'en';
                     const wordLabel = currentLanguage === 'es' ? 'palabras' : 'words';
                     wordCountElement.textContent = `${words}/200 ${wordLabel}`;
                     
@@ -1390,11 +1374,6 @@ function fillCountryOptions(selectElement) {
         option.textContent = country.name;
         selectElement.appendChild(option);
     });
-}
-
-// Helper function to get current language
-function getCurrentLanguage() {
-    return document.documentElement.lang || localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'en';
 }
 
 // Función de diagnóstico para el selector de idioma
