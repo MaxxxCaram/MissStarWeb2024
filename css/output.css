@@ -573,7 +573,21 @@ h1 {
 
 /* Add starry background pattern */
 
+.stars-bg {
+  background: 
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, #000000, #1a0033);
+  background-size: 20px 20px, 100% 100%;
+}
+
 /* Add stardust background pattern */
+
+.stardust-bg {
+  background: 
+      radial-gradient(circle at center, rgba(255, 215, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(45deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.95));
+  background-size: 15px 15px, 100% 100%;
+}
 
 .container {
   width: 100%;

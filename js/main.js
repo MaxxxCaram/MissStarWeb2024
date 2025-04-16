@@ -563,7 +563,7 @@ function setLanguage(lang) {
     document.documentElement.lang = lang;
     
     // Load translations from external file if available
-    let translationsData = window.translations || translations;
+    let translationsData = window.translations || window.translationsFallback;
     
     // Update all text elements with data-lang attributes
     const elements = document.querySelectorAll('[data-lang-es], [data-lang-en]');
@@ -923,7 +923,7 @@ function translateFormElements(lang, translationsData) {
     }
     
     // Fall back to basic translations if page-specific not available
-    const basicTranslations = translations[lang] || null;
+    const basicTranslations = window.translationsFallback[lang] || null;
     
     // Translate form elements
     const forms = document.querySelectorAll('form');
@@ -1152,20 +1152,20 @@ function translateAboutPage(translations) {
 function translateConsortiumPage(translations) {
     if (!translations || !translations.consortium) return;
     
-    const translations = translations.consortium[getCurrentLanguage()];
-    if (!translations) return;
+    const translationsForPage = translations.consortium[getCurrentLanguage()];
+    if (!translationsForPage) return;
     
     // Page title
     const pageTitle = document.querySelector('.consortium-section h1');
-    if (pageTitle) pageTitle.textContent = translations.pageTitle || "Miss Star Consortium";
+    if (pageTitle) pageTitle.textContent = translationsForPage.pageTitle || "Miss Star Consortium";
     
     // Intro text
     const introText = document.querySelector('.consortium-intro p');
-    if (introText) introText.textContent = translations.introText || "";
+    if (introText) introText.textContent = translationsForPage.introText || "";
     
     // Vision section
     const visionTitle = document.querySelector('.vision-section h2');
-    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
+    if (visionTitle) visionTitle.textContent = translationsForPage.visionTitle || "Our Vision";
     
     // And additional translations specific to the consortium page...
 }
@@ -1210,3 +1210,8 @@ window.translations = window.translations || window.translationsFallback;
 
 // Application Form Handler
 // ... existing code ...
+
+// Helper function to get current language
+function getCurrentLanguage() {
+    return document.documentElement.lang || localStorage.getItem('missstar-language') || 'en';
+}
