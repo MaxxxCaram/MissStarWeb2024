@@ -637,7 +637,38 @@ function initializeNavbar() {
     });
 }
 
-// Updated Language Switcher Function
+// Mejorar el manejo de eventos asincrónicos
+function safeEventListener(element, eventName, handler, options = {}) {
+    if (!element) return;
+    
+    const wrappedHandler = async (event) => {
+        try {
+            // Establecer un timeout para el handler
+            const timeout = options.timeout || 5000;
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Handler timed out')), timeout);
+            });
+
+            // Ejecutar el handler con un timeout
+            await Promise.race([
+                Promise.resolve(handler(event)),
+                timeoutPromise
+            ]);
+        } catch (error) {
+            if (error.message === 'Handler timed out') {
+                // Ignorar silenciosamente los timeouts
+                return;
+            }
+            // Log otros errores si es necesario
+            console.debug('Event handler error:', error);
+        }
+    };
+
+    element.addEventListener(eventName, wrappedHandler, options);
+    return () => element.removeEventListener(eventName, wrappedHandler, options);
+}
+
+// Actualizar initializeLanguageSwitcher para usar safeEventListener
 function initializeLanguageSwitcher() {
     console.log('Initializing language switcher...');
     
@@ -645,89 +676,94 @@ function initializeLanguageSwitcher() {
     const enBtn = document.querySelector('[data-lang="en"]');
     const esBtn = document.querySelector('[data-lang="es"]');
     
-    // Check if language buttons exist
     if (!enBtn || !esBtn) {
         console.warn('Language buttons not found, skipping language switcher initialization');
         return;
     }
     
-    console.log('Language buttons found, continuing initialization');
-    
-    // Check if we have translations loaded
+    // Check if translations are loaded
     if (typeof translations === 'undefined') {
-        console.error('Translations object not found. Make sure translations.js is loaded before main.js');
-        
-        // Attempt to load translations dynamically as a fallback
         const script = document.createElement('script');
         script.src = './js/translations.js';
-        script.onload = function() {
-            console.log('Translations loaded dynamically');
-            if (typeof translations !== 'undefined') {
-                continueLanguageSwitcherSetup();
-            } else {
-                console.error('Failed to load translations even after dynamic loading');
-            }
-        };
-        script.onerror = function() {
-            console.error('Failed to load translations.js dynamically');
-        };
-        document.head.appendChild(script);
+        
+        const scriptPromise = new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+
+        scriptPromise
+            .then(() => {
+                if (typeof translations !== 'undefined') {
+                    continueLanguageSwitcherSetup();
+                }
+            })
+            .catch(() => {
+                console.debug('Failed to load translations dynamically');
+            });
+            
         return;
     }
     
     continueLanguageSwitcherSetup();
+}
+
+function continueLanguageSwitcherSetup() {
+    const enBtn = document.querySelector('[data-lang="en"]');
+    const esBtn = document.querySelector('[data-lang="es"]');
     
-    function continueLanguageSwitcherSetup() {
-        // Get saved language preference from localStorage or use browser default
-        const savedLang = localStorage.getItem('language') || detectBrowserLanguage();
-        console.log('Saved language or browser default:', savedLang);
-        
-        // Set active class based on saved language
-        if (savedLang === 'es') {
-            esBtn.classList.add('active');
-            enBtn.classList.remove('active');
-        } else {
-            enBtn.classList.add('active');
-            esBtn.classList.remove('active');
-        }
-        
-        // Apply initial translations
-        updateContent(savedLang);
-        
-        // Event listeners for language buttons
-        enBtn.addEventListener('click', function() {
-            console.log('English button clicked');
-            setActiveLanguage('en');
-        });
-        
-        esBtn.addEventListener('click', function() {
-            console.log('Spanish button clicked');
-            setActiveLanguage('es');
-        });
-        
-        // Function to handle language button clicks
-        function setActiveLanguage(lang) {
-            console.log('Setting active language to:', lang);
-            
-            // Save preference to localStorage
-            localStorage.setItem('language', lang);
-            
-            // Update active button state
-            if (lang === 'es') {
-                esBtn.classList.add('active');
-                enBtn.classList.remove('active');
-            } else {
-                enBtn.classList.add('active');
-                esBtn.classList.remove('active');
-            }
-            
-            // Update content based on selected language
-            updateContent(lang);
-        }
-        
-        // Dispatch an event when language switcher is ready
+    if (!enBtn || !esBtn) return;
+    
+    const savedLang = localStorage.getItem('language') || detectBrowserLanguage();
+    
+    // Set active class based on saved language
+    if (savedLang === 'es') {
+        esBtn.classList.add('active');
+        enBtn.classList.remove('active');
+    } else {
+        enBtn.classList.add('active');
+        esBtn.classList.remove('active');
+    }
+    
+    // Apply initial translations
+    updateContent(savedLang);
+    
+    // Event listeners con manejo mejorado
+    safeEventListener(enBtn, 'click', () => setActiveLanguage('en'));
+    safeEventListener(esBtn, 'click', () => setActiveLanguage('es'));
+    
+    // Dispatch event when ready
+    requestAnimationFrame(() => {
         document.dispatchEvent(new CustomEvent('languageSwitcherReady'));
-        console.log('Language switcher initialized successfully');
+    });
+}
+
+// Mejorar el manejo de eventos DOM
+document.addEventListener('DOMContentLoaded', function() {
+    const storedLang = getCurrentLanguage();
+    
+    if (typeof window.translations !== 'undefined' || typeof window.translationsFallback !== 'undefined') {
+        requestAnimationFrame(() => {
+            updateLanguage(storedLang);
+        });
+    }
+    
+    // Mejorar el manejo de navegación
+    safeEventListener(window, 'popstate', () => {
+        const currentLang = getCurrentLanguage();
+        requestAnimationFrame(() => {
+            updateLanguage(currentLang);
+        });
+    });
+});
+
+// Asegurar que el lenguaje se aplica de manera segura
+function ensureLanguageApplied() {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        const currentLang = getCurrentLanguage();
+        requestAnimationFrame(() => {
+            updateLanguage(currentLang);
+        });
     }
 }
 
