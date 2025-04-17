@@ -87,7 +87,7 @@ function Test-SslCertificate {
         
         $cert = $req.ServicePoint.Certificate
         
-        if ($cert -eq $null) {
+        if ($null -eq $cert) {
             return @{
                 Success = $false
                 Error = "No SSL certificate found"
