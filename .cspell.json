@@ -68,7 +68,11 @@
         "keyout",
         "signkey",
         "socache",
-        "shmcb"
+        "shmcb",
+        "asincrónicos",
+        "asincrónico",
+        "sincrónico",
+        "sincrónicos"
     ],
     "flagWords": [],
     "ignorePaths": [
