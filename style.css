@@ -1,0 +1,24 @@
+.lang-btn {
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.25rem;
+    font-size: 0.875rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+    color: var(--star-gold);
+}
+
+.lang-btn.active {
+    border-color: var(--star-gold);
+    color: var(--star-gold);
+}
+
+.language-switcher span {
+    color: var(--text-color);
+    opacity: 0.5;
+} 

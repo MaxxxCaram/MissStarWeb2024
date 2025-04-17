@@ -637,948 +637,202 @@ function initializeNavbar() {
     });
 }
 
+// Manejador global de mensajes asincrónicos
+window.messageHandlers = new Map();
+window.messageTimeouts = new Map();
+
+const MESSAGE_TIMEOUT = 5000; // 5 segundos timeout
+
+function registerMessageHandler(id, handler, timeout = MESSAGE_TIMEOUT) {
+    window.messageHandlers.set(id, handler);
+    
+    // Configurar timeout
+    const timeoutId = setTimeout(() => {
+        if (window.messageHandlers.has(id)) {
+            window.messageHandlers.delete(id);
+            window.messageTimeouts.delete(id);
+        }
+    }, timeout);
+    
+    window.messageTimeouts.set(id, timeoutId);
+    
+    return () => {
+        clearTimeout(window.messageTimeouts.get(id));
+        window.messageHandlers.delete(id);
+        window.messageTimeouts.delete(id);
+    };
+}
+
+function handleAsyncMessage(message, sender) {
+    return new Promise((resolve, reject) => {
+        const messageId = Date.now() + Math.random();
+        
+        const cleanup = registerMessageHandler(messageId, {
+            resolve,
+            reject,
+            sender
+        });
+        
+        try {
+            // Enviar mensaje
+            if (sender && sender.postMessage) {
+                sender.postMessage({ id: messageId, ...message });
+            }
+        } catch (error) {
+            cleanup();
+            reject(error);
+        }
+    });
+}
+
 // Mejorar el manejo de eventos asincrónicos
 function safeEventListener(element, eventName, handler, options = {}) {
     if (!element) return;
     
     const wrappedHandler = async (event) => {
+        const messageId = Date.now() + Math.random();
+        
         try {
-            // Establecer un timeout para el handler
-            const timeout = options.timeout || 5000;
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Handler timed out')), timeout);
+            const cleanup = registerMessageHandler(messageId, {
+                async: true,
+                handler
             });
-
-            // Ejecutar el handler con un timeout
-            await Promise.race([
-                Promise.resolve(handler(event)),
-                timeoutPromise
+            
+            const result = await Promise.race([
+                handler(event),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Handler timed out')), 
+                    options.timeout || MESSAGE_TIMEOUT)
+                )
             ]);
+            
+            cleanup();
+            return result;
+            
         } catch (error) {
-            if (error.message === 'Handler timed out') {
-                // Ignorar silenciosamente los timeouts
-                return;
+            if (window.messageHandlers.has(messageId)) {
+                const cleanup = window.messageHandlers.get(messageId);
+                if (typeof cleanup === 'function') {
+                    cleanup();
+                }
             }
-            // Log otros errores si es necesario
-            console.debug('Event handler error:', error);
+            
+            if (error.message !== 'Handler timed out') {
+                console.debug('Event handler error:', error);
+            }
         }
     };
-
+    
     element.addEventListener(eventName, wrappedHandler, options);
     return () => element.removeEventListener(eventName, wrappedHandler, options);
 }
 
-// Actualizar initializeLanguageSwitcher para usar safeEventListener
-function initializeLanguageSwitcher() {
-    console.log('Initializing language switcher...');
-    
-    // Elements
-    const enBtn = document.querySelector('[data-lang="en"]');
-    const esBtn = document.querySelector('[data-lang="es"]');
-    
-    if (!enBtn || !esBtn) {
-        console.warn('Language buttons not found, skipping language switcher initialization');
-        return;
-    }
-    
-    // Check if translations are loaded
-    if (typeof translations === 'undefined') {
-        const script = document.createElement('script');
-        script.src = './js/translations.js';
-        
-        const scriptPromise = new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
+// Mejorar el manejo de promesas
+function safePromise(promise, timeout = MESSAGE_TIMEOUT) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Operation timed out')), timeout)
+        )
+    ]).catch(error => {
+        if (error.message === 'Operation timed out') {
+            return Promise.resolve(null); // Valor por defecto en caso de timeout
+        }
+        throw error;
+    });
+}
 
-        scriptPromise
-            .then(() => {
-                if (typeof translations !== 'undefined') {
-                    continueLanguageSwitcherSetup();
-                }
-            })
-            .catch(() => {
-                console.debug('Failed to load translations dynamically');
-            });
-            
-        return;
-    }
+// Language Switcher Setup
+function initializeLanguageSwitcher() {
+    // Get language from localStorage or default to 'en'
+    const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+    document.documentElement.lang = currentLang;
     
-    continueLanguageSwitcherSetup();
+    // Add click handlers to language buttons
+    const langButtons = document.querySelectorAll('[data-lang]');
+    langButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const lang = this.getAttribute('data-lang');
+            switchLanguage(lang);
+        });
+        
+        // Highlight current language button
+        if (button.getAttribute('data-lang') === currentLang) {
+            button.classList.add('active');
+        }
+    });
+}
+
+function switchLanguage(lang) {
+    // Save selection
+    localStorage.setItem('selectedLanguage', lang);
+    document.documentElement.lang = lang;
+    
+    // Update button states
+    const langButtons = document.querySelectorAll('[data-lang]');
+    langButtons.forEach(button => {
+        button.classList.toggle('active', button.getAttribute('data-lang') === lang);
+    });
+    
+    // Update content
+    translatePage(lang);
 }
 
 function continueLanguageSwitcherSetup() {
-    const enBtn = document.querySelector('[data-lang="en"]');
-    const esBtn = document.querySelector('[data-lang="es"]');
+    // Get current page name from URL
+    const pageName = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
     
-    if (!enBtn || !esBtn) return;
-    
-    const savedLang = localStorage.getItem('language') || detectBrowserLanguage();
-    
-    // Set active class based on saved language
-    if (savedLang === 'es') {
-        esBtn.classList.add('active');
-        enBtn.classList.remove('active');
-    } else {
-        enBtn.classList.add('active');
-        esBtn.classList.remove('active');
-    }
-    
-    // Apply initial translations
-    updateContent(savedLang);
-    
-    // Event listeners con manejo mejorado
-    safeEventListener(enBtn, 'click', () => setActiveLanguage('en'));
-    safeEventListener(esBtn, 'click', () => setActiveLanguage('es'));
-    
-    // Dispatch event when ready
-    requestAnimationFrame(() => {
-        document.dispatchEvent(new CustomEvent('languageSwitcherReady'));
-    });
-}
-
-// Mejorar el manejo de eventos DOM
-document.addEventListener('DOMContentLoaded', function() {
-    const storedLang = getCurrentLanguage();
-    
-    if (typeof window.translations !== 'undefined' || typeof window.translationsFallback !== 'undefined') {
-        requestAnimationFrame(() => {
-            updateLanguage(storedLang);
+    // Load translations asynchronously if not already loaded
+    if (!window.translations) {
+        loadTranslations().then(() => {
+            initializeLanguageSwitcher();
+            translatePage(localStorage.getItem('selectedLanguage') || 'en');
+        }).catch(error => {
+            console.error('Failed to load translations:', error);
+            // Use fallback translations
+            window.translations = window.translationsFallback;
+            initializeLanguageSwitcher();
+            translatePage(localStorage.getItem('selectedLanguage') || 'en');
         });
-    }
-    
-    // Mejorar el manejo de navegación
-    safeEventListener(window, 'popstate', () => {
-        const currentLang = getCurrentLanguage();
-        requestAnimationFrame(() => {
-            updateLanguage(currentLang);
-        });
-    });
-});
-
-// Asegurar que el lenguaje se aplica de manera segura
-function ensureLanguageApplied() {
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        const currentLang = getCurrentLanguage();
-        requestAnimationFrame(() => {
-            updateLanguage(currentLang);
-        });
-    }
-}
-
-// Function to update content based on selected language
-function updateContent(lang) {
-    console.log('Updating content to language:', lang);
-    
-    // Verify translations object exists
-    if (!translations) {
-        console.error('Translations object not available');
-        return;
-    }
-    
-    // Apply common translations first
-    if (translations.common && translations.common[lang]) {
-        applyCommonTranslations(translations.common[lang]);
     } else {
-        console.warn('Common translations not found for language:', lang);
+        initializeLanguageSwitcher();
+        translatePage(localStorage.getItem('selectedLanguage') || 'en');
     }
-    
-    // Apply page-specific translations
-    const pageName = getCurrentPageName();
-    console.log('Current page name:', pageName);
-    
-    if (translations[pageName] && translations[pageName][lang]) {
-        applyPageTranslations(pageName, translations[pageName][lang]);
-    } else {
-        console.warn(`Specific translations for page '${pageName}' not found`);
-    }
-    
-    // Translate elements with data-translate attribute
-    translateDataAttributes(lang);
-    
-    console.log('Content updated to language:', lang);
 }
 
-function getCurrentPageName() {
-    // Get current page filename without extension
-    const path = window.location.pathname;
-    let pageName = path.split("/").pop().split(".")[0];
-    
-    // If empty (root path), it's the index/home page
-    if (!pageName) pageName = 'index';
-    
-    // Special case for Dynasty section
-    if (path.includes('/Dynasty/')) {
-        return 'dynasty';
-    }
-    
-    return pageName;
-}
-
-function detectBrowserLanguage() {
-    const lang = navigator.language || navigator.userLanguage;
-    console.log('Detected browser language:', lang);
-    
-    // Check if the language starts with 'es' (Spanish)
-    if (lang.startsWith('es')) {
-        return 'es';
-    }
-    
-    // Default to English
-    return 'en';
-}
-
-function translateDataAttributes(lang) {
-    const elementsToTranslate = document.querySelectorAll('[data-translate]');
-    console.log(`Found ${elementsToTranslate.length} elements with data-translate attributes`);
-    
-    elementsToTranslate.forEach(element => {
-        const key = element.getAttribute('data-translate');
-        let translationFound = false;
+// Load translations asynchronously
+async function loadTranslations() {
+    try {
+        // Get the current script path to determine relative path
+        const scripts = document.getElementsByTagName('script');
+        let translationsPath = './js/translations.js';
         
-        // Check if this is a common translation
-        if (translations.common && translations.common[lang] && translations.common[lang][key]) {
-            element.textContent = translations.common[lang][key];
-            translationFound = true;
+        // Check if we're in a subdirectory by looking at the current page URL
+        if (window.location.pathname.includes('/Dynasty/')) {
+            translationsPath = '../js/translations.js';
         }
         
-        // If not found in common, check page-specific
-        if (!translationFound) {
-            const pageName = getCurrentPageName();
-            if (translations[pageName] && translations[pageName][lang] && translations[pageName][lang][key]) {
-                element.textContent = translations[pageName][lang][key];
-                translationFound = true;
-            }
+        const response = await fetch(translationsPath);
+        if (!response.ok) {
+            console.error(`Failed to load translations from ${translationsPath}`);
+            throw new Error('Failed to load translations');
+        }
+        const text = await response.text();
+        // Execute the translations script
+        eval(text);
+        
+        if (!window.translations) {
+            throw new Error('Translations not properly loaded');
         }
         
-        // If still not found, check all other pages as fallback
-        if (!translationFound) {
-            for (const page in translations) {
-                if (page !== 'common' && translations[page] && translations[page][lang] && translations[page][lang][key]) {
-                    element.textContent = translations[page][lang][key];
-                    translationFound = true;
-                    break;
-                }
-            }
-        }
-        
-        if (!translationFound) {
-            console.warn(`Translation not found for key '${key}' in language '${lang}'`);
-        }
-    });
-}
-
-function applyCommonTranslations(translations) {
-    if (!translations) {
-        console.warn('No common translations provided');
-        return;
-    }
-    
-    // Menu items
-    document.querySelectorAll('nav a, .mobile-menu a').forEach(link => {
-        const href = link.getAttribute('href');
-        
-        if (href.includes('index.html') || href === '/' || href === '') {
-            if (translations.home) link.textContent = translations.home;
-        } else if (href.includes('company.html')) {
-            if (translations.company) link.textContent = translations.company;
-        } else if (href.includes('about.html')) {
-            if (translations.aboutUs) link.textContent = translations.aboutUs;
-        } else if (href.includes('consortium.html')) {
-            if (translations.consortium) link.textContent = translations.consortium;
-        } else if (href.includes('empower.html')) {
-            if (translations.empowerTransNation) link.textContent = translations.empowerTransNation;
-        } else if (href.includes('dynasty') || href.includes('Dynasty')) {
-            if (translations.dynastyPlatform) link.textContent = translations.dynastyPlatform;
-        } else if (href.includes('hall-of-fame.html')) {
-            if (translations.hallOfFame) link.textContent = translations.hallOfFame;
-        } else if (href.includes('partners.html')) {
-            if (translations.partners) link.textContent = translations.partners;
-        } else if (href.includes('news.html')) {
-            if (translations.news) link.textContent = translations.news;
-        }
-    });
-    
-    // Footer content
-    const copyright = document.querySelector('.copyright');
-    if (copyright && translations.copyright) copyright.innerHTML = translations.copyright;
-    
-    const companyInfo = document.querySelector('.company-info');
-    if (companyInfo && translations.companyInfo) companyInfo.innerHTML = translations.companyInfo;
-    
-    const address = document.querySelector('.address');
-    if (address && translations.address) address.innerHTML = translations.address;
-    
-    const phone = document.querySelector('.phone');
-    if (phone && translations.phone) phone.innerHTML = translations.phone;
-    
-    // Button text
-    document.querySelectorAll('.btn-primary, .btn-secondary').forEach(button => {
-        if (button.textContent.includes('Read More') && translations.readMore) {
-            button.textContent = translations.readMore;
-        } else if (button.textContent.includes('Learn More') && translations.learnMore) {
-            button.textContent = translations.learnMore;
-        } else if (button.textContent.includes('Contact Us') && translations.contactUs) {
-            button.textContent = translations.contactUs;
-        }
-    });
-    
-    console.log('Applied common translations');
-}
-
-function applyPageTranslations(pageName, translations) {
-    console.log(`Applying translations for page: ${pageName}`);
-    
-    // Call the appropriate page-specific translation function
-    switch (pageName) {
-        case 'index':
-            translateIndexPage(translations);
-            break;
-        case 'company':
-            translateCompanyPage(translations);
-            break;
-        case 'about':
-            translateAboutPage(translations);
-            break;
-        case 'consortium':
-            translateConsortiumPage(translations);
-            break;
-        case 'empower':
-            translateEmpowerPage(translations);
-            break;
-        case 'dynasty':
-            translateDynastyPage(translations);
-            break;
-        default:
-            translateGenericPage(translations);
-            break;
+        return window.translations;
+    } catch (error) {
+        console.error('Translation loading error:', error);
+        throw new Error('Failed to load translations: ' + error.message);
     }
 }
 
-function translateGenericPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for generic page');
-        return;
-    }
-    
-    // Try to translate common page elements by convention
-    
-    // Page title
-    const pageTitle = document.querySelector('.page-header h1, .page-title, h1.title');
-    if (pageTitle && translations.pageTitle) pageTitle.textContent = translations.pageTitle;
-    
-    // Introduction text
-    const introText = document.querySelector('.intro-text, .intro p, .introduction');
-    if (introText && translations.introText) introText.textContent = translations.introText;
-    
-    // Section titles (try to find by convention)
-    document.querySelectorAll('h2, .section-title').forEach((title, index) => {
-        const key = `section${index + 1}Title`;
-        if (translations[key]) {
-            title.textContent = translations[key];
-        }
-    });
-    
-    // Section content (paragraphs)
-    document.querySelectorAll('section p, .section-content p').forEach((paragraph, index) => {
-        const key = `section${index + 1}Content`;
-        if (translations[key]) {
-            paragraph.textContent = translations[key];
-        }
-    });
-    
-    // Try to translate buttons
-    document.querySelectorAll('button, .btn, .btn-primary, .btn-secondary').forEach((button, index) => {
-        const key = `button${index + 1}`;
-        if (translations[key]) {
-            // Keep any icons if present
-            const iconHTML = button.innerHTML.match(/<i[^>]*><\/i>/) || '';
-            button.innerHTML = translations[key] + ' ' + iconHTML;
-        }
-    });
-    
-    console.log('Applied generic translations to page elements');
-}
-
-// Page-specific translation functions
-function translateIndexPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for index page');
-        return;
-    }
-    
-    // Hero section
-    const welcomeToText = document.querySelector('.welcome-text .hologram-text:nth-child(1)');
-    if (welcomeToText) welcomeToText.textContent = translations.welcomeTitle || "Welcome to";
-    
-    const missStarText = document.querySelector('.welcome-text .hologram-text:nth-child(2)');
-    if (missStarText) missStarText.textContent = "Miss Star";
-    
-    const internationalText = document.querySelector('.welcome-text .hologram-text:nth-child(3)');
-    if (internationalText) internationalText.textContent = "International";
-    
-    const heroDescription = document.querySelector('.hero-section p');
-    if (heroDescription) heroDescription.textContent = translations.heroDescription || "";
-    
-    // Pageant section
-    const pageantTitle = document.querySelector('#pageant .section-title');
-    if (pageantTitle) pageantTitle.textContent = translations.pageantTitle || "The Pageant";
-    
-    const pageantDescription = document.querySelector('#pageant .section-content p');
-    if (pageantDescription) pageantDescription.textContent = translations.pageantDescription || "Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.";
-    
-    const pageantButton = document.querySelector('#pageant .btn-primary');
-    if (pageantButton) {
-        const iconHTML = pageantButton.innerHTML.match(/<i[^>]*><\/i>/) || '';
-        pageantButton.innerHTML = (translations.learnMore || "Learn More") + ' ' + iconHTML;
-    }
-    
-    // Contestants section
-    const contestantsTitle = document.querySelector('#contestants .section-title');
-    if (contestantsTitle) contestantsTitle.textContent = translations.contestantsTitle || "Contestants";
-    
-    const contestantsDescription = document.querySelector('#contestants .section-content p');
-    if (contestantsDescription) contestantsDescription.textContent = translations.contestantsDescription || "Meet our amazing contestants who will represent their countries in this year's competition.";
-    
-    const contestantsButton = document.querySelector('#contestants .btn-primary');
-    if (contestantsButton) {
-        const iconHTML = contestantsButton.innerHTML.match(/<i[^>]*><\/i>/) || '';
-        contestantsButton.innerHTML = (translations.meetQueens || "Meet the Queens") + ' ' + iconHTML;
-    }
-    
-    // Events section
-    const eventsTitle = document.querySelector('#events .section-title');
-    if (eventsTitle) eventsTitle.textContent = translations.eventsTitle || "Events";
-    
-    const eventsDescription = document.querySelector('#events .section-content p');
-    if (eventsDescription) eventsDescription.textContent = translations.eventsDescription || "Check out our calendar of events and activities throughout the pageant.";
-    
-    const eventsButton = document.querySelector('#events .btn-primary');
-    if (eventsButton) {
-        const iconHTML = eventsButton.innerHTML.match(/<i[^>]*><\/i>/) || '';
-        eventsButton.innerHTML = (translations.viewCalendar || "View Calendar") + ' ' + iconHTML;
-    }
-    
-    // Sponsors section
-    const sponsorsTitle = document.querySelector('#sponsors .section-title');
-    if (sponsorsTitle) sponsorsTitle.textContent = translations.sponsorsTitle || "Sponsors";
-    
-    const sponsorsDescription = document.querySelector('#sponsors .section-content p');
-    if (sponsorsDescription) sponsorsDescription.textContent = translations.sponsorsDescription || "Our official sponsors who make this event possible.";
-    
-    const sponsorsButton = document.querySelector('#sponsors .btn-primary');
-    if (sponsorsButton) {
-        const iconHTML = sponsorsButton.innerHTML.match(/<i[^>]*><\/i>/) || '';
-        sponsorsButton.innerHTML = (translations.ourPartners || "Our Partners") + ' ' + iconHTML;
-    }
-    
-    // Special text elements
-    const fearlessText = document.querySelector('.text-5xl .glow-text:nth-child(1)');
-    if (fearlessText) {
-        fearlessText.textContent = translations.fearlessly || "Fearlessly Feminine.";
-    }
-    
-    const unapologeticallyText = document.querySelector('.text-5xl .glow-text:nth-child(2)');
-    if (unapologeticallyText) {
-        unapologeticallyText.textContent = translations.unapologetically || "Unapologetically Powerful";
-    }
-}
-
-function translateCompanyPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for company page');
-        return;
-    }
-    
-    // Page title and introduction
-    const pageTitle = document.querySelector('.page-header h1');
-    if (pageTitle) pageTitle.textContent = translations.pageTitle || "The Company";
-    
-    const introText = document.querySelector('.intro-section p');
-    if (introText) introText.textContent = translations.introText || "";
-    
-    // Values section
-    const valuesTitle = document.querySelector('.values-section h2');
-    if (valuesTitle) valuesTitle.textContent = translations.valuesTitle || "Our Values";
-    
-    // Values cards
-    const inclusivityTitle = document.querySelector('.values-card:nth-child(1) h3');
-    if (inclusivityTitle) inclusivityTitle.textContent = translations.inclusivityTitle || "Inclusivity";
-    
-    const inclusivityText = document.querySelector('.values-card:nth-child(1) p');
-    if (inclusivityText) inclusivityText.textContent = translations.inclusivityText || "";
-    
-    const empowermentTitle = document.querySelector('.values-card:nth-child(2) h3');
-    if (empowermentTitle) empowermentTitle.textContent = translations.empowermentTitle || "Empowerment";
-    
-    const empowermentText = document.querySelector('.values-card:nth-child(2) p');
-    if (empowermentText) empowermentText.textContent = translations.empowermentText || "";
-    
-    const excellenceTitle = document.querySelector('.values-card:nth-child(3) h3');
-    if (excellenceTitle) excellenceTitle.textContent = translations.excellenceTitle || "Excellence";
-    
-    const excellenceText = document.querySelector('.values-card:nth-child(3) p');
-    if (excellenceText) excellenceText.textContent = translations.excellenceText || "";
-    
-    const innovationTitle = document.querySelector('.values-card:nth-child(4) h3');
-    if (innovationTitle) innovationTitle.textContent = translations.innovationTitle || "Innovation";
-    
-    const innovationText = document.querySelector('.values-card:nth-child(4) p');
-    if (innovationText) innovationText.textContent = translations.innovationText || "";
-    
-    // Mission and vision
-    const missionTitle = document.querySelector('.mission-section h2');
-    if (missionTitle) missionTitle.textContent = translations.missionTitle || "Our Mission";
-    
-    const missionText = document.querySelector('.mission-section p');
-    if (missionText) missionText.textContent = translations.missionText || "";
-    
-    const visionTitle = document.querySelector('.vision-section h2');
-    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
-    
-    const visionText = document.querySelector('.vision-section p');
-    if (visionText) visionText.textContent = translations.visionText || "";
-}
-
-function translateAboutPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for about page');
-        return;
-    }
-    
-    // Page title and introduction
-    const pageTitle = document.querySelector('.page-header h1');
-    if (pageTitle) pageTitle.textContent = translations.pageTitle || "About Us";
-    
-    const introText = document.querySelector('.intro-section p');
-    if (introText) introText.textContent = translations.introText || "";
-    
-    // Founder section
-    const founderTitle = document.querySelector('.founder-section h2');
-    if (founderTitle) founderTitle.textContent = translations.founderTitle || "";
-    
-    const founderPosition = document.querySelector('.founder-position');
-    if (founderPosition) founderPosition.textContent = translations.founderPosition || "";
-    
-    const founderBio = document.querySelector('.founder-bio');
-    if (founderBio) founderBio.textContent = translations.founderBio || "";
-    
-    // Achievements section
-    const achievementsTitle = document.querySelector('.achievements-section h2');
-    if (achievementsTitle) achievementsTitle.textContent = translations.achievementsTitle || "Key Achievements";
-    
-    const achievementsText = document.querySelector('.achievements-section p');
-    if (achievementsText) achievementsText.textContent = translations.achievementsText || "";
-    
-    // Impact section
-    const impactTitle = document.querySelector('.impact-section h2');
-    if (impactTitle) impactTitle.textContent = translations.impactTitle || "Global Impact";
-    
-    const impactText = document.querySelector('.impact-section p');
-    if (impactText) impactText.textContent = translations.impactText || "";
-    
-    // Vision & Values section
-    const visionValuesTitle = document.querySelector('.vision-values-section h2');
-    if (visionValuesTitle) visionValuesTitle.textContent = translations.visionValuesTitle || "Vision & Values";
-    
-    const visionValuesText = document.querySelector('.vision-values-section p');
-    if (visionValuesText) visionValuesText.textContent = translations.visionValuesText || "";
-    
-    // Mayor recommendation section
-    const mayorRecommendationTitle = document.querySelector('.mayor-recommendation h2');
-    if (mayorRecommendationTitle) mayorRecommendationTitle.textContent = translations.mayorRecommendationTitle || "Official Recommendation from the Mayor of Santa Susanna";
-    
-    // Translate mayor recommendation paragraphs if they exist
-    const mayorRecommendationTexts = document.querySelectorAll('.mayor-recommendation p');
-    if (mayorRecommendationTexts && mayorRecommendationTexts.length >= 4) {
-        if (translations.mayorRecommendationText1) 
-            mayorRecommendationTexts[0].textContent = translations.mayorRecommendationText1;
-        if (translations.mayorRecommendationText2) 
-            mayorRecommendationTexts[1].textContent = translations.mayorRecommendationText2;
-        if (translations.mayorRecommendationText3) 
-            mayorRecommendationTexts[2].textContent = translations.mayorRecommendationText3;
-        if (translations.mayorRecommendationText4) 
-            mayorRecommendationTexts[3].textContent = translations.mayorRecommendationText4;
-    }
-    
-    const mayorName = document.querySelector('.mayor-name');
-    if (mayorName) mayorName.textContent = translations.mayorName || "Joan Campolier i Montsant";
-    
-    const mayorPosition = document.querySelector('.mayor-position');
-    if (mayorPosition) mayorPosition.textContent = translations.mayorPosition || "Mayor of Santa Susanna City Council";
-}
-
-function translateConsortiumPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for consortium page');
-        return;
-    }
-    
-    // Page title
-    const pageTitle = document.querySelector('.consortium-section h1, .page-header h1');
-    if (pageTitle) pageTitle.textContent = translations.pageTitle || "Miss Star Consortium";
-    
-    // Intro text
-    const introText = document.querySelector('.consortium-intro p, .intro-section p');
-    if (introText) introText.textContent = translations.introText || "";
-    
-    // Vision section
-    const visionTitle = document.querySelector('.vision-section h2');
-    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
-    
-    const visionText = document.querySelector('.vision-section p');
-    if (visionText) visionText.textContent = translations.visionText || "";
-    
-    // Vision points
-    const visionPoints = document.querySelectorAll('.vision-points li');
-    if (visionPoints && visionPoints.length >= 5) {
-        if (translations.visionPoint1) visionPoints[0].textContent = translations.visionPoint1;
-        if (translations.visionPoint2) visionPoints[1].textContent = translations.visionPoint2;
-        if (translations.visionPoint3) visionPoints[2].textContent = translations.visionPoint3;
-        if (translations.visionPoint4) visionPoints[3].textContent = translations.visionPoint4;
-        if (translations.visionPoint5) visionPoints[4].textContent = translations.visionPoint5;
-    }
-    
-    // Legal section
-    const legalTitle = document.querySelector('.legal-section h2');
-    if (legalTitle) legalTitle.textContent = translations.legalTitle || "Legal Authority";
-    
-    const legalText = document.querySelector('.legal-section p');
-    if (legalText) legalText.textContent = translations.legalText || "";
-    
-    // Join button
-    const joinButton = document.querySelector('.join-button');
-    if (joinButton) joinButton.textContent = translations.joinButton || "Join the Consortium";
-    
-    // Equity structure section
-    const equityTitle = document.querySelector('.equity-section h2');
-    if (equityTitle) equityTitle.textContent = translations.equityTitle || "Equity Structure";
-    
-    const initialTitle = document.querySelector('.initial-participation h3');
-    if (initialTitle) initialTitle.textContent = translations.initialTitle || "Initial Participation";
-    
-    const initialText = document.querySelector('.initial-participation p');
-    if (initialText) initialText.textContent = translations.initialText || "";
-    
-    // Incentives section
-    const incentivesTitle = document.querySelector('.incentives h3');
-    if (incentivesTitle) incentivesTitle.textContent = translations.incentivesTitle || "Performance Incentives";
-    
-    const incentivesList = document.querySelectorAll('.incentives-list li');
-    if (incentivesList && incentivesList.length >= 4) {
-        if (translations.incentive1) incentivesList[0].textContent = translations.incentive1;
-        if (translations.incentive2) incentivesList[1].textContent = translations.incentive2;
-        if (translations.incentive3) incentivesList[2].textContent = translations.incentive3;
-        if (translations.incentive4) incentivesList[3].textContent = translations.incentive4;
-    }
-    
-    // Vesting section
-    const vestingTitle = document.querySelector('.vesting h3');
-    if (vestingTitle) vestingTitle.textContent = translations.vestingTitle || "Vesting Period";
-    
-    const vestingText = document.querySelector('.vesting p');
-    if (vestingText) vestingText.textContent = translations.vestingText || "";
-    
-    // Contact section
-    const contactTitle = document.querySelector('.contact-section h2');
-    if (contactTitle) contactTitle.textContent = translations.contactTitle || "Join the Consortium";
-    
-    const contactText = document.querySelector('.contact-section > p');
-    if (contactText) contactText.textContent = translations.contactText || "";
-    
-    const contactInfoTitle = document.querySelector('.contact-info h3');
-    if (contactInfoTitle) contactInfoTitle.textContent = translations.contactInfoTitle || "Contact Information";
-}
-
-// Function to translate the News page
-function translateNewsPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for news page');
-        return;
-    }
-    
-    // Page title and introduction
-    const pageTitle = document.querySelector('.page-header h1, .news-title, h1.title');
-    if (pageTitle) pageTitle.textContent = translations.pageTitle || "News & Updates";
-    
-    const introText = document.querySelector('.news-intro, .intro-text, .news-description');
-    if (introText) introText.textContent = translations.introText || "";
-    
-    // Latest news section
-    const latestNewsTitle = document.querySelector('.latest-news-title, .news-section h2:first-of-type');
-    if (latestNewsTitle) latestNewsTitle.textContent = translations.latestNewsTitle || "Latest News";
-    
-    // Upcoming events section
-    const upcomingEventsTitle = document.querySelector('.upcoming-events-title, .events-section h2');
-    if (upcomingEventsTitle) upcomingEventsTitle.textContent = translations.upcomingEventsTitle || "Upcoming Events";
-    
-    // Press releases section
-    const pressReleasesTitle = document.querySelector('.press-releases-title, .press-section h2');
-    if (pressReleasesTitle) pressReleasesTitle.textContent = translations.pressReleasesTitle || "Press Releases";
-    
-    // Media gallery section
-    const mediaGalleryTitle = document.querySelector('.media-gallery-title, .gallery-section h2');
-    if (mediaGalleryTitle) mediaGalleryTitle.textContent = translations.mediaGalleryTitle || "Media Gallery";
-    
-    // Subscribe section
-    const subscribeTitle = document.querySelector('.subscribe-title, .subscribe-section h2');
-    if (subscribeTitle) subscribeTitle.textContent = translations.subscribeTitle || "Subscribe to Updates";
-    
-    const subscribeText = document.querySelector('.subscribe-text, .subscribe-section p');
-    if (subscribeText) subscribeText.textContent = translations.subscribeText || "";
-    
-    // Email input placeholder
-    const emailInput = document.querySelector('.subscribe-section input[type="email"], input[name="email"]');
-    if (emailInput) emailInput.placeholder = translations.emailPlaceholder || "Your email address";
-    
-    // Subscribe button
-    const subscribeButton = document.querySelector('.subscribe-section button, .subscribe-button');
-    if (subscribeButton) subscribeButton.textContent = translations.subscribeButton || "Subscribe";
-    
-    // No news message (if applicable)
-    const noNewsText = document.querySelector('.no-news-text, .empty-state');
-    if (noNewsText) noNewsText.textContent = translations.noNewsText || "Check back soon for updates!";
-    
-    // Media contact section
-    const mediaContactTitle = document.querySelector('.media-contact-title, .contact-section h3');
-    if (mediaContactTitle) mediaContactTitle.textContent = translations.mediaContactTitle || "Media Contact";
-    
-    const mediaContactText = document.querySelector('.media-contact-text, .contact-section p');
-    if (mediaContactText) mediaContactText.textContent = translations.mediaContactText || "";
-    
-    console.log('News page translation complete');
-}
-
-// Function to translate the EmpowerTransNation page
-function translateEmpowerPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for EmpowerTransNation page');
-        return;
-    }
-    
-    // Page title and introduction
-    const pageTitle = document.querySelector('.page-header h1, h1.title, .empower-title');
-    if (pageTitle) pageTitle.textContent = translations.pageTitle || "EmpowerTransNation";
-    
-    const introText = document.querySelector('.intro-text, .empower-intro, .introduction');
-    if (introText) introText.textContent = translations.introText || "";
-    
-    // Mission Section
-    const missionTitle = document.querySelector('#mission-section h2, #mission .section-title');
-    if (missionTitle) missionTitle.textContent = translations.missionTitle || "Our Mission";
-    
-    const missionText = document.querySelector('#mission-section p, #mission .section-content');
-    if (missionText) missionText.textContent = translations.missionText || 
-        "To create a world where transgender individuals have equal access to resources, opportunities, and respect.";
-    
-    // Vision Section
-    const visionTitle = document.querySelector('#vision-section h2, #vision .section-title');
-    if (visionTitle) visionTitle.textContent = translations.visionTitle || "Our Vision";
-    
-    const visionText = document.querySelector('#vision-section p, #vision .section-content');
-    if (visionText) visionText.textContent = translations.visionText || 
-        "A society that celebrates transgender diversity, where barriers to success are eliminated and where transgender individuals are empowered to become leaders in their communities.";
-    
-    // Programs Section
-    const programsTitle = document.querySelector('#programs-section h2, #programs .section-title');
-    if (programsTitle) programsTitle.textContent = translations.programsTitle || "Our Programs";
-    
-    // Program 1
-    const program1Title = document.querySelector('#program1 h3, .program:nth-child(1) h3');
-    if (program1Title) program1Title.textContent = translations.program1Title || "Education & Skills Development";
-    
-    const program1Text = document.querySelector('#program1 p, .program:nth-child(1) p');
-    if (program1Text) program1Text.textContent = translations.program1Text || 
-        "Providing scholarships, mentorship, and training programs to develop marketable skills.";
-    
-    // Program 2
-    const program2Title = document.querySelector('#program2 h3, .program:nth-child(2) h3');
-    if (program2Title) program2Title.textContent = translations.program2Title || "Advocacy & Policy Change";
-    
-    const program2Text = document.querySelector('#program2 p, .program:nth-child(2) p');
-    if (program2Text) program2Text.textContent = translations.program2Text || 
-        "Working with governments and organizations to implement inclusive policies.";
-    
-    // Testimonials section
-    const testimonialsTitle = document.querySelector('.testimonials-title, .section-testimonials h2');
-    if (testimonialsTitle) testimonialsTitle.textContent = translations.testimonialsTitle || "Success Stories";
-    
-    // Testimonial 1
-    const testimonial1Text = document.querySelector('.testimonial-1-text, .testimonial:nth-child(1) blockquote');
-    if (testimonial1Text) testimonial1Text.textContent = translations.testimonial1Text || "";
-    
-    const testimonial1Author = document.querySelector('.testimonial-1-author, .testimonial:nth-child(1) cite');
-    if (testimonial1Author) testimonial1Author.textContent = translations.testimonial1Author || "";
-    
-    // Testimonial 2
-    const testimonial2Text = document.querySelector('.testimonial-2-text, .testimonial:nth-child(2) blockquote');
-    if (testimonial2Text) testimonial2Text.textContent = translations.testimonial2Text || "";
-    
-    const testimonial2Author = document.querySelector('.testimonial-2-author, .testimonial:nth-child(2) cite');
-    if (testimonial2Author) testimonial2Author.textContent = translations.testimonial2Author || "";
-    
-    // Join section
-    const joinTitle = document.querySelector('.join-title, .section-join h2');
-    if (joinTitle) joinTitle.textContent = translations.joinTitle || "Join Our Movement";
-    
-    const joinText = document.querySelector('.join-text, .section-join p');
-    if (joinText) joinText.textContent = translations.joinText || "";
-    
-    // Contact section
-    const contactTitle = document.querySelector('#contact h2, .contact-section h2');
-    if (contactTitle) contactTitle.textContent = translations.contactTitle || "Contact Us";
-    
-    const contactButton = document.querySelector('#contact .btn, .contact-section .btn');
-    if (contactButton) contactButton.textContent = translations.contactButton || "Contact Us";
-    
-    console.log('EmpowerTransNation page translation complete');
-}
-
-// Function to translate the Dynasty page
-function translateDynastyPage(translations) {
-    if (!translations) {
-        console.warn('No translations provided for Dynasty page');
-        return;
-    }
-    
-    // Hero section
-    const heroTitle = document.querySelector('.font-orbitron, .text-2xl.font-bold.text-transparent');
-    if (heroTitle) heroTitle.textContent = translations.heroTitle || "DYNASTY";
-    
-    const heroDescription = document.querySelector('.hero-section p, .max-w-7xl p');
-    if (heroDescription) heroDescription.textContent = translations.heroDescription || "";
-    
-    // Community section
-    const communityTitle = document.querySelector('#community h2, .text-4xl.font-bold.mb-4 span.text-white');
-    if (communityTitle) communityTitle.textContent = translations.communityTitle || "Community Hub";
-    
-    const communityDescription = document.querySelector('#community p.text-xl, .text-xl.text-gray-300.max-w-3xl');
-    if (communityDescription) communityDescription.textContent = translations.communityDescription || "";
-    
-    // Community features
-    const communityFeatures = document.querySelectorAll('#community .feature h3, .grid-cols-3 .bg-black.bg-opacity-60 h3');
-    if (communityFeatures && communityFeatures.length >= 3) {
-        if (communityFeatures[0]) communityFeatures[0].textContent = translations.communityFeature1 || "Private & Safe Spaces";
-        if (communityFeatures[1]) communityFeatures[1].textContent = translations.communityFeature2 || "Mentorship Networks";
-        if (communityFeatures[2]) communityFeatures[2].textContent = translations.communityFeature3 || "Support Groups";
-    }
-    
-    // Live streaming section
-    const liveTitle = document.querySelector('#live h2, .text-4xl.font-bold.mb-4 span.text-white:nth-child(2)');
-    if (liveTitle) liveTitle.textContent = translations.liveTitle || "Live Streaming";
-    
-    const liveDescription = document.querySelector('#live p.text-xl, .text-xl.text-gray-300.max-w-3xl:nth-child(2)');
-    if (liveDescription) liveDescription.textContent = translations.liveDescription || "";
-    
-    // Live features
-    const liveFeatures = document.querySelectorAll('#live .feature h3, .live-features h3');
-    if (liveFeatures && liveFeatures.length >= 3) {
-        if (liveFeatures[0]) liveFeatures[0].textContent = translations.liveFeature1 || "Interactive Live Shows";
-        if (liveFeatures[1]) liveFeatures[1].textContent = translations.liveFeature2 || "Virtual Meet & Greets";
-        if (liveFeatures[2]) liveFeatures[2].textContent = translations.liveFeature3 || "Behind-the-scenes Access";
-    }
-    
-    // Competitions section
-    const competitionsTitle = document.querySelector('#competitions h2, .competitions-section h2');
-    if (competitionsTitle) competitionsTitle.textContent = translations.competitionsTitle || "Competitions";
-    
-    const competitionsDescription = document.querySelector('#competitions p.text-xl, .competitions-section p.text-xl');
-    if (competitionsDescription) competitionsDescription.textContent = translations.competitionsDescription || "";
-    
-    // Competition features
-    const competitionFeatures = document.querySelectorAll('#competitions .feature h3, .competitions-features h3');
-    if (competitionFeatures && competitionFeatures.length >= 3) {
-        if (competitionFeatures[0]) competitionFeatures[0].textContent = translations.competitionsFeature1 || "Multiple Categories";
-        if (competitionFeatures[1]) competitionFeatures[1].textContent = translations.competitionsFeature2 || "Global Participation";
-        if (competitionFeatures[2]) competitionFeatures[2].textContent = translations.competitionsFeature3 || "Recognition & Prizes";
-    }
-    
-    // Learning center section
-    const learningTitle = document.querySelector('#learning h2, .learning-section h2');
-    if (learningTitle) learningTitle.textContent = translations.learningTitle || "Learning Center";
-    
-    const learningDescription = document.querySelector('#learning p.text-xl, .learning-section p.text-xl');
-    if (learningDescription) learningDescription.textContent = translations.learningDescription || "";
-    
-    // Featured courses
-    const featuredCoursesTitle = document.querySelector('.holographic-card h3:first-of-type');
-    if (featuredCoursesTitle) featuredCoursesTitle.textContent = translations.featuredCoursesTitle || "Featured Courses";
-    
-    // Course titles and descriptions
-    const courseTitles = document.querySelectorAll('.holographic-card h4');
-    const courseDescriptions = document.querySelectorAll('.holographic-card .text-gray-300.text-sm.mb-2');
-    
-    if (courseTitles && courseTitles.length >= 3) {
-        if (courseTitles[0]) courseTitles[0].textContent = translations.course1Title || "Gender-Affirming Style";
-        if (courseTitles[1]) courseTitles[1].textContent = translations.course2Title || "Voice Training";
-        if (courseTitles[2]) courseTitles[2].textContent = translations.course3Title || "Legal Name & Gender Change";
-    }
-    
-    if (courseDescriptions && courseDescriptions.length >= 3) {
-        if (courseDescriptions[0]) courseDescriptions[0].textContent = translations.course1Description || "";
-        if (courseDescriptions[1]) courseDescriptions[1].textContent = translations.course2Description || "";
-        if (courseDescriptions[2]) courseDescriptions[2].textContent = translations.course3Description || "";
-    }
-    
-    // Mentorship program
-    const mentorshipTitle = document.querySelector('.holographic-card h3:nth-of-type(2)');
-    if (mentorshipTitle) mentorshipTitle.textContent = translations.mentorshipTitle || "Mentorship Program";
-    
-    const mentorshipDescription = document.querySelector('.holographic-card > p.text-gray-300.mb-6');
-    if (mentorshipDescription) mentorshipDescription.textContent = translations.mentorshipDescription || "";
-    
-    // Resource library
-    const resourcesTitle = document.querySelector('.text-center.mb-12 h3');
-    if (resourcesTitle) resourcesTitle.textContent = translations.resourcesTitle || "Resource Library";
-    
-    const resourcesDescription = document.querySelector('.text-center.mb-12 p');
-    if (resourcesDescription) resourcesDescription.textContent = translations.resourcesDescription || "";
-    
-    // Resource cards
-    const resourceCardTitles = document.querySelectorAll('.grid-cols-3 .holographic-card h4');
-    const resourceCardTexts = document.querySelectorAll('.grid-cols-3 .holographic-card p');
-    
-    if (resourceCardTitles && resourceCardTitles.length >= 3) {
-        if (resourceCardTitles[0]) resourceCardTitles[0].textContent = translations.resource1Title || "Transition Guides";
-        if (resourceCardTitles[1]) resourceCardTitles[1].textContent = translations.resource2Title || "Mental Health";
-        if (resourceCardTitles[2]) resourceCardTitles[2].textContent = translations.resource3Title || "Career Development";
-    }
-    
-    if (resourceCardTexts && resourceCardTexts.length >= 3) {
-        if (resourceCardTexts[0]) resourceCardTexts[0].textContent = translations.resource1Text || "";
-        if (resourceCardTexts[1]) resourceCardTexts[1].textContent = translations.resource2Text || "";
-        if (resourceCardTexts[2]) resourceCardTexts[2].textContent = translations.resource3Text || "";
-    }
-    
-    // Explore resources links
-    const exploreLinks = document.querySelectorAll('.group-hover\\:text-purple-200 span, .group-hover\\:text-cyan-200 span, .group-hover\\:text-pink-200 span');
-    exploreLinks.forEach(link => {
-        link.textContent = translations.exploreResources || "Explore Resources";
-    });
-    
-    // Join community section
-    const joinCommunityTitle = document.querySelector('.max-w-4xl.mx-auto.text-center h2 span');
-    if (joinCommunityTitle) joinCommunityTitle.textContent = translations.joinCommunityTitle || "Join Our Community";
-    
-    const joinCommunityText = document.querySelector('.max-w-4xl.mx-auto.text-center p');
-    if (joinCommunityText) joinCommunityText.textContent = translations.joinCommunityText || "";
-    
-    // Buttons
-    const signUpButton = document.querySelector('.holographic-btn.px-8.py-4.text-lg');
-    if (signUpButton) signUpButton.textContent = translations.signUpFree || "Sign Up Free";
-    
-    const tourButton = document.querySelector('.px-8.py-4.text-lg.border.border-purple-500');
-    if (tourButton) tourButton.textContent = translations.takeTour || "Take a Tour";
-    
-    const browseCoursesButton = document.querySelector('.holographic-btn.w-full.mt-6');
-    if (browseCoursesButton) browseCoursesButton.textContent = translations.browseAllCourses || "Browse All Courses";
-    
-    const applyMentorshipButton = document.querySelector('.holographic-btn.w-full');
-    if (applyMentorshipButton) applyMentorshipButton.textContent = translations.applyMentorship || "Apply for Mentorship";
-    
-    console.log('Dynasty page translation complete');
-}
+// ... rest of the existing code ...
 
 // Basic translations as fallback
 window.translationsFallback = {
@@ -2503,3 +1757,86 @@ function ensureLanguageApplied() {
 
 // Call this 300ms after page load to make sure everything is ready
 setTimeout(ensureLanguageApplied, 300);
+
+function initializeLanguage() {
+    const storedLang = localStorage.getItem('selectedLanguage') || 'en';
+    setLanguage(storedLang);
+    updateLanguageButtons(storedLang);
+}
+
+function setLanguage(lang) {
+    localStorage.setItem('selectedLanguage', lang);
+    document.documentElement.setAttribute('lang', lang);
+    translatePage(lang);
+    updateLanguageButtons(lang);
+}
+
+function updateLanguageButtons(lang) {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeLanguage();
+    
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.dataset.lang;
+            setLanguage(lang);
+        });
+    });
+});
+
+function translatePage(lang) {
+    if (!window.translations) {
+        console.error('Translations not loaded');
+        return;
+    }
+
+    // Get current page name from URL
+    const pageName = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
+    
+    // Get translations for current page
+    const pageTranslations = window.translations[pageName];
+    const commonTranslations = window.translations.common;
+    
+    if (!pageTranslations || !commonTranslations) {
+        console.error('Missing translations for page:', pageName);
+        return;
+    }
+    
+    // Translate common elements
+    Object.entries(commonTranslations[lang] || {}).forEach(([key, value]) => {
+        document.querySelectorAll(`[data-translate="${key}"]`).forEach(element => {
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = value;
+            } else {
+                element.innerHTML = value;
+            }
+        });
+    });
+    
+    // Translate page-specific elements
+    Object.entries(pageTranslations[lang] || {}).forEach(([key, value]) => {
+        document.querySelectorAll(`[data-translate="${key}"]`).forEach(element => {
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = value;
+            } else {
+                element.innerHTML = value;
+            }
+        });
+    });
+    
+    // Update form labels if they exist
+    if (pageTranslations[lang]?.formLabels) {
+        Object.entries(pageTranslations[lang].formLabels).forEach(([key, value]) => {
+            document.querySelectorAll(`[data-translate-label="${key}"]`).forEach(element => {
+                element.innerHTML = value;
+            });
+        });
+    }
+    
+    // Dispatch event for custom translations
+    document.dispatchEvent(new CustomEvent('translationComplete', { detail: { language: lang } }));
+}

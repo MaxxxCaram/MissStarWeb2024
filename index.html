@@ -165,8 +165,8 @@
     </script>
     <!-- == END INLINE CONSOLE FILTER == -->
 
-    <script src="./js/translations.js" defer></script>
-    <script src="./js/main.js" defer></script>
+    <script src="./js/translations.js"></script>
+    <script src="./js/main.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
         
@@ -395,19 +395,19 @@
                 </a>
             </div>
             <ul class="hidden lg:flex space-x-8 items-center">
-                <li><a href="index.html" class="hover:text-star-gold transition-colors">Home</a></li>
-                <li><a href="company.html" class="hover:text-star-gold transition-colors">The Company</a></li>
-                <li><a href="about.html" class="hover:text-star-gold transition-colors">About Us</a></li>
-                <li><a href="consortium.html" class="hover:text-star-gold transition-colors">Consortium</a></li>
-                <li><a href="empower.html" class="hover:text-star-gold transition-colors">EmpowerTransNation</a></li>
-                <li><a href="dynasty.html" class="hover:text-star-gold transition-colors">Dynasty Platform</a></li>
-                <li><a href="halloffame.html" class="hover:text-star-gold transition-colors">Hall of Fame</a></li>
-                <li><a href="partners.html" class="hover:text-star-gold transition-colors">Partners</a></li>
-                <li><a href="news.html" class="hover:text-star-gold transition-colors">News</a></li>
+                <li><a href="index.html" class="hover:text-star-gold transition-colors" data-translate="home">Home</a></li>
+                <li><a href="company.html" class="hover:text-star-gold transition-colors" data-translate="company">The Company</a></li>
+                <li><a href="about.html" class="hover:text-star-gold transition-colors" data-translate="aboutUs">About Us</a></li>
+                <li><a href="consortium.html" class="hover:text-star-gold transition-colors" data-translate="consortium">Consortium</a></li>
+                <li><a href="empower.html" class="hover:text-star-gold transition-colors" data-translate="empowerTransNation">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html" class="hover:text-star-gold transition-colors" data-translate="dynastyPlatform">Dynasty Platform</a></li>
+                <li><a href="halloffame.html" class="hover:text-star-gold transition-colors" data-translate="hallOfFame">Hall of Fame</a></li>
+                <li><a href="partners.html" class="hover:text-star-gold transition-colors" data-translate="partners">Partners</a></li>
+                <li><a href="news.html" class="hover:text-star-gold transition-colors" data-translate="news">News</a></li>
                 <li class="language-switcher">
-                    <button data-lang="en" class="lang-btn px-2 py-1 mx-1 text-sm">EN</button>
-                    |
-                    <button data-lang="es" class="lang-btn px-2 py-1 mx-1 text-sm">ES</button>
+                    <button data-lang="en" class="lang-btn active">EN</button>
+                    <span>|</span>
+                    <button data-lang="es" class="lang-btn">ES</button>
                 </li>
             </ul>
             <button id="mobile-menu-button" class="lg:hidden text-white focus:outline-none">
@@ -425,15 +425,15 @@
                 </svg>
             </button>
             <ul class="flex flex-col space-y-6 text-center">
-                <li><a href="index.html" class="text-2xl text-white hover:text-star-gold transition-colors">Home</a></li>
-                <li><a href="company.html" class="text-2xl text-white hover:text-star-gold transition-colors">The Company</a></li>
-                <li><a href="about.html" class="text-2xl text-white hover:text-star-gold transition-colors">About Us</a></li>
-                <li><a href="consortium.html" class="text-2xl text-white hover:text-star-gold transition-colors">Consortium</a></li>
-                <li><a href="empower.html" class="text-2xl text-white hover:text-star-gold transition-colors">EmpowerTransNation</a></li>
-                <li><a href="dynasty.html" class="text-2xl text-white hover:text-star-gold transition-colors">Dynasty Platform</a></li>
-                <li><a href="halloffame.html" class="text-2xl text-white hover:text-star-gold transition-colors">Hall of Fame</a></li>
-                <li><a href="partners.html" class="text-2xl text-white hover:text-star-gold transition-colors">Partners</a></li>
-                <li><a href="news.html" class="text-2xl text-white hover:text-star-gold transition-colors">News</a></li>
+                <li><a href="index.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="home">Home</a></li>
+                <li><a href="company.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="company">The Company</a></li>
+                <li><a href="about.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="aboutUs">About Us</a></li>
+                <li><a href="consortium.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="consortium">Consortium</a></li>
+                <li><a href="empower.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="empowerTransNation">EmpowerTransNation</a></li>
+                <li><a href="dynasty.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="dynastyPlatform">Dynasty Platform</a></li>
+                <li><a href="halloffame.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="hallOfFame">Hall of Fame</a></li>
+                <li><a href="partners.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="partners">Partners</a></li>
+                <li><a href="news.html" class="text-2xl text-white hover:text-star-gold transition-colors" data-translate="news">News</a></li>
                 <li class="mobile-language-switcher pt-4">
                     <span class="text-white mb-2 block">Language:</span>
                     <button data-lang="en" class="lang-btn px-4 py-2 mx-2 text-white border border-star-gold/30 rounded">EN</button>
@@ -670,8 +670,8 @@
     </div>
 
     <!-- Scripts principales del sitio se mantienen en js/main.js -->
-    <script src="js/translations.js"></script>
-    <script src="js/main.js"></script>
+    <script src="./js/translations.js"></script>
+    <script src="./js/main.js"></script>
     <script>
         // Initialize mobile menu functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -707,6 +707,65 @@
                 }, 300);
             }
         });
+    </script>
+
+    <script>
+    // Runtime Error Handler
+    (function() {
+        const originalConsole = {
+            error: console.error.bind(console),
+            warn: console.warn.bind(console)
+        };
+
+        // Interceptar errores de runtime
+        function handleRuntimeError(error) {
+            if (error && error.message && error.message.includes('runtime.lastError')) {
+                // Ignorar silenciosamente los errores de runtime.lastError
+                return;
+            }
+            return originalConsole.error(error);
+        }
+
+        // Sobrescribir console.error
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+                (args[0].includes('runtime.lastError') || 
+                 args[0].includes('message channel closed'))) {
+                return; // Ignorar estos errores específicos
+            }
+            originalConsole.error.apply(console, args);
+        };
+
+        // Sobrescribir console.warn
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+                (args[0].includes('runtime.lastError') || 
+                 args[0].includes('message channel closed'))) {
+                return; // Ignorar estos errores específicos
+            }
+            originalConsole.warn.apply(console, args);
+        };
+
+        // Manejar errores no capturados
+        window.addEventListener('error', function(event) {
+            if (event.error && event.error.message && 
+                (event.error.message.includes('runtime.lastError') || 
+                 event.error.message.includes('message channel closed'))) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        // Manejar promesas rechazadas
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.message && 
+                (event.reason.message.includes('runtime.lastError') || 
+                 event.reason.message.includes('message channel closed'))) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    })();
     </script>
 </body>
 </html> 
