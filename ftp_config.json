@@ -1,0 +1,16 @@
+{
+    "ftpServer": "web0151.zxcs.nl",
+    "ftpUser": "u127684p143111",
+    "localPath": "E:\\MissStarWeb2024",
+    "remotePath": "/",
+    "excludePatterns": [
+        "\\.git",
+        "\\.vscode",
+        "node_modules",
+        "*.log",
+        "*.tmp",
+        "*.temp",
+        "sync_ftp.ps1",
+        "ftp_config.json"
+    ]
+} 

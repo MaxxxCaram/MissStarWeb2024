@@ -324,11 +324,20 @@
         }
 
         .video-container {
-            margin: 30px auto;
-            max-width: 900px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
             overflow: hidden;
+            max-width: 100%;
+            margin: 2rem auto;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .feature-video {
@@ -409,10 +418,7 @@
                 <div class="content-block video-block">
                     <h2>Our Vision</h2>
                     <div class="video-container">
-                        <video controls id="empower-video" class="feature-video">
-                            <source src="assets/videos/empower-video.mp4" type="video/mp4">
-                            Su navegador no soporta la reproducción de videos.
-                        </video>
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/JnAySXsrDf0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <p class="video-caption">Discover how Empower TransNation Network is changing lives and building a more inclusive future.</p>
                 </div>

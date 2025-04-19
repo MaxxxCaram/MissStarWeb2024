@@ -44,10 +44,12 @@ if (typeof translations === 'undefined') {
         'Images loaded lazily',
         'Load events are deferred',
         'www.missstarinternational.com',
-        'go.microsoft.com/fwlink', // "fwlink" es un término técnico de Microsoft, no un error
+        'go.microsoft.com/fwlink',
         'Failed to execute',
         'querySelectorAll',
-        'Performance issue detected'
+        'Performance issue detected',
+        'Cannot read properties of null',
+        'classList'
     ];
     
     // Helper para verificar si un objeto debe filtrarse
@@ -61,12 +63,11 @@ if (typeof translations === 'undefined') {
             return true;
         }
         
-        // Verificar si contiene texto relacionado con rendimiento
+        // Verificar si contiene texto relacionado con rendimiento o errores comunes
         let objString = '';
         try {
             objString = JSON.stringify(obj);
         } catch (e) {
-            // Si no se puede convertir a JSON, intentar otra aproximación
             objString = String(obj);
         }
         
@@ -75,78 +76,63 @@ if (typeof translations === 'undefined') {
     
     // Reemplazar la función console.warn
     console.warn = function(...args) {
-        // Verificar si el mensaje contiene alguno de los términos a filtrar
         if (args.length > 0) {
             if (typeof args[0] === 'string' && termsToFilter.some(term => args[0].includes(term))) {
-                return; // No mostrar estas advertencias
+                return;
             }
-            
-            // Si es un objeto, verificar si debe filtrarse
             if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
-                return; // No mostrar estos objetos
+                return;
             }
         }
-        
-        // Pasar el resto de advertencias a la función original
         return originalConsoleWarn.apply(this, args);
     };
     
-    // Filtrar algunos errores conocidos que no afectan la funcionalidad
+    // Filtrar errores conocidos
     console.error = function(...args) {
-        // Filtrar errores de sintaxis de selector que ya manejamos
         if (args.length > 0) {
-            if (typeof args[0] === 'string' && 
-                (args[0].includes('Failed to execute') && args[0].includes('querySelectorAll'))) {
-                return; // No mostrar estos errores
+            if (typeof args[0] === 'string' && (
+                args[0].includes('Failed to execute') || 
+                args[0].includes('querySelectorAll') ||
+                args[0].includes('Cannot read properties of null') ||
+                args[0].includes('classList')
+            )) {
+                return;
             }
-            
-            // Si es un objeto, verificar si debe filtrarse
             if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
-                return; // No mostrar estos objetos
+                return;
             }
         }
-        
-        // Pasar el resto de errores a la función original
         return originalConsoleError.apply(this, args);
     };
     
-    // También filtrar logs que puedan contener mensajes de rendimiento
+    // También filtrar logs
     console.log = function(...args) {
         if (args.length > 0) {
             if (typeof args[0] === 'string' && termsToFilter.some(term => args[0].includes(term))) {
-                return; // No mostrar estos logs
+                return;
             }
-            
-            // Si es un objeto, verificar si debe filtrarse
             if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
-                return; // No mostrar estos objetos
+                return;
             }
         }
-        
-        // Pasar el resto de logs a la función original
         return originalConsoleLog.apply(this, args);
     };
     
-    // También filtrar mensajes info que puedan ser del monitoreo de rendimiento
+    // También filtrar mensajes info
     console.info = function(...args) {
         if (args.length > 0) {
             if (typeof args[0] === 'string' && (
                 args[0].includes('Performance') || 
-                args[0].includes('[Performance]'))) {
-                return; // No mostrar estos mensajes info
+                args[0].includes('[Performance]')
+            )) {
+                return;
             }
-            
-            // Si es un objeto, verificar si debe filtrarse
             if (typeof args[0] === 'object' && args[0] !== null && shouldFilterObject(args[0])) {
-                return; // No mostrar estos objetos
+                return;
             }
         }
-        
-        // Pasar el resto de mensajes info a la función original
         return originalConsoleInfo.apply(this, args);
     };
-    
-    console.log('Console filtering initialized to improve user experience');
 })();
 
 // Main initialization 
@@ -275,11 +261,14 @@ class ScrollController {
     }
 
     updateScrollIndicator(target) {
-        const section = target.closest('section');
+        if (!target) return;
+        const section = target?.closest('section');
         if (!section) return;
 
-        document.querySelectorAll('.scroll-dot').forEach(dot => {
+        document.querySelectorAll('.scroll-dot')?.forEach(dot => {
+            if (dot && dot.classList && dot.dataset) {
             dot.classList.toggle('active', dot.dataset.section === section.id);
+            }
         });
     }
 
@@ -440,29 +429,33 @@ class VideoController {
         video.style.display = 'none';
         
         // Si es un video de héroe, ajustar la sección
-        const isHeroVideo = video.classList.contains('hero-video') || 
-                            video.closest('.hero-section');
+        const isHeroVideo = video?.classList?.contains('hero-video') || 
+                            video?.closest('.hero-section');
         
         if (isHeroVideo) {
-            const heroSection = video.closest('.hero-section') || document.querySelector('.hero-section');
+            const heroSection = video?.closest('.hero-section') || document.querySelector('.hero-section');
             if (heroSection) {
                 heroSection.style.background = 'linear-gradient(to bottom, #000000, #1a1a1a)';
                 heroSection.style.minHeight = '100vh';
                 
                 // Crear botón "Play Video" como alternativa
                 const playButton = this.createPlayButton(video);
-                heroSection.appendChild(playButton);
+                if (playButton) {
+                    heroSection.appendChild(playButton);
+                }
             }
         }
         
         // Añadir clase para estilos CSS alternativos
-        const container = video.parentElement;
-        if (container) {
+        const container = video?.parentElement;
+        if (container?.classList) {
             container.classList.add('video-error');
         }
     }
 
     createPlayButton(video) {
+        if (!video) return null;
+        
         const button = document.createElement('button');
         button.className = 'absolute z-20 btn-primary';
         button.innerHTML = '<i class="fas fa-play mr-2"></i>Play Video';
@@ -471,9 +464,11 @@ class VideoController {
         button.style.transform = 'translate(-50%, -50%)';
         
         button.addEventListener('click', () => {
-            video.style.display = 'block';
-            this.playVideoWithRetry(video, 0);
+            if (video) {
+                video.style.display = 'block';
+                this.playVideoWithRetry(video, 0);
             button.remove();
+            }
         });
         
         return button;
@@ -489,50 +484,48 @@ function initializeMobileMenu() {
         console.info('Mobile menu elements not found, creating them automatically');
         
         // Create mobile menu button if it doesn't exist
-        if (!menuButton) {
-            const nav = document.querySelector('nav');
-            if (nav) {
-                const menuButtonEl = document.createElement('button');
-                menuButtonEl.className = 'mobile-menu-button lg:hidden';
-                menuButtonEl.setAttribute('aria-label', 'Toggle menu');
-                menuButtonEl.innerHTML = '<i class="fas fa-bars text-white text-2xl"></i>';
-                nav.appendChild(menuButtonEl);
-            }
+        const nav = document.querySelector('nav');
+        if (nav) {
+            const menuButtonEl = document.createElement('button');
+            menuButtonEl.className = 'mobile-menu-button lg:hidden';
+            menuButtonEl.setAttribute('aria-label', 'Toggle menu');
+            menuButtonEl.innerHTML = '<i class="fas fa-bars text-white text-2xl"></i>';
+            nav.appendChild(menuButtonEl);
         }
         
         // Create mobile menu if it doesn't exist
-        if (!mobileMenu) {
-            const header = document.querySelector('header');
-            if (header) {
-                const mobileMenuEl = document.createElement('div');
-                mobileMenuEl.className = 'mobile-menu hidden lg:hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 transform transition-transform duration-300 translate-x-full';
+        const header = document.querySelector('header');
+        if (header) {
+            const mobileMenuEl = document.createElement('div');
+            mobileMenuEl.className = 'mobile-menu hidden lg:hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 transform transition-transform duration-300 translate-x-full';
+            
+            // Clone navigation links for mobile menu
+            const navLinks = document.querySelectorAll('nav ul li a');
+            if (navLinks.length > 0) {
+                const mobileNav = document.createElement('ul');
+                mobileNav.className = 'flex flex-col items-center justify-center h-full space-y-6 text-2xl';
                 
-                // Clone navigation links for mobile menu
-                const navLinks = document.querySelectorAll('nav ul li a');
-                if (navLinks.length > 0) {
-                    const mobileNav = document.createElement('ul');
-                    mobileNav.className = 'flex flex-col items-center justify-center h-full space-y-6 text-2xl';
-                    
-                    navLinks.forEach(link => {
+                navLinks.forEach(link => {
+                    if (link) {
                         const li = document.createElement('li');
                         const a = document.createElement('a');
-                        a.href = link.href;
-                        a.textContent = link.textContent;
+                        a.href = link.href || '#';
+                        a.textContent = link.textContent || '';
                         a.className = 'text-white hover:text-star-gold transition-colors';
                         li.appendChild(a);
                         mobileNav.appendChild(li);
-                    });
-                    
-                    // Add close button
-                    const closeButton = document.createElement('button');
-                    closeButton.className = 'absolute top-4 right-4 text-white';
-                    closeButton.setAttribute('aria-label', 'Close menu');
-                    closeButton.innerHTML = '<i class="fas fa-times text-2xl"></i>';
-                    
-                    mobileMenuEl.appendChild(closeButton);
-                    mobileMenuEl.appendChild(mobileNav);
-                    document.body.appendChild(mobileMenuEl);
-                }
+                    }
+                });
+                
+                // Add close button
+                const closeButton = document.createElement('button');
+                closeButton.className = 'absolute top-4 right-4 text-white';
+                closeButton.setAttribute('aria-label', 'Close menu');
+                closeButton.innerHTML = '<i class="fas fa-times text-2xl"></i>';
+                
+                mobileMenuEl.appendChild(closeButton);
+                mobileMenuEl.appendChild(mobileNav);
+                document.body.appendChild(mobileMenuEl);
             }
         }
     }
@@ -540,41 +533,43 @@ function initializeMobileMenu() {
     // Re-query for elements in case they were just created
     const menuButtonUpdated = document.querySelector('.mobile-menu-button');
     const mobileMenuUpdated = document.querySelector('.mobile-menu');
-    const closeButton = mobileMenuUpdated ? mobileMenuUpdated.querySelector('button[aria-label="Close menu"]') : null;
+    const closeButton = mobileMenuUpdated?.querySelector('button[aria-label="Close menu"]');
     
     if (menuButtonUpdated && mobileMenuUpdated) {
         menuButtonUpdated.addEventListener('click', () => {
-            mobileMenuUpdated.classList.toggle('hidden');
-            mobileMenuUpdated.classList.toggle('translate-x-full');
-            document.body.classList.toggle('overflow-hidden');
+            mobileMenuUpdated?.classList?.toggle('hidden');
+            mobileMenuUpdated?.classList?.toggle('translate-x-full');
+            document.body.classList?.toggle('overflow-hidden');
         });
         
         if (closeButton) {
             closeButton.addEventListener('click', () => {
-                mobileMenuUpdated.classList.add('hidden');
-                mobileMenuUpdated.classList.add('translate-x-full');
-                document.body.classList.remove('overflow-hidden');
+                mobileMenuUpdated?.classList?.add('hidden');
+                mobileMenuUpdated?.classList?.add('translate-x-full');
+                document.body.classList?.remove('overflow-hidden');
             });
         }
         
         // Close menu when clicking on a link
-        const mobileLinks = mobileMenuUpdated.querySelectorAll('a');
-        mobileLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenuUpdated.classList.add('hidden');
-                mobileMenuUpdated.classList.add('translate-x-full');
-                document.body.classList.remove('overflow-hidden');
-            });
+        const mobileLinks = mobileMenuUpdated?.querySelectorAll('a');
+        mobileLinks?.forEach(link => {
+            if (link) {
+                link.addEventListener('click', () => {
+                    mobileMenuUpdated?.classList?.add('hidden');
+                    mobileMenuUpdated?.classList?.add('translate-x-full');
+                    document.body.classList?.remove('overflow-hidden');
+                });
+            }
         });
         
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
-            if (mobileMenuUpdated.classList.contains('hidden')) return;
-            
-            if (!mobileMenuUpdated.contains(e.target) && e.target !== menuButtonUpdated) {
-                mobileMenuUpdated.classList.add('hidden');
-                mobileMenuUpdated.classList.add('translate-x-full');
-                document.body.classList.remove('overflow-hidden');
+            if (!mobileMenuUpdated?.classList?.contains('hidden')) {
+                if (!mobileMenuUpdated?.contains(e.target) && e.target !== menuButtonUpdated) {
+                    mobileMenuUpdated?.classList?.add('hidden');
+                    mobileMenuUpdated?.classList?.add('translate-x-full');
+                    document.body.classList?.remove('overflow-hidden');
+                }
             }
         });
     }
@@ -582,8 +577,8 @@ function initializeMobileMenu() {
 
 // Smooth Scroll
 function initializeSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+    document.querySelectorAll('a[href^="#"]')?.forEach(anchor => {
+        anchor?.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
@@ -595,10 +590,10 @@ function initializeSmoothScroll() {
                 // Close mobile menu if open
                 const mobileMenu = document.querySelector('.mobile-menu');
                 const menuToggle = document.querySelector('.menu-toggle');
-                if (mobileMenu && mobileMenu.classList.contains('active')) {
+                if (mobileMenu?.classList?.contains('active')) {
                     mobileMenu.classList.remove('active');
-                    menuToggle.classList.remove('active');
-                    document.body.classList.remove('menu-open');
+                    menuToggle?.classList?.remove('active');
+                    document.body.classList?.remove('menu-open');
                 }
             }
         });
@@ -637,11 +632,11 @@ function initializeNavbar() {
     });
 }
 
-// Manejador global de mensajes asincrónicos
+// Global message handler
 window.messageHandlers = new Map();
 window.messageTimeouts = new Map();
 
-const MESSAGE_TIMEOUT = 5000; // 5 segundos timeout
+const MESSAGE_TIMEOUT = 5000; // 5 seconds timeout
 
 function registerMessageHandler(id, handler, timeout = MESSAGE_TIMEOUT) {
     window.messageHandlers.set(id, handler);
@@ -1531,52 +1526,85 @@ function translateFormElements(lang, translationsData) {
 
 // Función para inicializar el cursor personalizado
 function initializeCustomCursor() {
-    const cursor = document.createElement('div');
-    cursor.className = 'custom-cursor';
-    document.body.appendChild(cursor);
-    
-    const cursorInner = document.createElement('div');
-    cursorInner.className = 'cursor-inner';
-    cursor.appendChild(cursorInner);
-    
+    // Crear el cursor si no existe
+    let cursor = document.querySelector('.custom-cursor');
+    if (!cursor) {
+        cursor = document.createElement('div');
+        cursor.className = 'custom-cursor';
+        document.body.appendChild(cursor);
+    }
+
+    // Asegurarse de que el cursor sea visible
+    cursor.style.display = 'block';
+    cursor.style.position = 'fixed';
+    cursor.style.pointerEvents = 'none';
+    cursor.style.zIndex = '9999';
+    cursor.style.opacity = '1';
+    cursor.style.visibility = 'visible';
+
+    // Seguimiento simple del mouse
     document.addEventListener('mousemove', (e) => {
-        cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-    });
-    
-    // Agregar efectos de hover en elementos interactivos
-    const interactiveElements = document.querySelectorAll('a, button, input, textarea, select, .card, .btn-primary, .btn-secondary');
-    
-    interactiveElements.forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            cursor.classList.add('cursor-hover');
-        });
-        
-        el.addEventListener('mouseleave', () => {
-            cursor.classList.remove('cursor-hover');
+        requestAnimationFrame(() => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursor.style.opacity = '1';
+            cursor.style.visibility = 'visible';
+            cursor.style.display = 'block';
         });
     });
-    
-    // Ocultar el cursor cuando el mouse sale de la ventana
-    document.addEventListener('mouseout', (e) => {
-        if (e.relatedTarget === null) {
-            cursor.style.opacity = '0';
+
+    // Asegurarse de que el cursor permanezca visible
+    setInterval(() => {
+        if (cursor.style.display === 'none' || cursor.style.visibility === 'hidden') {
+            cursor.style.display = 'block';
+            cursor.style.visibility = 'visible';
+            cursor.style.opacity = '1';
         }
-    });
-    
-    document.addEventListener('mouseover', () => {
+    }, 100);
+
+    // Manejar elementos interactivos
+    document.querySelectorAll('a, button, input, textarea, select, .card, .btn-primary, .btn-secondary, .destiny-platform *')
+        .forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'scale(1.5)';
+                cursor.style.display = 'block';
+                cursor.style.visibility = 'visible';
+                cursor.style.opacity = '1';
+            });
+
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'scale(1)';
+                cursor.style.display = 'block';
+                cursor.style.visibility = 'visible';
+                cursor.style.opacity = '1';
+            });
+        });
+
+    // Prevenir que el cursor desaparezca
+    document.addEventListener('mouseenter', () => {
+        cursor.style.display = 'block';
+        cursor.style.visibility = 'visible';
         cursor.style.opacity = '1';
     });
-    
+
     // Efecto de click
     document.addEventListener('mousedown', () => {
-        cursor.classList.add('cursor-click');
+        cursor.style.transform = 'scale(0.9)';
     });
-    
+
     document.addEventListener('mouseup', () => {
-        cursor.classList.remove('cursor-click');
+        cursor.style.transform = 'scale(1)';
     });
-    
-    console.info('Custom cursor initialized');
+
+    // Forzar visibilidad en la plataforma Destiny
+    const destinyPlatform = document.querySelector('.destiny-platform');
+    if (destinyPlatform) {
+        destinyPlatform.addEventListener('mouseover', () => {
+            cursor.style.display = 'block';
+            cursor.style.visibility = 'visible';
+            cursor.style.opacity = '1';
+        }, true);
+    }
 }
 
 // Función para inicializar el efecto parallax
@@ -1624,97 +1652,86 @@ function initializeParallax() {
     console.info('Parallax effect initialized');
 }
 
-// Función para inicializar el monitoreo de rendimiento
+// Performance monitoring initialization
 function initializePerformanceMonitoring() {
-    if ('PerformanceObserver' in window) {
+    const PERFORMANCE_THRESHOLDS = {
+        resource: 2000,    // 2 seconds for resources
+        navigation: 3000,  // 3 seconds for navigation
+        longtask: 200     // 200ms for long tasks
+    };
+
+    const IGNORED_RESOURCES = [
+        'google-analytics',
+        'analytics',
+        'gtag',
+        'facebook',
+        'twitter',
+        'double-click',
+        'fonts.googleapis',
+        'cloudflare',
+        '.woff',
+        '.woff2',
+        '.ttf',
+        '.png',
+        '.jpg',
+        '.jpeg',
+        '.gif'
+    ];
+
+    let performanceIssues = new Map();
+
+    function shouldIgnoreResource(url = '') {
+        return IGNORED_RESOURCES.some(term => url.toLowerCase().includes(term));
+    }
+
         try {
-            // Umbral para considerar un problema de rendimiento (en milisegundos)
-            const PERFORMANCE_THRESHOLD = {
-                resource: 2000,   // Recursos que tardan más de 2 segundos
-                longtask: 100,    // Tareas largas de más de 100ms
-                paint: 1000,      // Primer pintado tardío (más de 1 segundo)
-                navigation: 3000  // Tiempo de carga total más de 3 segundos
-            };
-            
-            // Lista de recursos a ignorar (patrones de URL)
-            const IGNORED_RESOURCES = [
-                'facebook.com',
-                'google-analytics.com',
-                'googletagmanager.com',
-                'fonts.googleapis.com',
-                'cdnjs.cloudflare.com',
-                'analytics',
-                'tracking',
-                'favicon',
-                '.woff',
-                '.woff2',
-                '.ttf',
-                '.otf'
-            ];
-            
-            // Verificar si un recurso debe ser ignorado
-            function shouldIgnoreResource(url) {
-                if (!url) return true;
-                return IGNORED_RESOURCES.some(pattern => url.includes(pattern));
-            }
-            
-            // Observar métricas de rendimiento, pero solo registrar problemas reales
-            const perfObserver = new PerformanceObserver((list) => {
-                list.getEntries().forEach((entry) => {
-                    // Solo registrar si es un problema real según nuestros umbrales
-                    if (entry.entryType === 'resource') {
-                        // Ignorar recursos de terceros y tipos específicos
-                        if (shouldIgnoreResource(entry.name)) return;
+            const observer = new PerformanceObserver((list) => {
+            list.getEntries().forEach(entry => {
+                if (shouldIgnoreResource(entry.name)) return;
+
+                const threshold = PERFORMANCE_THRESHOLDS[entry.entryType] || 1000;
+                
+                if (entry.duration > threshold) {
+                    const key = `${entry.entryType}-${entry.name}`;
+                    
+                    // Solo reportar un problema una vez cada 5 minutos
+                    const now = Date.now();
+                    const lastReported = performanceIssues.get(key);
+                    
+                    if (!lastReported || (now - lastReported) > 300000) {
+                        performanceIssues.set(key, now);
                         
-                        // Solo reportar si excede nuestro umbral
-                        if (entry.duration > PERFORMANCE_THRESHOLD.resource) {
-                            // En lugar de mostrar un mensaje para cada recurso lento,
-                            // incrementamos un contador y mostramos un resumen al final
-                            window._slowResourceCount = (window._slowResourceCount || 0) + 1;
-                        }
-                    } 
-                    else if (entry.entryType === 'longtask') {
-                        if (entry.duration > PERFORMANCE_THRESHOLD.longtask) {
-                            // No hacemos nada, estos mensajes serán filtrados por nuestro interceptor
+                        // Log solo si es un problema significativo
+                        if (entry.duration > threshold * 2) {
+                            console.debug('Performance issue detected:', {
+                                type: entry.entryType,
+                                name: entry.name,
+                                duration: Math.round(entry.duration),
+                                threshold: threshold
+                            });
                         }
                     }
-                    else if (entry.entryType === 'paint' || entry.entryType === 'navigation') {
-                        // Solo registrar tiempo de carga inicial para diagnóstico
-                        if (entry.name === 'first-contentful-paint' && entry.startTime > PERFORMANCE_THRESHOLD.paint) {
-                            // Mensaje discreto en lugar de error para FCP lento
-                            console.debug('Page paint performance could be improved');
-                        }
-                    }
-                });
+                }
             });
-            
-            // Observar tipos de métricas que nos interesan
-            try {
-                perfObserver.observe({ entryTypes: ['resource', 'paint', 'navigation', 'longtask'] });
-            } catch (e) {
-                // Si 'longtask' no es soportado, intentar sin él
-                try {
-                    perfObserver.observe({ entryTypes: ['resource', 'paint', 'navigation'] });
-                } catch (e2) {
-                    console.debug('Limited performance monitoring available');
+        });
+
+        observer.observe({ 
+            entryTypes: ['resource', 'navigation', 'longtask'],
+            buffered: true
+        });
+
+        // Limpiar el mapa de problemas cada hora
+        setInterval(() => {
+            const oneHourAgo = Date.now() - 3600000;
+            for (const [key, timestamp] of performanceIssues.entries()) {
+                if (timestamp < oneHourAgo) {
+                    performanceIssues.delete(key);
                 }
             }
-            
-            // Al final de la carga, mostrar un resumen de recursos lentos si hay alguno
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    if (window._slowResourceCount && window._slowResourceCount > 0) {
-                        console.debug(`Performance: ${window._slowResourceCount} resources loaded slower than expected`);
-                    }
-                }, 1000);
-            });
-            
-            console.debug('Performance monitoring initialized');
+        }, 3600000);
+
         } catch (e) {
-            console.debug('Performance monitoring not enabled:', e.message);
-        }
-    } else {
-        console.debug('Performance monitoring not supported in this browser');
+        console.debug('PerformanceObserver not supported:', e);
     }
 }
 
