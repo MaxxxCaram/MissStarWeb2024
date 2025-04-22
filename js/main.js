@@ -1779,70 +1779,56 @@ function getCurrentLanguage() {
     return localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'en';
 }
 
-// Function to immediately apply stored language on page load - 
-// this is crucial for pages other than index.html
+// Function to immediately apply stored language on page load
 document.addEventListener('DOMContentLoaded', function() {
     const storedLang = getCurrentLanguage();
+    updateLanguage(storedLang);
     
-    // Only initialize language if translations are available
-    if (typeof window.translations !== 'undefined' || typeof window.translationsFallback !== 'undefined') {
-        console.info(`Applying stored language preference: ${storedLang} on page load`);
-        updateLanguage(storedLang);
-    } else {
-        console.info('Waiting for translations to load before applying language...');
-    }
-    
-    // Listen for history change events (navigation between pages)
-    window.addEventListener('popstate', function() {
-        console.info('Navigation detected, re-applying language preference');
-        const currentLang = getCurrentLanguage();
-        setTimeout(() => {
-            updateLanguage(currentLang);
-        }, 100); // Small delay to ensure the new page content is loaded
+    // Add click handlers for language buttons if they exist
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.getAttribute('data-lang');
+            updateLanguage(lang);
+        });
     });
 });
 
-// Additionally, implement a manual language application when document is ready (safer approach)
+// Additionally, implement a manual language application when document is ready
 function ensureLanguageApplied() {
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         const currentLang = getCurrentLanguage();
-        console.info(`Ensuring language ${currentLang} is applied`);
         updateLanguage(currentLang);
     }
 }
 
-// Call this 300ms after page load to make sure everything is ready
+// Call this after page load to make sure everything is ready
 setTimeout(ensureLanguageApplied, 300);
 
-function initializeLanguage() {
-    const storedLang = localStorage.getItem('selectedLanguage') || 'en';
-    setLanguage(storedLang);
-    updateLanguageButtons(storedLang);
-}
+function updateLanguage(lang) {
+    if (!lang) return;
+    
+    // Update HTML elements with data-lang attributes
+    document.querySelectorAll('[data-lang-en], [data-lang-es]').forEach(element => {
+        const translation = element.getAttribute(`data-lang-${lang}`);
+        if (translation) {
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = translation;
+            } else {
+                element.textContent = translation;
+            }
+        }
+    });
 
-function setLanguage(lang) {
+    // Update language buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+
+    // Store the selected language
+    localStorage.setItem('language', lang);
     localStorage.setItem('selectedLanguage', lang);
     document.documentElement.setAttribute('lang', lang);
-    translatePage(lang);
-    updateLanguageButtons(lang);
 }
-
-function updateLanguageButtons(lang) {
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeLanguage();
-    
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const lang = btn.dataset.lang;
-            setLanguage(lang);
-        });
-    });
-});
 
 function translatePage(lang) {
     if (!window.translations) {
