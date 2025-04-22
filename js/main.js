@@ -759,18 +759,57 @@ function initializeLanguageSwitcher() {
 }
 
 function switchLanguage(lang) {
-    // Save selection
-    localStorage.setItem('selectedLanguage', lang);
-    document.documentElement.lang = lang;
-    
-    // Update button states
-    const langButtons = document.querySelectorAll('[data-lang]');
-    langButtons.forEach(button => {
-        button.classList.toggle('active', button.getAttribute('data-lang') === lang);
+    // Update active state of language buttons
+    document.querySelectorAll('.language-switcher button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
     });
-    
-    // Update content
-    translatePage(lang);
+
+    // Save language preference
+    localStorage.setItem('preferredLanguage', lang);
+
+    // Update all translatable elements
+    document.querySelectorAll('[data-lang-en], [data-lang-es]').forEach(element => {
+        const translation = element.getAttribute(`data-lang-${lang}`);
+        if (translation) {
+            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = translation;
+            } else {
+                element.textContent = translation;
+            }
+        }
+    });
+
+    // Update navigation text
+    const navTranslations = translations[lang];
+    document.querySelectorAll('nav ul li a').forEach(link => {
+        const key = link.getAttribute('href').replace('.html', '').replace('index', 'home');
+        if (navTranslations[key]) {
+            link.textContent = navTranslations[key];
+        }
+    });
+
+    // Update video captions and titles
+    document.querySelectorAll('.video-block h2').forEach(title => {
+        const pageId = window.location.pathname.split('/').pop().replace('.html', '');
+        if (pageId === 'about') {
+            title.textContent = translations[lang].tenthAnniversaryTitle;
+        } else if (pageId === 'empower') {
+            title.textContent = translations[lang].empowerVisionTitle;
+        } else if (pageId === 'news') {
+            title.textContent = translations[lang].latestNewsTitle;
+        }
+    });
+
+    document.querySelectorAll('.video-caption').forEach(caption => {
+        const pageId = window.location.pathname.split('/').pop().replace('.html', '');
+        if (pageId === 'about') {
+            caption.textContent = translations[lang].tenthAnniversaryCaption;
+        } else if (pageId === 'empower') {
+            caption.textContent = translations[lang].empowerVisionCaption;
+        } else if (pageId === 'news') {
+            caption.textContent = translations[lang].latestNewsCaption;
+        }
+    });
 }
 
 function continueLanguageSwitcherSetup() {

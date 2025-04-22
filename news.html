@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News</title>
+    <title data-lang-en="News - Miss Star International" data-lang-es="Noticias - Miss Star International">News - Miss Star International</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,39 +13,48 @@
                 <img src="assets/logo/logo-main.png" alt="Miss Star International 2025">
             </div>
             <ul>
-                <li><a href="index.html">Inicio</a></li>
-                <li><a href="company.html">La Compañía</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="company.html">The Company</a></li>
                 <li><a href="about.html">About Us</a></li>
                 <li><a href="consortium.html">Consortium</a></li>
                 <li><a href="empower.html">EmpowerTransNation</a></li>
-                <li><a href="dinasty.html">Dinasty Platform</a></li>
+                <li><a href="dynasty.html">Dynasty Platform</a></li>
                 <li><a href="halloffame.html">Hall of Fame</a></li>
                 <li><a href="partners.html">Partners</a></li>
                 <li><a href="news.html">News</a></li>
             </ul>
             <div class="language-switcher">
-                <button data-lang="es" class="active">ES</button>
-                <button data-lang="en">EN</button>
+                <button data-lang="es">ES</button>
+                <button data-lang="en" class="active">EN</button>
             </div>
         </nav>
     </header>
 
     <main>
-        <h1 data-lang-es="Noticias" data-lang-en="News">Noticias</h1>
-        <p data-lang-es="Últimas noticias y actualizaciones..." data-lang-en="Latest news and updates...">Últimas noticias y actualizaciones...</p>
+        <h1 data-lang-en="News" data-lang-es="Noticias">News</h1>
+        <p data-lang-en="Latest news and updates..." data-lang-es="Últimas noticias y actualizaciones...">Latest news and updates...</p>
         <div class="content-block video-block">
-            <h2>Latest News</h2>
+            <h2 data-lang-en="Latest News" data-lang-es="Últimas Noticias">Latest News</h2>
             <div class="video-container">
                 <iframe width="560" height="315" src="https://www.youtube.com/embed/ywK2WFOeUso" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
-            <p class="video-caption">Miss Star International - Latest Updates and Announcements</p>
+            <p class="video-caption" data-lang-en="Miss Star International - Latest Updates and Announcements" data-lang-es="Miss Star International - Últimas Actualizaciones y Anuncios">Miss Star International - Latest Updates and Announcements</p>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2025 Miss Star International. Todos los derechos reservados.</p>
+        <div class="footer-content">
+            <div class="company-info">
+                <h4>Miss Star International LLC</h4>
+                <p>1209 Mountain Road Pl Ne Ste N<br>
+                Albuquerque, Bernalillo County, NM 87110 US</p>
+                <p data-lang-en="Phone" data-lang-es="Teléfono">Phone: <a href="tel:+15056218615">+1 (505) 621-8615</a></p>
+            </div>
+            <p data-lang-en="&copy; 2024 Miss Star International. All rights reserved." data-lang-es="&copy; 2024 Miss Star International. Todos los derechos reservados.">&copy; 2024 Miss Star International. All rights reserved.</p>
+        </div>
     </footer>
 
+    <script src="js/translations.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html> 

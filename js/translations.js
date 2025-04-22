@@ -454,6 +454,97 @@ const translations = {
             contactText: "¿Tienes preguntas o quieres aprender más sobre nuestros programas? Comunícate con nuestro equipo.",
             contactButton: "Contáctanos"
         }
+    },
+
+    en: {
+        // Navigation
+        "home": "Home",
+        "company": "The Company",
+        "about": "About Us",
+        "consortium": "Consortium",
+        "empower": "EmpowerTransNation",
+        "dynasty": "Dynasty Platform",
+        "hallOfFame": "Hall of Fame",
+        "partners": "Partners",
+        "news": "News",
+        
+        // Common sections
+        "readMore": "Read More",
+        "contactUs": "Contact Us",
+        "learnMore": "Learn More",
+        "applyNow": "Apply Now",
+        
+        // Footer
+        "allRightsReserved": "All rights reserved",
+        "phone": "Phone",
+        
+        // Videos
+        "tenthAnniversaryTitle": "10th Anniversary Speech",
+        "tenthAnniversaryCaption": "Celebrating a Decade of Transformation and Progress - Miss Star International 10th Anniversary",
+        "empowerVisionTitle": "Our Vision",
+        "empowerVisionCaption": "Discover how Empower TransNation Network is changing lives and building a more inclusive future",
+        "latestNewsTitle": "Latest News",
+        "latestNewsCaption": "Miss Star International - Latest Updates and Announcements",
+        
+        // About page
+        "founderTitle": "Executive Director – Miss Star International",
+        "keyAchievements": "Key Achievements",
+        "globalImpact": "Global Impact",
+        "visionValues": "Vision & Values",
+        
+        // Empower page
+        "ourMission": "Our Mission",
+        "ourValues": "Our Values",
+        "inclusiveness": "Inclusiveness",
+        "empowerment": "Empowerment",
+        "education": "Education",
+        "advocacy": "Advocacy",
+        "community": "Community"
+    },
+    es: {
+        // Navegación
+        "home": "Inicio",
+        "company": "La Compañía",
+        "about": "Sobre Nosotros",
+        "consortium": "Consorcio",
+        "empower": "EmpowerTransNation",
+        "dynasty": "Plataforma Dynasty",
+        "hallOfFame": "Salón de la Fama",
+        "partners": "Socios",
+        "news": "Noticias",
+        
+        // Secciones comunes
+        "readMore": "Leer Más",
+        "contactUs": "Contáctanos",
+        "learnMore": "Más Información",
+        "applyNow": "Aplicar Ahora",
+        
+        // Pie de página
+        "allRightsReserved": "Todos los derechos reservados",
+        "phone": "Teléfono",
+        
+        // Videos
+        "tenthAnniversaryTitle": "Discurso del 10º Aniversario",
+        "tenthAnniversaryCaption": "Celebrando una Década de Transformación y Progreso - Miss Star International 10º Aniversario",
+        "empowerVisionTitle": "Nuestra Visión",
+        "empowerVisionCaption": "Descubre cómo la Red EmpowerTransNation está cambiando vidas y construyendo un futuro más inclusivo",
+        "latestNewsTitle": "Últimas Noticias",
+        "latestNewsCaption": "Miss Star International - Últimas Actualizaciones y Anuncios",
+        
+        // Página Sobre Nosotros
+        "founderTitle": "Directora Ejecutiva – Miss Star International",
+        "keyAchievements": "Logros Principales",
+        "globalImpact": "Impacto Global",
+        "visionValues": "Visión y Valores",
+        
+        // Página Empower
+        "ourMission": "Nuestra Misión",
+        "ourValues": "Nuestros Valores",
+        "inclusiveness": "Inclusividad",
+        "empowerment": "Empoderamiento",
+        "education": "Educación",
+        "advocacy": "Defensa",
+        "community": "Comunidad"
     }
 };
 
