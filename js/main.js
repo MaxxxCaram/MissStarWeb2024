@@ -9,23 +9,19 @@ if (typeof translations === 'undefined') {
         console.info("Translations loaded successfully");
         if (typeof translations !== 'undefined') {
             console.info("Translations object available:", Object.keys(translations));
-            // Intentar inicializar el selector de idioma nuevamente después de cargar las traducciones
-            if (typeof initializeLanguageSwitcher === 'function') {
-                initializeLanguageSwitcher();
-            }
-        } else {
-            console.warn("Translations object not available after script load");
+            initializeLanguageSwitcher();
+            updateLanguage(getCurrentLanguage());
         }
     };
     script.onerror = function(error) {
         console.error("Failed to load translations.js:", error);
-        // Crear traducciones básicas si no se pudo cargar el archivo
         window.translations = window.translationsFallback || {
             common: {
                 en: { home: "Home" },
                 es: { home: "Inicio" }
             }
         };
+        initializeLanguageSwitcher();
     };
     document.head.appendChild(script);
 }
@@ -139,16 +135,9 @@ if (typeof translations === 'undefined') {
 document.addEventListener('DOMContentLoaded', function() {
     console.info('Initializing page components...');
     
-    // Asegurarse de que las traducciones estén disponibles antes de inicializar el selector de idioma
-    if (typeof translations === 'undefined') {
-        console.info('Translations not available, loading dynamically...');
-        // Código de carga ya existe en la parte superior del archivo, solo esperamos a que termine
-    } else {
-        console.info('Translations available, initializing language selector...');
-        // Initialize language switcher first to ensure translations load before other components
-        setTimeout(function() {
-            initializeLanguageSwitcher();
-        }, 100); // Small delay to ensure DOM elements are ready
+    // Initialize language switcher first
+    if (typeof translations !== 'undefined') {
+        initializeLanguageSwitcher();
     }
     
     // Find all elements with 'expandable-title' class
@@ -737,18 +726,26 @@ function safePromise(promise, timeout = MESSAGE_TIMEOUT) {
     });
 }
 
+// Helper function to get current language
+function getCurrentLanguage() {
+    return localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'en';
+}
+
 // Language Switcher Setup
+let languageInitialized = false;
+
 function initializeLanguageSwitcher() {
-    // Get language from localStorage or default to 'en'
-    const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+    if (languageInitialized) return;
+    
+    const currentLang = getCurrentLanguage();
     document.documentElement.lang = currentLang;
     
     // Add click handlers to language buttons
-    const langButtons = document.querySelectorAll('[data-lang]');
+    const langButtons = document.querySelectorAll('.lang-btn');
     langButtons.forEach(button => {
         button.addEventListener('click', function() {
             const lang = this.getAttribute('data-lang');
-            switchLanguage(lang);
+            updateLanguage(lang);
         });
         
         // Highlight current language button
@@ -756,18 +753,15 @@ function initializeLanguageSwitcher() {
             button.classList.add('active');
         }
     });
+
+    updateLanguage(currentLang);
+    languageInitialized = true;
 }
 
-function switchLanguage(lang) {
-    // Update active state of language buttons
-    document.querySelectorAll('.language-switcher button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-
-    // Save language preference
-    localStorage.setItem('preferredLanguage', lang);
-
-    // Update all translatable elements
+function updateLanguage(lang) {
+    if (!lang) return;
+    
+    // Update HTML elements with data-lang attributes
     document.querySelectorAll('[data-lang-en], [data-lang-es]').forEach(element => {
         const translation = element.getAttribute(`data-lang-${lang}`);
         if (translation) {
@@ -779,283 +773,349 @@ function switchLanguage(lang) {
         }
     });
 
-    // Update navigation text
-    const navTranslations = translations[lang];
-    document.querySelectorAll('nav ul li a').forEach(link => {
-        const key = link.getAttribute('href').replace('.html', '').replace('index', 'home');
-        if (navTranslations[key]) {
-            link.textContent = navTranslations[key];
-        }
+    // Update language buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
     });
 
-    // Update video captions and titles
-    document.querySelectorAll('.video-block h2').forEach(title => {
-        const pageId = window.location.pathname.split('/').pop().replace('.html', '');
-        if (pageId === 'about') {
-            title.textContent = translations[lang].tenthAnniversaryTitle;
-        } else if (pageId === 'empower') {
-            title.textContent = translations[lang].empowerVisionTitle;
-        } else if (pageId === 'news') {
-            title.textContent = translations[lang].latestNewsTitle;
-        }
-    });
-
-    document.querySelectorAll('.video-caption').forEach(caption => {
-        const pageId = window.location.pathname.split('/').pop().replace('.html', '');
-        if (pageId === 'about') {
-            caption.textContent = translations[lang].tenthAnniversaryCaption;
-        } else if (pageId === 'empower') {
-            caption.textContent = translations[lang].empowerVisionCaption;
-        } else if (pageId === 'news') {
-            caption.textContent = translations[lang].latestNewsCaption;
-        }
-    });
+    // Store the selected language
+    localStorage.setItem('language', lang);
+    localStorage.setItem('selectedLanguage', lang);
+    document.documentElement.setAttribute('lang', lang);
 }
 
-function continueLanguageSwitcherSetup() {
-    // Get current page name from URL
-    const pageName = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
+// Main initialization 
+document.addEventListener('DOMContentLoaded', function() {
+    console.info('Initializing page components...');
     
-    // Load translations asynchronously if not already loaded
-    if (!window.translations) {
-        loadTranslations().then(() => {
-            initializeLanguageSwitcher();
-            translatePage(localStorage.getItem('selectedLanguage') || 'en');
-        }).catch(error => {
-            console.error('Failed to load translations:', error);
-            // Use fallback translations
-            window.translations = window.translationsFallback;
-            initializeLanguageSwitcher();
-            translatePage(localStorage.getItem('selectedLanguage') || 'en');
-        });
-    } else {
+    // Initialize language switcher first
+    if (typeof translations !== 'undefined') {
         initializeLanguageSwitcher();
-        translatePage(localStorage.getItem('selectedLanguage') || 'en');
+    }
+    
+    // Find all elements with 'expandable-title' class
+    const expandableTitles = document.querySelectorAll('.expandable-title');
+    
+    // Add click event to each expandable title
+    expandableTitles.forEach(title => {
+        title.addEventListener('click', function() {
+            // Toggle 'active' class on title
+            this.classList.toggle('active');
+            
+            // Get content associated with this title
+            const content = this.nextElementSibling;
+            
+            // Toggle content visibility
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        });
+    });
+
+    // Initialize controllers
+    new ScrollController();
+    new VideoController();
+    
+    // Verificar si las funciones existen antes de llamarlas
+    if (typeof initializeMobileMenu === 'function') {
+        // Initialize mobile menu
+        initializeMobileMenu();
+    } else {
+        console.warn('Mobile menu initialization function not found');
+    }
+    
+    // Initialize smooth scroll
+    initializeSmoothScroll();
+    
+    // Initialize navbar animation
+    initializeNavbar();
+    
+    // Verificar si las funciones existen antes de llamarlas
+    if (typeof initializeCustomCursor === 'function') {
+        // Initialize custom cursor
+        initializeCustomCursor();
+    } else {
+        console.warn('Custom cursor initialization function not found');
+    }
+    
+    if (typeof initializeParallax === 'function') {
+        // Initialize parallax effect
+        initializeParallax();
+    } else {
+        console.warn('Parallax initialization function not found');
+    }
+    
+    // Initialize AOS
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100,
+            disable: 'mobile'
+        });
+    }
+    
+    // Initialize forms
+    initializeForms();
+    
+    // Initialize performance monitoring
+    initializePerformanceMonitoring();
+    
+    // Si después de 2 segundos no hay traducciones, intentar forzar la inicialización
+    setTimeout(function() {
+        if (typeof window.translations === 'undefined') {
+            console.warn('Traducciones no disponibles después de 2 segundos, inicializando con valores predeterminados');
+            window.translations = window.translationsFallback || {
+                common: {
+                    en: { home: "Home" },
+                    es: { home: "Inicio" }
+                }
+            };
+            initializeLanguageSwitcher();
+        }
+    }, 2000);
+});
+
+// Scroll and Animation Controller
+class ScrollController {
+    constructor() {
+        this.initializeObserver();
+        this.initializeScrollDots();
+    }
+
+    initializeObserver() {
+        this.observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    this.updateScrollIndicator(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.3
+        });
+
+        // Observe all animated elements
+        document.querySelectorAll('.section-title, .section-divider, .section-content')
+            .forEach(el => this.observer.observe(el));
+    }
+
+    updateScrollIndicator(target) {
+        if (!target) return;
+        const section = target?.closest('section');
+        if (!section) return;
+
+        document.querySelectorAll('.scroll-dot')?.forEach(dot => {
+            if (dot && dot.classList && dot.dataset) {
+            dot.classList.toggle('active', dot.dataset.section === section.id);
+            }
+        });
+    }
+
+    initializeScrollDots() {
+        document.querySelectorAll('.scroll-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const section = document.getElementById(dot.dataset.section);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
     }
 }
 
-// Load translations asynchronously
-async function loadTranslations() {
-    try {
-        // Get the current script path to determine relative path
-        const scripts = document.getElementsByTagName('script');
-        let translationsPath = './js/translations.js';
-        
-        // Check if we're in a subdirectory by looking at the current page URL
-        if (window.location.pathname.includes('/Dynasty/')) {
-            translationsPath = '../js/translations.js';
+// Video Controller
+class VideoController {
+    constructor() {
+        this.videos = document.querySelectorAll('video, .hero-video, .background-video, .section-video');
+        this.audioContext = null;
+        this.initializeAllVideos();
+        console.log(`VideoController initialized with ${this.videos.length} videos found`);
+    }
+
+    initializeAllVideos() {
+        // Solo crea AudioContext después de interacción del usuario
+        document.addEventListener('click', () => {
+            if (!this.audioContext) {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.audioContext.resume();
+                } catch (e) {
+                    console.warn('AudioContext not supported:', e);
+                }
+            }
+        }, { once: true });
+
+        // Si no hay videos, búsqueda adicional
+        if (this.videos.length === 0) {
+            console.info('No videos found with initial selectors, trying deeper search');
+            this.videos = document.querySelectorAll('[data-video], [data-background-video], iframe[src*="youtube"], iframe[src*="vimeo"]'); // vimeo es un nombre de servicio
+        }
+
+        // Manejar cada video encontrado
+        this.videos.forEach((video, index) => {
+            console.info(`Initializing video ${index + 1}/${this.videos.length}`);
+            
+            // Si es un iframe, asegurarse de que tenga el atributo allow para autoplay
+            if (video.tagName === 'IFRAME') {
+                if (!video.allow || !video.allow.includes('autoplay')) {
+                    video.allow = (video.allow || '') + '; autoplay';
+                }
+                console.info(`Enhanced iframe permissions for video ${index + 1}`);
+                return; // Los iframes se manejan por su plataforma
+            }
+            
+            // Si no es un elemento video pero tiene un video de fondo
+            if (video.tagName !== 'VIDEO' && !video.querySelector('video')) {
+                const bgVideo = video.getAttribute('data-background-video') || 
+                                video.getAttribute('data-video');
+                
+                if (bgVideo) {
+                    // Crear un nuevo elemento video
+                    const videoEl = document.createElement('video');
+                    videoEl.className = 'background-video absolute inset-0 w-full h-full object-cover';
+                    videoEl.autoplay = true;
+                    videoEl.loop = true;
+                    videoEl.muted = true;
+                    videoEl.playsInline = true;
+                    
+                    // Agregar source
+                    const source = document.createElement('source');
+                    source.src = bgVideo;
+                    source.type = bgVideo.toLowerCase().endsWith('.mp4') ? 'video/mp4' : 'video/webm';
+                    videoEl.appendChild(source);
+                    
+                    // Agregar al DOM
+                    video.style.position = 'relative';
+                    video.style.overflow = 'hidden';
+                    video.insertBefore(videoEl, video.firstChild);
+                    
+                    // Actualizar referencia
+                    video = videoEl;
+                    console.info(`Created video element from data attribute for ${index + 1}`);
+                }
+            }
+            
+            // Ahora asegurarse de que el video tiene los atributos correctos
+            if (video.tagName === 'VIDEO') {
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                
+                // Asegurarse de que tenga source
+                if (!video.querySelector('source') && !video.src) {
+                    console.warn(`Video ${index + 1} does not have a source`);
+                    return;
+                }
+                
+                // Intentar reproducir con retries
+                this.playVideoWithRetry(video, index);
+                
+                // Manejar errores
+                this.handleVideoErrors(video, index);
+            }
+        });
+    }
+
+    playVideoWithRetry(video, index, attempts = 0) {
+        if (attempts >= 3) {
+            console.warn(`Failed to play video ${index + 1} after 3 attempts`);
+            this.handleVideoError(video);
+            return;
         }
         
-        const response = await fetch(translationsPath);
-        if (!response.ok) {
-            console.error(`Failed to load translations from ${translationsPath}`);
-            throw new Error('Failed to load translations');
-        }
-        const text = await response.text();
-        // Execute the translations script
-        eval(text);
+        console.info(`Attempting to play video ${index + 1}, attempt ${attempts + 1}`);
         
-        if (!window.translations) {
-            throw new Error('Translations not properly loaded');
+        const playPromise = video.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                console.info(`Video ${index + 1} playing successfully`);
+            }).catch(error => {
+                console.warn(`Error playing video ${index + 1}:`, error);
+                
+                // Retry con un pequeño retraso
+                setTimeout(() => {
+                    this.playVideoWithRetry(video, index, attempts + 1);
+                }, 1000);
+            });
+        }
+    }
+
+    handleVideoErrors(video, index) {
+        if (!video) return;
+
+        // Escuchar por errores de carga
+        video.addEventListener('error', () => {
+            console.warn(`Error event triggered for video ${index + 1}`);
+            this.handleVideoError(video);
+        });
+        
+        // Verificar si el video tiene source
+        const videoSource = video.querySelector('source');
+        if (videoSource) {
+            videoSource.addEventListener('error', () => {
+                console.warn(`Source error event for video ${index + 1}`);
+                this.handleVideoError(video);
+            });
+        }
+    }
+
+    handleVideoError(video) {
+        if (!video) return;
+        
+        // Ocultar video y mostrar un fondo de respaldo
+        video.style.display = 'none';
+        
+        // Si es un video de héroe, ajustar la sección
+        const isHeroVideo = video?.classList?.contains('hero-video') || 
+                            video?.closest('.hero-section');
+        
+        if (isHeroVideo) {
+            const heroSection = video?.closest('.hero-section') || document.querySelector('.hero-section');
+            if (heroSection) {
+                heroSection.style.background = 'linear-gradient(to bottom, #000000, #1a1a1a)';
+                heroSection.style.minHeight = '100vh';
+                
+                // Crear botón "Play Video" como alternativa
+                const playButton = this.createPlayButton(video);
+                if (playButton) {
+                    heroSection.appendChild(playButton);
+                }
+            }
         }
         
-        return window.translations;
-    } catch (error) {
-        console.error('Translation loading error:', error);
-        throw new Error('Failed to load translations: ' + error.message);
+        // Añadir clase para estilos CSS alternativos
+        const container = video?.parentElement;
+        if (container?.classList) {
+            container.classList.add('video-error');
+        }
+    }
+
+    createPlayButton(video) {
+        if (!video) return null;
+        
+        const button = document.createElement('button');
+        button.className = 'absolute z-20 btn-primary';
+        button.innerHTML = '<i class="fas fa-play mr-2"></i>Play Video';
+        button.style.top = '50%';
+        button.style.left = '50%';
+        button.style.transform = 'translate(-50%, -50%)';
+        
+        button.addEventListener('click', () => {
+            if (video) {
+                video.style.display = 'block';
+                this.playVideoWithRetry(video, 0);
+            button.remove();
+            }
+        });
+        
+        return button;
     }
 }
-
-// ... rest of the existing code ...
-
-// Basic translations as fallback
-window.translationsFallback = {
-    common: {
-        en: {
-            home: "Home",
-            company: "The Company",
-            aboutUs: "About Us",
-            consortium: "Consortium",
-            empowerTransNation: "EmpowerTransNation",
-            dynastyPlatform: "Dynasty Platform",
-            hallOfFame: "Hall of Fame",
-            partners: "Partners",
-            news: "News",
-            copyright: "© 2025 Miss Star International. All rights reserved.",
-            companyInfo: "Miss Star International",
-            phone: "Phone: +1 (505) 621-8615"
-        },
-        es: {
-            home: "Inicio",
-            company: "La Compañía",
-            aboutUs: "Sobre Nosotros",
-            consortium: "Consorcio",
-            empowerTransNation: "EmpowerTransNation",
-            dynastyPlatform: "Plataforma Dynasty",
-            hallOfFame: "Salón de la Fama",
-            partners: "Colaboradores",
-            news: "Noticias",
-            copyright: "© 2025 Miss Star International. Todos los derechos reservados.",
-            companyInfo: "Miss Star International",
-            phone: "Teléfono: +1 (505) 621-8615"
-        }
-    },
-    index: {
-        en: {
-            welcomeTitle: "Welcome to",
-            heroDescription: "A global celebration of diversity, empowerment and beauty.",
-            pageantTitle: "The Pageant",
-            pageantDescription: "Experience the glamour and elegance of our international beauty pageant that celebrates diversity and empowerment.",
-            learnMore: "Learn More",
-            contestantsTitle: "Contestants",
-            contestantsDescription: "Meet our amazing contestants who will represent their countries in this year's competition.",
-            meetQueens: "Meet the Queens",
-            eventsTitle: "Events",
-            eventsDescription: "Check out our calendar of events and activities throughout the pageant.",
-            viewCalendar: "View Calendar",
-            sponsorsTitle: "Sponsors",
-            sponsorsDescription: "Our official sponsors who make this event possible.",
-            ourPartners: "Our Partners",
-            applyNow: "Apply Now",
-            applyNowDescription: "Applications are now open for Miss Star International 2025.",
-            fullName: "FULL NAME",
-            email: "EMAIL",
-            country: "COUNTRY",
-            age: "AGE",
-            biography: "BIOGRAPHY (200 WORDS MAX)",
-            socialImpact: "SOCIAL IMPACT PLATFORM",
-            socialImpactPlaceholder: "What cause would you champion as Miss Star International?",
-            selectCountry: "Select your country",
-            submit: "Submit Application",
-            fearlessly: "Fearlessly Feminine.",
-            unapologetically: "Unapologetically Powerful"
-        },
-        es: {
-            welcomeTitle: "Bienvenido a",
-            heroDescription: "Una celebración global de diversidad, empoderamiento y belleza.",
-            pageantTitle: "El Concurso",
-            pageantDescription: "Experimenta el glamour y la elegancia de nuestro concurso de belleza internacional que celebra la diversidad y el empoderamiento.",
-            learnMore: "Más Información",
-            contestantsTitle: "Concursantes",
-            contestantsDescription: "Conoce a nuestras increíbles concursantes que representarán a sus países en la competencia de este año.",
-            meetQueens: "Conoce a las Reinas",
-            eventsTitle: "Eventos",
-            eventsDescription: "Consulta nuestro calendario de eventos y actividades durante todo el concurso.",
-            viewCalendar: "Ver Calendario",
-            sponsorsTitle: "Patrocinadores",
-            sponsorsDescription: "Nuestros patrocinadores oficiales que hacen posible este evento.",
-            ourPartners: "Nuestros Socios",
-            applyNow: "Aplica Ahora",
-            applyNowDescription: "Las solicitudes ya están abiertas para Miss Star International 2025.",
-            fullName: "NOMBRE COMPLETO",
-            email: "CORREO ELECTRÓNICO",
-            country: "PAÍS",
-            age: "EDAD",
-            biography: "BIOGRAFÍA (MÁXIMO 200 PALABRAS)",
-            socialImpact: "PLATAFORMA DE IMPACTO SOCIAL",
-            socialImpactPlaceholder: "¿Qué causa defenderías como Miss Star International?",
-            selectCountry: "Selecciona tu país",
-            submit: "Enviar Solicitud",
-            fearlessly: "Intrépidamente Femenina.",
-            unapologetically: "Decididamente Poderosa"
-        }
-    },
-    company: {
-        // existing translations...
-    },
-    // other pages...
-    news: {
-        en: {
-            pageTitle: "News & Updates",
-            introText: "Stay informed with the latest news, updates, and announcements from Miss Star International.",
-            latestNewsTitle: "Latest News",
-            upcomingEventsTitle: "Upcoming Events",
-            pressReleasesTitle: "Press Releases",
-            mediaGalleryTitle: "Media Gallery",
-            subscribeTitle: "Subscribe to Updates",
-            subscribeText: "Join our mailing list to receive the latest news and updates directly in your inbox.",
-            emailPlaceholder: "Your email address",
-            subscribeButton: "Subscribe",
-            noNewsText: "Check back soon for updates!",
-            mediaContactTitle: "Media Contact",
-            mediaContactText: "For press inquiries, please contact our media relations team."
-        },
-        es: {
-            pageTitle: "Noticias y Actualizaciones",
-            introText: "Mantente informado con las últimas noticias, actualizaciones y anuncios de Miss Star International.",
-            latestNewsTitle: "Últimas Noticias",
-            upcomingEventsTitle: "Próximos Eventos",
-            pressReleasesTitle: "Comunicados de Prensa",
-            mediaGalleryTitle: "Galería de Medios",
-            subscribeTitle: "Suscríbete a las Actualizaciones",
-            subscribeText: "Únete a nuestra lista de correo para recibir las últimas noticias y actualizaciones directamente en tu bandeja de entrada.",
-            emailPlaceholder: "Tu dirección de correo electrónico",
-            subscribeButton: "Suscribirse",
-            noNewsText: "¡Vuelve pronto para ver actualizaciones!",
-            mediaContactTitle: "Contacto para Medios",
-            mediaContactText: "Para consultas de prensa, por favor contacta a nuestro equipo de relaciones con los medios."
-        }
-    },
-    empower: {
-        en: {
-            pageTitle: "EmpowerTransNation",
-            introText: "A global initiative dedicated to uplifting and empowering transgender individuals through education, advocacy, and economic opportunities.",
-            missionTitle: "Our Mission",
-            missionText: "To create a world where transgender individuals have equal access to resources, opportunities, and respect, allowing them to live authentically and reach their full potential.",
-            visionTitle: "Our Vision",
-            visionText: "A society that celebrates transgender diversity, where barriers to success are eliminated and where transgender individuals are empowered to become leaders in their communities.",
-            programsTitle: "Our Programs",
-            program1Title: "Education & Skills Development",
-            program1Text: "Providing scholarships, mentorship, and training programs to develop marketable skills and advance educational opportunities.",
-            program2Title: "Advocacy & Policy Change",
-            program2Text: "Working with governments and organizations to implement inclusive policies and eliminate discriminatory practices.",
-            program3Title: "Economic Empowerment",
-            program3Text: "Creating employment opportunities and supporting transgender-owned businesses through grants, microloans, and business development resources.",
-            program4Title: "Health & Wellbeing",
-            program4Text: "Promoting access to healthcare services and mental health resources tailored to meet the unique needs of the transgender community.",
-            testimonialsTitle: "Success Stories",
-            testimonial1Text: "Through EmpowerTransNation, I received a scholarship that allowed me to complete my education and secure employment in my desired field.",
-            testimonial1Author: "Maria S., Program Participant",
-            testimonial2Text: "The business development program gave me the tools and confidence to start my own company. Now I employ five people from my community.",
-            testimonial2Author: "Alex T., Entrepreneur",
-            joinTitle: "Join Our Movement",
-            joinText: "Whether you're interested in volunteering, donating, or partnering with us, there are many ways to support our mission and make a difference.",
-            contactTitle: "Get in Touch",
-            contactText: "Have questions or want to learn more about our programs? Reach out to our team.",
-            contactButton: "Contact Us"
-        },
-        es: {
-            pageTitle: "EmpowerTransNation",
-            introText: "Una iniciativa global dedicada a elevar y empoderar a las personas transgénero a través de la educación, la defensa y las oportunidades económicas.",
-            missionTitle: "Nuestra Misión",
-            missionText: "Crear un mundo donde las personas transgénero tengan igual acceso a recursos, oportunidades y respeto, permitiéndoles vivir auténticamente y alcanzar su máximo potencial.",
-            visionTitle: "Nuestra Visión",
-            visionText: "Una sociedad que celebra la diversidad transgénero, donde se eliminan las barreras para el éxito y donde las personas transgénero están empoderadas para convertirse en líderes en sus comunidades.",
-            programsTitle: "Nuestros Programas",
-            program1Title: "Educación y Desarrollo de Habilidades",
-            program1Text: "Proporcionar becas, mentoría y programas de capacitación para desarrollar habilidades comercializables y avanzar en oportunidades educativas.",
-            program2Title: "Defensa y Cambio de Políticas",
-            program2Text: "Trabajar con gobiernos y organizaciones para implementar políticas inclusivas y eliminar prácticas discriminatorias.",
-            program3Title: "Empoderamiento Económico",
-            program3Text: "Crear oportunidades de empleo y apoyar a negocios propiedad de personas transgénero a través de subvenciones, microcréditos y recursos para el desarrollo empresarial.",
-            program4Title: "Salud y Bienestar",
-            program4Text: "Promover el acceso a servicios de salud y recursos de salud mental adaptados para satisfacer las necesidades únicas de la comunidad transgénero.",
-            testimonialsTitle: "Historias de Éxito",
-            testimonial1Text: "A través de EmpowerTransNation, recibí una beca que me permitió completar mi educación y asegurar empleo en mi campo deseado.",
-            testimonial1Author: "María S., Participante del Programa",
-            testimonial2Text: "El programa de desarrollo empresarial me dio las herramientas y la confianza para iniciar mi propia empresa. Ahora empleo a cinco personas de mi comunidad.",
-            testimonial2Author: "Alex T., Emprendedor",
-            joinTitle: "Únete a Nuestro Movimiento",
-            joinText: "Ya sea que estés interesado en ser voluntario, donar o asociarte con nosotros, hay muchas formas de apoyar nuestra misión y marcar la diferencia.",
-            contactTitle: "Ponte en Contacto",
-            contactText: "¿Tienes preguntas o quieres aprender más sobre nuestros programas? Comunícate con nuestro equipo.",
-            contactButton: "Contáctanos"
-        }
-    }
-};
-
-// Ensure window.translations is available
-window.translations = window.translations || window.translationsFallback;
 
 // Application Form Handler
 function initializeForms() {
@@ -1772,62 +1832,6 @@ function initializePerformanceMonitoring() {
         } catch (e) {
         console.debug('PerformanceObserver not supported:', e);
     }
-}
-
-// Helper function to get current language
-function getCurrentLanguage() {
-    return localStorage.getItem('language') || localStorage.getItem('selectedLanguage') || 'en';
-}
-
-// Function to immediately apply stored language on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const storedLang = getCurrentLanguage();
-    updateLanguage(storedLang);
-    
-    // Add click handlers for language buttons if they exist
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const lang = btn.getAttribute('data-lang');
-            updateLanguage(lang);
-        });
-    });
-});
-
-// Additionally, implement a manual language application when document is ready
-function ensureLanguageApplied() {
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        const currentLang = getCurrentLanguage();
-        updateLanguage(currentLang);
-    }
-}
-
-// Call this after page load to make sure everything is ready
-setTimeout(ensureLanguageApplied, 300);
-
-function updateLanguage(lang) {
-    if (!lang) return;
-    
-    // Update HTML elements with data-lang attributes
-    document.querySelectorAll('[data-lang-en], [data-lang-es]').forEach(element => {
-        const translation = element.getAttribute(`data-lang-${lang}`);
-        if (translation) {
-            if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-                element.placeholder = translation;
-            } else {
-                element.textContent = translation;
-            }
-        }
-    });
-
-    // Update language buttons
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
-    });
-
-    // Store the selected language
-    localStorage.setItem('language', lang);
-    localStorage.setItem('selectedLanguage', lang);
-    document.documentElement.setAttribute('lang', lang);
 }
 
 function translatePage(lang) {

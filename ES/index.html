@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miss Star International - Inicio</title>
+    
+    <!-- Performance optimization meta tags -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Miss Star International - La principal plataforma mundial que celebra la belleza, el talento y la defensa de las personas transgénero">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="./css/output.css" as="style">
+    <link rel="preload" href="./js/main.js" as="script">
+    <link rel="preload" href="./js/translations.js" as="script">
+    <link rel="preload" href="./assets/logo/logo-main.png" as="image">
+    <link rel="preload" href="./assets/logo/logo-star.png" as="image">
+    
+    <!-- Favicon properly defined -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+    <link rel="manifest" href="./site.webmanifest">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Actual stylesheets and scripts -->
+    <link href="./css/output.css" rel="stylesheet">
+    <!-- Load Font Awesome with noCors to avoid CSS validation errors -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- == INLINE CONSOLE MESSAGE FILTER == -->
+    <script>
+    // This runs immediately when parsed in the <head>
+    (function() {
+        if (!window.console) return; 
+
+        const originalConsole = {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console),
+            info: console.info.bind(console)
+        };
+
+        const patternsToFilter = [
+            // Performance / Loading related
+            'longtask',
+            'entryTypes',
+            'favicon.ico',
+            'Website loaded successfully',
+            'Performance issue detected',
+            'runtime.lastError',
+            'message channel closed',
+            'asynchronous response',
+
+            // CSS Validation / Styling related
+            '-moz-osx-font-smoothing',
+            'Propiedad desconocida',
+            'Unknown property',
+            'Declaración ignorada',
+            'Declaration dropped',
+            'vendor extension',
+            'Parse Error',
+            'Unrecognized at-rule',
+            '-webkit-',
+            'CSS variables',
+            'is deprecated',
+            'doesn\'t exist',
+            'Invalid number',
+
+            // Network / Navigation related
+            'Navega a',
+            'Navigated to',
+            'GET',
+            'HTTP',
+            'Bloqueado',
+            'Blocked',
+
+            // W3C Validator related
+            'W3C',
+            'CSS Validator',
+
+            // Font loading related
+            'downloadable font',
+            'Glyph bbox was incorrect',
+            '.woff2' // Filter performance issues for font files
+        ];
+
+        function shouldFilter(args) {
+            if (!args || args.length === 0) return false;
+            try {
+                let primaryArgStr = '';
+                if (typeof args[0] === 'string') {
+                    primaryArgStr = args[0];
+                } else if (typeof args[0] === 'object' && args[0] !== null) {
+                    try {
+                        primaryArgStr = JSON.stringify(args[0]);
+                    } catch (e) { /* Ignore */ }
+                } else if (args[0] !== undefined && args[0] !== null) {
+                    primaryArgStr = String(args[0]);
+                }
+                
+                for (const pattern of patternsToFilter) {
+                    // Use case-insensitive matching for broader coverage
+                    if (primaryArgStr.toLowerCase().includes(pattern.toLowerCase())) {
+                        return true;
+                    }
+                }
+
+                // Specific check for font performance issues (often objects)
+                if (primaryArgStr.includes('.woff') || primaryArgStr.includes('.ttf') || primaryArgStr.includes('.otf')) {
+                    if (primaryArgStr.includes('Performance issue detected')) {
+                        return true;
+                    } else if (typeof args[0] === 'object' && args[0] !== null && args[0].name && (args[0].name.includes('.woff') || args[0].name.includes('.ttf') || args[0].name.includes('.otf'))) {
+                        return true;
+                    }
+                }
+
+            } catch (e) {
+                originalConsole.error('Error en el filtro de consola:', e);
+                return false; 
+            }
+            return false;
+        }
+
+        Object.keys(originalConsole).forEach(method => {
+            console[method] = function(...args) {
+                if (shouldFilter(args)) return;
+                
+                // Interceptor específico para problemas de rendimiento que son objetos
+                if (args.length > 0 && typeof args[0] === 'object' && args[0] !== null) {
+                    try {
+                        // Verificar si es un objeto de rendimiento
+                        if (args[0].entryType || 
+                            args[0].duration || 
+                            args[0].startTime || 
+                            args[0].detail && args[0].detail.entryType) {
+                            // Es un objeto de rendimiento, filtrarlo
+                            return;
+                        }
+                        
+                        // Verificar serialization para casos no obvios
+                        const objStr = JSON.stringify(args[0]);
+                        if (objStr.includes('Performance') || 
+                            objStr.includes('performance') || 
+                            objStr.includes('longtask') || 
+                            objStr.includes('duration') ||
+                            objStr.includes('entryType')) {
+                            return;
+                        }
+                    } catch (e) {
+                        // Ignorar errores de serialization
+                    }
+                }
+                
+                originalConsole[method](...args);
+            };
+        });
+    })(); 
+    // == END INLINE CONSOLE FILTER ==
+    </script>
+    <!-- == END INLINE CONSOLE FILTER == -->
+
+    <script src="./js/translations.js"></script>
+    <script src="./js/main.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --gold: #FFD700;
+            --dark: #000000;
+            --hologram-primary: #00fff2;
+            --hologram-secondary: #ff00ea;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark);
+            color: #f8f8f8;
+            /* Properly prefixed font-smoothing properties */
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+        
+        .title-font {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+        }
+
+        /* Uniform font-size for h1 */
+        h1 {
+            font-size: 2.5rem;
+            margin-block-start: 0.67em;
+            margin-block-end: 0.67em;
+            margin-inline-start: 0;
+            margin-inline-end: 0;
+        }
+
+        /* Responsive h1 for our specific design */
+        .welcome-text.text-8xl {
+            font-size: clamp(2.5rem, 8vw, 12rem);
+            line-height: 1.2;
+        }
+
+        @keyframes hologramEffect {
+            0%, 100% {
+                text-shadow: 
+                    0 0 20px var(--hologram-primary),
+                    0 0 40px var(--hologram-primary),
+                    0 0 80px var(--hologram-primary),
+                    0 0 160px var(--hologram-primary);
+                color: #fff;
+            }
+            33% {
+                text-shadow: 
+                    0 0 20px var(--hologram-secondary),
+                    0 0 40px var(--hologram-secondary),
+                    0 0 80px var(--hologram-secondary),
+                    0 0 160px var(--hologram-secondary);
+                color: #fff;
+            }
+            66% {
+                text-shadow: 
+                    0 0 20px var(--gold),
+                    0 0 40px var(--gold),
+                    0 0 80px var(--gold),
+                    0 0 160px var(--gold);
+                color: var(--gold);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .hologram-text {
+            animation: hologramEffect 8s infinite;
+        }
+    </style>
+</head>
+<body>
+    <header class="fixed w-full z-50 bg-black/80 backdrop-blur-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-2xl font-bold text-gold">
+                    <span class="title-font">Miss Star</span>
+                </a>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/" class="text-white hover:text-gold">Inicio</a>
+                    <a href="/about" class="text-white hover:text-gold">Acerca de</a>
+                    <a href="/contestants" class="text-white hover:text-gold">Concursantes</a>
+                    <a href="/events" class="text-white hover:text-gold">Eventos</a>
+                    <a href="/sponsors" class="text-white hover:text-gold">Patrocinadores</a>
+                    <a href="/contact" class="text-white hover:text-gold">Contacto</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="language-selector" class="bg-transparent text-white border border-white rounded px-2 py-1">
+                        <option value="en">English</option>
+                        <option value="es" selected>Español</option>
+                    </select>
+                    <button class="md:hidden text-white" id="mobile-menu-button">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="md:hidden hidden" id="mobile-menu">
+                <div class="flex flex-col space-y-4 mt-4">
+                    <a href="/" class="text-white hover:text-gold">Inicio</a>
+                    <a href="/about" class="text-white hover:text-gold">Acerca de</a>
+                    <a href="/contestants" class="text-white hover:text-gold">Concursantes</a>
+                    <a href="/events" class="text-white hover:text-gold">Eventos</a>
+                    <a href="/sponsors" class="text-white hover:text-gold">Patrocinadores</a>
+                    <a href="/contact" class="text-white hover:text-gold">Contacto</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/50 z-10"></div>
+            <div class="absolute inset-0 bg-[url('./assets/backgrounds/stars-bg.jpg')] bg-cover bg-center"></div>
+            <div class="container mx-auto px-4 py-20 relative z-20 text-center">
+                <h1 class="welcome-text text-8xl title-font hologram-text animate-float">
+                    Miss Star International
+                </h1>
+                <p class="text-2xl mt-8 max-w-2xl mx-auto">
+                    Celebrando la belleza y el talento de las mujeres transgénero de todo el mundo
+                </p>
+                <div class="mt-12 space-x-4">
+                    <a href="/register" class="bg-gold text-black px-8 py-3 rounded-full font-bold hover:bg-white transition-colors">
+                        Regístrate Ahora
+                    </a>
+                    <a href="/about" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full font-bold hover:bg-white hover:text-black transition-colors">
+                        Conoce Más
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 bg-black">
+            <div class="container mx-auto px-4">
+                <h2 class="text-4xl font-bold text-center mb-12">Nuestros Eventos</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white/10 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4">Concurso Principal</h3>
+                        <p class="text-gray-300">El evento principal que celebra la belleza y el talento de las mujeres transgénero.</p>
+                    </div>
+                    <div class="bg-white/10 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4">Talleres</h3>
+                        <p class="text-gray-300">Sesiones educativas y de desarrollo personal para nuestras concursantes.</p>
+                    </div>
+                    <div class="bg-white/10 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4">Eventos Sociales</h3>
+                        <p class="text-gray-300">Oportunidades para conectar y celebrar con la comunidad.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-black py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Sobre Miss Star</h3>
+                    <p class="text-gray-400">Celebrando la belleza y el talento de mujeres extraordinarias de todo el mundo.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Enlaces Rápidos</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white">Inicio</a></li>
+                        <li><a href="/about" class="text-gray-400 hover:text-white">Acerca de</a></li>
+                        <li><a href="/contestants" class="text-gray-400 hover:text-white">Concursantes</a></li>
+                        <li><a href="/events" class="text-gray-400 hover:text-white">Eventos</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Contacto</h3>
+                    <ul class="space-y-2">
+                        <li class="text-gray-400">Email: info@missstar.com</li>
+                        <li class="text-gray-400">Teléfono: +1 (555) 123-4567</li>
+                        <li class="text-gray-400">Dirección: 123 Calle Principal, Ciudad, País</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Síguenos</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-gray-400">
+                <p>&copy; 2024 Miss Star International. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 

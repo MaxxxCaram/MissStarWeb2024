@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "contestants": "Concursantes",
+    "events": "Eventos",
+    "sponsors": "Patrocinadores",
+    "contact": "Contacto"
+  },
+  "hero": {
+    "title": "Bienvenidos a Miss Star International",
+    "subtitle": "Celebrando la belleza y el talento",
+    "cta": "Regístrate ahora"
+  },
+  "about": {
+    "title": "Acerca de Nosotros",
+    "description": "Miss Star International es un prestigioso concurso de belleza que celebra la diversidad y el empoderamiento de las mujeres."
+  },
+  "contestants": {
+    "title": "Nuestras Concursantes",
+    "description": "Conoce a las increíbles mujeres que compiten por la corona de Miss Star International."
+  },
+  "events": {
+    "title": "Eventos",
+    "description": "Únete a nosotros en nuestros emocionantes eventos y espectáculos."
+  },
+  "sponsors": {
+    "title": "Nuestros Patrocinadores",
+    "description": "Agradecemos a nuestros generosos patrocinadores por su apoyo."
+  },
+  "footer": {
+    "social": "Síguenos",
+    "quickLinks": "Enlaces Rápidos",
+    "helpfulLinks": "Enlaces Útiles",
+    "contact": "Contacto",
+    "address": "123 Calle Principal, Ciudad, País",
+    "phone": "+1 234 567 890",
+    "email": "info@missstar.com"
+  }
+} 

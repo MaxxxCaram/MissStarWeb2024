@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<!-- cSpell:words Montsant -->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre Nosotros - Miss Star International</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .founder-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .founder-image {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .founder-bio {
+            padding: 2rem;
+        }
+
+        .founder-bio h2 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .founder-bio h3 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .founder-bio p {
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: #555;
+        }
+
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .achievement-item {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .recommendation {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            grid-column: 1 / -1;
+        }
+
+        .recommendation-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .recommendation img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .recommendation-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .founder-section {
+                grid-template-columns: 1fr;
+            }
+            .recommendation-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .bio-highlights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .highlight-card {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .highlight-card h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #333;
+        }
+
+        .video-section {
+            margin-top: 2rem;
+            grid-column: 1 / -1;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .company-info {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .company-info h4 {
+            color: #D4AF37;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .company-info p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+        
+        .company-info a {
+            color: #fff;
+            text-decoration: none;
+        }
+        
+        .company-info a:hover {
+            color: #D4AF37;
+        }
+    </style>
+
+    <!-- == INLINE CONSOLE MESSAGE FILTER == -->
+    <script>
+    // This runs immediately when parsed in the <head>
+    (function() {
+        if (!window.console) return; 
+
+        const originalConsole = {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console),
+            info: console.info.bind(console)
+        };
+
+        const patternsToFilter = [
+            // Performance / Loading related
+            'longtask',
+            'entryTypes',
+            'favicon.ico',
+            'Website loaded successfully',
+            'Performance issue detected',
+
+            // CSS Validation / Styling related
+            '-moz-osx-font-smoothing',
+            'Propiedad desconocida',
+            'Unknown property',
+            'Declaración ignorada',
+            'Declaration dropped',
+            'vendor extension',
+            'Parse Error',
+            'Unrecognized at-rule',
+            '-webkit-',
+            'CSS variables',
+            'is deprecated',
+            'doesn\'t exist',
+            'Invalid number',
+
+            // Network / Navigation related
+            'Navega a',
+            'Navigated to',
+            'GET',
+            'HTTP',
+            'Bloqueado',
+            'Blocked',
+
+            // W3C Validator related
+            'W3C',
+            'CSS Validator',
+
+            // Font loading related
+            'downloadable font',
+            'Glyph bbox was incorrect',
+            '.woff2' // Filter performance issues for font files
+        ];
+
+        function shouldFilter(args) {
+            if (!args || args.length === 0) return false;
+            try {
+                let primaryArgStr = '';
+                if (typeof args[0] === 'string') {
+                    primaryArgStr = args[0];
+                } else if (typeof args[0] === 'object' && args[0] !== null) {
+                    try {
+                        primaryArgStr = JSON.stringify(args[0]);
+                    } catch (e) { /* Ignore */ }
+                } else if (args[0] !== undefined && args[0] !== null) {
+                    primaryArgStr = String(args[0]);
+                }
+                
+                for (const pattern of patternsToFilter) {
+                    // Use case-insensitive matching for broader coverage
+                    if (primaryArgStr.toLowerCase().includes(pattern.toLowerCase())) {
+                        return true;
+                    }
+                }
+
+                // Specific check for font performance issues (often objects)
+                if (primaryArgStr.includes('.woff') || primaryArgStr.includes('.ttf') || primaryArgStr.includes('.otf')) {
+                    if (primaryArgStr.includes('Performance issue detected')) {
+                        return true;
+                    } else if (typeof args[0] === 'object' && args[0] !== null && args[0].name && (args[0].name.includes('.woff') || args[0].name.includes('.ttf') || args[0].name.includes('.otf'))) {
+                        return true;
+                    }
+                }
+
+            } catch (e) {
+                originalConsole.error('Error en el filtro de consola:', e);
+                return false; 
+            }
+            return false;
+        }
+
+        Object.keys(originalConsole).forEach(method => {
+            console[method] = function(...args) {
+                if (shouldFilter(args)) return;
+                
+                // Interceptor específico para problemas de rendimiento que son objetos
+                if (args.length > 0 && typeof args[0] === 'object' && args[0] !== null) {
+                    try {
+                        // Verificar si es un objeto de rendimiento
+                        if (args[0].entryType || 
+                            args[0].duration || 
+                            args[0].startTime || 
+                            args[0].detail && args[0].detail.entryType) {
+                            // Es un objeto de rendimiento, filtrarlo
+                            return;
+                        }
+                        
+                        // Verificar serialization para casos no obvios
+                        const objStr = JSON.stringify(args[0]);
+                        if (objStr.includes('Performance') || 
+                            objStr.includes('performance') || 
+                            objStr.includes('longtask') || 
+                            objStr.includes('duration') ||
+                            objStr.includes('entryType')) {
+                            return;
+                        }
+                    } catch (e) {
+                        // Ignorar errores de serialization
+                    }
+                }
+                
+                originalConsole[method](...args);
+            };
+        });
+    })(); 
+    // == END INLINE CONSOLE FILTER ==
+    </script>
+    <!-- == END INLINE CONSOLE FILTER == -->
+</head>
+<body>
+    <header class="fixed w-full z-50 bg-black/80 backdrop-blur-sm">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-2xl font-bold text-gold">
+                    <span class="title-font">Miss Star</span>
+                </a>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/" class="text-white hover:text-gold">Inicio</a>
+                    <a href="/about" class="text-white hover:text-gold">Acerca de</a>
+                    <a href="/contestants" class="text-white hover:text-gold">Concursantes</a>
+                    <a href="/events" class="text-white hover:text-gold">Eventos</a>
+                    <a href="/sponsors" class="text-white hover:text-gold">Patrocinadores</a>
+                    <a href="/contact" class="text-white hover:text-gold">Contacto</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="language-selector" class="bg-transparent text-white border border-white rounded px-2 py-1">
+                        <option value="en">English</option>
+                        <option value="es" selected>Español</option>
+                    </select>
+                    <button class="md:hidden text-white" id="mobile-menu-button">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="md:hidden hidden" id="mobile-menu">
+                <div class="flex flex-col space-y-4 mt-4">
+                    <a href="/" class="text-white hover:text-gold">Inicio</a>
+                    <a href="/about" class="text-white hover:text-gold">Acerca de</a>
+                    <a href="/contestants" class="text-white hover:text-gold">Concursantes</a>
+                    <a href="/events" class="text-white hover:text-gold">Eventos</a>
+                    <a href="/sponsors" class="text-white hover:text-gold">Patrocinadores</a>
+                    <a href="/contact" class="text-white hover:text-gold">Contacto</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-20">
+        <section class="founder-section">
+            <div class="founder-image">
+                <img src="./assets/images/founder.jpg" alt="Fundadora de Miss Star International">
+            </div>
+            <div class="founder-bio">
+                <h2>Nuestra Historia</h2>
+                <h3>Fundadora y Directora</h3>
+                <p>Miss Star International fue fundada con la visión de crear una plataforma global que celebre la belleza, el talento y la defensa de las personas transgénero. Nuestra fundadora, una destacada activista y empresaria, ha dedicado su vida a empoderar a las mujeres transgénero y promover la inclusión en la industria del entretenimiento.</p>
+                <div class="achievements">
+                    <span class="achievement-item">Premio a la Excelencia en Diversidad</span>
+                    <span class="achievement-item">Líder en Inclusión</span>
+                    <span class="achievement-item">Premio al Impacto Social</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bio-highlights">
+            <div class="highlight-card">
+                <h4>Misión</h4>
+                <p>Empoderar a las mujeres transgénero a través de la celebración de su belleza, talento y contribuciones a la sociedad.</p>
+            </div>
+            <div class="highlight-card">
+                <h4>Visión</h4>
+                <p>Crear un mundo donde la diversidad sea celebrada y donde cada persona tenga la oportunidad de brillar.</p>
+            </div>
+            <div class="highlight-card">
+                <h4>Valores</h4>
+                <p>Inclusión, respeto, empoderamiento y excelencia en todo lo que hacemos.</p>
+            </div>
+        </section>
+
+        <section class="recommendation">
+            <h2 class="text-center mb-8">Lo Que Dicen Sobre Nosotros</h2>
+            <div class="recommendation-content">
+                <div class="recommendation-text">
+                    <p>"Miss Star International ha revolucionado la forma en que vemos la belleza y el talento en la comunidad transgénero. Su compromiso con la inclusión y el empoderamiento es verdaderamente inspirador."</p>
+                    <p class="mt-4 font-bold">- Revista de Moda Internacional</p>
+                </div>
+                <img src="./assets/images/recommendation.jpg" alt="Recomendación de Miss Star International">
+            </div>
+        </section>
+
+        <section class="video-section">
+            <h2 class="text-center mb-8">Nuestra Historia en Video</h2>
+            <div class="video-container">
+                <iframe width="100%" height="600" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-black py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Sobre Miss Star</h3>
+                    <p class="text-gray-400">Celebrando la belleza y el talento de mujeres extraordinarias de todo el mundo.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Enlaces Rápidos</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-400 hover:text-white">Inicio</a></li>
+                        <li><a href="/about" class="text-gray-400 hover:text-white">Acerca de</a></li>
+                        <li><a href="/contestants" class="text-gray-400 hover:text-white">Concursantes</a></li>
+                        <li><a href="/events" class="text-gray-400 hover:text-white">Eventos</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Contacto</h3>
+                    <ul class="space-y-2">
+                        <li class="text-gray-400">Email: info@missstar.com</li>
+                        <li class="text-gray-400">Teléfono: +1 (555) 123-4567</li>
+                        <li class="text-gray-400">Dirección: 123 Calle Principal, Ciudad, País</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Síguenos</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-gray-400">
+                <p>&copy; 2024 Miss Star International. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 
